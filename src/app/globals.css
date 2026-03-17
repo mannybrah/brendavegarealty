@@ -1,29 +1,56 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  :root {
-    --navy: #0F1D35;
-    --navy-mid: #1B2A4A;
-    --navy-light: #253A5E;
-    --gold: #C8A55B;
-    --gold-light: #D4B978;
-    --gold-pale: #F0E6CE;
-    --cream: #F8F5EF;
-    --warm-white: #FDFBF7;
-    --charcoal: #2D2D2D;
-    --charcoal-light: #5A5A5A;
-    --teal: #2A7F6F;
-    --teal-light: #34997F;
-    --sage: #8FA89A;
-  }
+@theme {
+  /* Brand Colors */
+  --color-navy: #0F1D35;
+  --color-navy-mid: #1B2A4A;
+  --color-navy-light: #253A5E;
+  --color-gold: #C8A55B;
+  --color-gold-light: #D4B978;
+  --color-gold-pale: #F0E6CE;
+  --color-cream: #F8F5EF;
+  --color-warm-white: #FDFBF7;
+  --color-charcoal: #2D2D2D;
+  --color-charcoal-light: #5A5A5A;
+  --color-teal: #2A7F6F;
+  --color-teal-light: #34997F;
+  --color-sage: #8FA89A;
 
-  html {
-    scroll-behavior: smooth;
-  }
+  /* Font Families */
+  --font-display: "Cormorant Garamond", serif;
+  --font-body: "Outfit", sans-serif;
+  --font-ui: "DM Sans", sans-serif;
 
-  body {
-    @apply bg-warm-white text-charcoal font-body font-light;
-  }
+  /* Breakpoints */
+  --breakpoint-mobile: 0px;
+  --breakpoint-tablet: 641px;
+  --breakpoint-desktop: 1025px;
+}
+
+/* CSS Variables for non-Tailwind usage */
+:root {
+  --navy: #0F1D35;
+  --navy-mid: #1B2A4A;
+  --navy-light: #253A5E;
+  --gold: #C8A55B;
+  --gold-light: #D4B978;
+  --gold-pale: #F0E6CE;
+  --cream: #F8F5EF;
+  --warm-white: #FDFBF7;
+  --charcoal: #2D2D2D;
+  --charcoal-light: #5A5A5A;
+  --teal: #2A7F6F;
+  --teal-light: #34997F;
+  --sage: #8FA89A;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-warm-white);
+  color: var(--color-charcoal);
+  font-family: var(--font-body);
+  font-weight: 300;
 }
