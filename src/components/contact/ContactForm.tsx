@@ -11,17 +11,11 @@ export function ContactForm() {
     e.preventDefault();
     setStatus("sending");
     try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      if (res.ok) {
-        setStatus("sent");
-        setFormData({ name: "", email: "", phone: "", message: "", type: "buyer" });
-      } else {
-        setStatus("error");
-      }
+      const subject = encodeURIComponent(`New ${formData.type} inquiry from ${formData.name}`);
+      const body = encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nType: ${formData.type}\n\nMessage:\n${formData.message}`);
+      window.open(`mailto:brenda.vega@c21anew.com?subject=${subject}&body=${body}`, "_self");
+      setStatus("sent");
+      setFormData({ name: "", email: "", phone: "", message: "", type: "buyer" });
     } catch {
       setStatus("error");
     }

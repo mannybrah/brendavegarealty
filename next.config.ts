@@ -1,14 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "export",
   images: {
-    formats: ["image/webp" as const],
-    remotePatterns: [
-      {
-        protocol: "https" as const,
-        hostname: "*.r2.dev",
-      },
-    ],
+    unoptimized: true,
   },
 };
 

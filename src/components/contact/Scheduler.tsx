@@ -28,29 +28,33 @@ export function Scheduler() {
     if (!selectedDate) return;
     setLoading(true);
     setSelectedTime("");
-    fetch(`/api/schedule/availability?date=${selectedDate}`)
-      .then((res) => res.json())
-      .then((data) => setSlots(data.slots || []))
-      .catch(() => setSlots([]))
-      .finally(() => setLoading(false));
+    // Generate default business hours slots (9 AM - 5 PM, 30 min intervals)
+    const defaultSlots: TimeSlot[] = [];
+    for (let hour = 9; hour < 17; hour++) {
+      for (let min = 0; min < 60; min += 30) {
+        const time = `${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+        defaultSlots.push({ date: selectedDate, time });
+      }
+    }
+    setSlots(defaultSlots);
+    setLoading(false);
   }, [selectedDate]);
 
   const handleBook = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("booking");
     try {
-      const res = await fetch("/api/schedule/book", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, date: selectedDate, time: selectedTime }),
-      });
-      if (res.ok) {
-        setStatus("booked");
-      } else {
-        const data = await res.json();
-        if (res.status === 429) alert(data.error);
-        setStatus("error");
-      }
+      const hour = parseInt(selectedTime.split(":")[0]);
+      const min = selectedTime.split(":")[1];
+      const ampm = hour >= 12 ? "PM" : "AM";
+      const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+      const timeDisplay = `${displayHour}:${min} ${ampm}`;
+      const dateDisplay = new Date(selectedDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+
+      const subject = encodeURIComponent(`Consultation Request from ${formData.name}`);
+      const body = encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nType: ${formData.consultationType}\nPreferred Date: ${dateDisplay}\nPreferred Time: ${timeDisplay} PT\n\nReason:\n${formData.reason}`);
+      window.open(`mailto:brenda.vega@c21anew.com?subject=${subject}&body=${body}`, "_self");
+      setStatus("booked");
     } catch {
       setStatus("error");
     }
