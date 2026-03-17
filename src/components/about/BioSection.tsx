@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { AnimateOnScroll } from "@/components/ui/AnimateOnScroll";
 
 const bioParas = [
@@ -12,12 +13,16 @@ export function BioSection() {
     <section className="py-20 px-6">
       <div className="max-w-[1200px] mx-auto grid desktop:grid-cols-2 gap-16 items-start">
         <AnimateOnScroll>
-          <div className="relative h-[400px] desktop:h-[600px] rounded-2xl overflow-hidden bg-gradient-to-br from-navy to-navy-light sticky top-24">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_70%,rgba(200,165,91,0.15),transparent_50%)]" />
+          <div className="relative h-[400px] desktop:h-[600px] rounded-2xl overflow-hidden sticky top-24">
+            <Image
+              src="/images/brenda-headshot.jpg"
+              alt="Brenda Vega — REALTOR®"
+              fill
+              className="object-cover object-top"
+              sizes="(max-width: 1024px) 100vw, 50vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-navy/20 to-transparent" />
             <div className="absolute inset-5 border border-gold/20 rounded-lg" />
-            <span className="absolute bottom-8 left-8 font-body font-light text-sm text-gold/60">
-              Professional photo of Brenda
-            </span>
           </div>
         </AnimateOnScroll>
         <div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 
@@ -40,13 +41,18 @@ export function Hero() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, delay: 0.2, ease: [0.2, 0, 0, 1] }}
-          className="relative h-[400px] desktop:h-[500px] rounded-2xl overflow-hidden bg-gradient-to-br from-navy to-navy-light"
+          className="relative h-[400px] desktop:h-[500px] rounded-2xl overflow-hidden"
         >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_70%,rgba(200,165,91,0.15),transparent_50%),radial-gradient(circle_at_70%_30%,rgba(42,127,111,0.1),transparent_50%)]" />
+          <Image
+            src="/images/brenda-headshot.jpg"
+            alt="Brenda Vega — Bay Area Real Estate Agent"
+            fill
+            className="object-cover object-top"
+            priority
+            sizes="(max-width: 1024px) 100vw, 50vw"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-navy/30 to-transparent" />
           <div className="absolute inset-5 border border-gold/20 rounded-lg" />
-          <span className="absolute bottom-8 left-8 font-body font-light text-sm text-gold/60 tracking-wider">
-            Professional photo of Brenda
-          </span>
         </motion.div>
       </div>
     </section>
