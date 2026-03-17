@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/Footer";
 import { MobileCTABar } from "@/components/layout/MobileCTABar";
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { siteConfig } from "@/data/site";
+import { getLocalBusinessSchema } from "@/lib/seo";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -54,6 +55,14 @@ export default function RootLayout({
       lang="en"
       className={`${cormorant.variable} ${outfit.variable} ${dmSans.variable}`}
     >
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(getLocalBusinessSchema()),
+          }}
+        />
+      </head>
       <body>
         <Navbar />
         <main className="pt-[72px] pb-[60px] desktop:pb-0">{children}</main>
