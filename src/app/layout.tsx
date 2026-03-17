@@ -4,6 +4,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { MobileCTABar } from "@/components/layout/MobileCTABar";
 import { CookieConsent } from "@/components/ui/CookieConsent";
+import { Analytics } from "@/components/Analytics";
 import { siteConfig } from "@/data/site";
 import { getLocalBusinessSchema } from "@/lib/seo";
 import "./globals.css";
@@ -64,6 +65,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <Analytics />
         <Navbar />
         <main className="pt-[72px] pb-[60px] desktop:pb-0">{children}</main>
         <Footer />
