@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Outfit, DM_Sans } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { MobileCTABar } from "@/components/layout/MobileCTABar";
+import { CookieConsent } from "@/components/ui/CookieConsent";
 import { siteConfig } from "@/data/site";
 import "./globals.css";
 
@@ -58,6 +59,7 @@ export default function RootLayout({
         <main className="pt-[72px] pb-[60px] desktop:pb-0">{children}</main>
         <Footer />
         <MobileCTABar />
+        <CookieConsent />
       </body>
     </html>
   );
