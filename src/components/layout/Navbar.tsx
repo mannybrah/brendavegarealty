@@ -18,6 +18,7 @@ const navLinks = [
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [calcOpen, setCalcOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -48,8 +49,8 @@ export function Navbar() {
             </span>
           </Link>
 
-          <ul className="hidden desktop:flex gap-8 list-none">
-            {navLinks.map((link) => (
+          <ul className="hidden desktop:flex gap-8 items-center list-none">
+            {navLinks.slice(0, 5).map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
@@ -59,6 +60,30 @@ export function Navbar() {
                 </Link>
               </li>
             ))}
+            {/* Calculators Dropdown */}
+            <li className="relative group">
+              <span className="cursor-pointer font-body font-normal text-[0.8rem] tracking-[0.1em] uppercase text-charcoal-light hover:text-gold transition-colors">
+                Calculators
+              </span>
+              <div className="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                <div className="bg-white rounded-lg shadow-lg border border-navy/5 py-2 min-w-[220px]">
+                  <Link href="/calculators/qualify" className="block px-4 py-2 text-sm font-body text-charcoal hover:bg-cream hover:text-gold transition-colors">
+                    Do I Qualify?
+                  </Link>
+                  <Link href="/calculators/costs" className="block px-4 py-2 text-sm font-body text-charcoal hover:bg-cream hover:text-gold transition-colors">
+                    Mortgage & Closing Costs
+                  </Link>
+                </div>
+              </div>
+            </li>
+            <li>
+              <Link
+                href="/contact"
+                className="font-body font-normal text-[0.8rem] tracking-[0.1em] uppercase text-charcoal-light hover:text-gold transition-colors"
+              >
+                Contact
+              </Link>
+            </li>
           </ul>
 
           <div className="hidden desktop:block">
@@ -100,7 +125,7 @@ export function Navbar() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-40 bg-navy flex flex-col items-center justify-center gap-8 desktop:hidden"
           >
-            {navLinks.map((link, i) => (
+            {navLinks.slice(0, 5).map((link, i) => (
               <motion.div
                 key={link.href}
                 initial={{ opacity: 0, y: 20 }}
@@ -116,10 +141,55 @@ export function Navbar() {
                 </Link>
               </motion.div>
             ))}
+            {/* Calculators expandable section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: navLinks.length * 0.08 }}
+              transition={{ delay: 5 * 0.08 }}
+              className="flex flex-col items-center"
+            >
+              <button
+                onClick={() => setCalcOpen(!calcOpen)}
+                className="font-display font-light text-3xl text-cream tracking-wider hover:text-gold transition-colors"
+              >
+                Calculators {calcOpen ? "\u2212" : "+"}
+              </button>
+              {calcOpen && (
+                <div className="mt-3 space-y-3 flex flex-col items-center">
+                  <Link
+                    href="/calculators/qualify"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="font-body font-light text-xl text-cream/70 hover:text-gold transition-colors"
+                  >
+                    Do I Qualify?
+                  </Link>
+                  <Link
+                    href="/calculators/costs"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="font-body font-light text-xl text-cream/70 hover:text-gold transition-colors"
+                  >
+                    Mortgage & Closing Costs
+                  </Link>
+                </div>
+              )}
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 6 * 0.08 }}
+            >
+              <Link
+                href="/contact"
+                className="font-display font-light text-3xl text-cream tracking-wider hover:text-gold transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Contact
+              </Link>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 7 * 0.08 }}
             >
               <Link
                 href="/contact#schedule"
