@@ -74,7 +74,7 @@ export function RentVsBuy({ result, currentRent, purchasePrice, appreciationRate
             <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#5A5A5A" }} />
             <YAxis tick={{ fontSize: 11, fill: "#5A5A5A" }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
             <Tooltip
-              formatter={(value: number) => formatCurrency(value)}
+              formatter={(value) => formatCurrency(Number(value))}
               contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e5e5e5" }}
             />
             <Legend wrapperStyle={{ fontSize: 12 }} />

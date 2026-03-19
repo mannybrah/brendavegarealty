@@ -46,7 +46,7 @@ export function PaymentBreakdown({ payment, loanType }: PaymentBreakdownProps) {
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(v: number) => formatCurrency(v)} />
+              <Tooltip formatter={(v) => formatCurrency(Number(v))} />
             </PieChart>
           </ResponsiveContainer>
         </div>

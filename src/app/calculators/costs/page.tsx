@@ -9,7 +9,7 @@ import type { CalculatorSummary } from "@/types";
 
 export default function CostsPage() {
   const [showCalculator, setShowCalculator] = useState(false);
-  const summaryRef = useRef<CalculatorSummary | undefined>();
+  const summaryRef = useRef<CalculatorSummary | undefined>(undefined);
 
   const handleComplete = useCallback(() => {
     setShowCalculator(true);

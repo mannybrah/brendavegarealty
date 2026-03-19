@@ -31,7 +31,7 @@ export function Scheduler() {
     try {
       const res = await fetch(`/api/schedule/availability?date=${dateStr}`);
       if (res.ok) {
-        const data = await res.json();
+        const data = await res.json() as { slots?: TimeSlot[] };
         setSlots(data.slots || []);
       } else {
         setSlots([]);

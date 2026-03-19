@@ -105,8 +105,8 @@ export function QualificationCalculator({ onSummaryChange }: QualificationCalcul
     );
 
     return {
-      conventional: { result: { ...convVerdict, dtiRatio: convDTI, loanAmount: convLoan }, payment: convPayment, loanAmount: convLoan },
-      fha: { result: { ...fhaVerdict, dtiRatio: fhaDTI, loanAmount: fhaLoan }, payment: fhaPayment, loanAmount: fhaLoan },
+      conventional: { result: { ...convVerdict, dtiRatio: convDTI, loanAmount: convLoan, payment: convPayment }, payment: convPayment, loanAmount: convLoan },
+      fha: { result: { ...fhaVerdict, dtiRatio: fhaDTI, loanAmount: fhaLoan, payment: fhaPayment }, payment: fhaPayment, loanAmount: fhaLoan },
       rentVsBuy,
       summary: {
         purchasePrice,

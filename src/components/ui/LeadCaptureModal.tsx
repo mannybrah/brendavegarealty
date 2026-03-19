@@ -102,7 +102,7 @@ export function LeadCaptureModal({ source, onComplete, calculatorSummary }: Lead
       }
 
       if (res.status === 400) {
-        const data = await res.json();
+        const data = await res.json() as { error?: string };
         setServerError(data.error || "Please check your information.");
         setStatus("error");
         return;

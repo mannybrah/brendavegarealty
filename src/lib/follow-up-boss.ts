@@ -95,7 +95,7 @@ export async function createLeadWithDetails(data: {
 
     // If there's a note, add it to the person
     if (data.note) {
-      const person = await personResponse.json();
+      const person = await personResponse.json() as { id?: number };
       const personId = person.id;
 
       if (personId) {

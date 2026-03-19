@@ -48,11 +48,12 @@ export async function POST(request: NextRequest) {
   try {
     // Rate limit by IP
     const ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "unknown";
-    let kvStore = null;
+    let kvStore: { get(key: string): Promise<string | null>; put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void> } | null = null;
     try {
       const { getRequestContext } = await import("@cloudflare/next-on-pages");
       const { env } = getRequestContext();
-      kvStore = (env as Record<string, unknown>).RATE_LIMITS ?? null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      kvStore = (env as any).RATE_LIMITS ?? null;
     } catch {
       // getRequestContext() not available in dev mode — fail-open
     }

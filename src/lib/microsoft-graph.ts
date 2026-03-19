@@ -36,7 +36,7 @@ async function getAccessToken(): Promise<string> {
     throw new Error(`Failed to get M365 access token: ${error}`);
   }
 
-  const data = await response.json();
+  const data = await response.json() as { access_token: string };
   return data.access_token;
 }
 
@@ -102,7 +102,8 @@ export async function getAvailableSlots(dateStr: string): Promise<TimeSlot[]> {
       return generateSlots(dateStr, []);
     }
 
-    const data = await response.json();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = await response.json() as any;
     const scheduleItems = data.value?.[0]?.scheduleItems || [];
 
     const busyTimes = scheduleItems
