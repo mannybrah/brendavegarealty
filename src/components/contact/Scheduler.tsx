@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/Button";
 
 interface TimeSlot {
@@ -16,45 +16,55 @@ export function Scheduler() {
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", reason: "", consultationType: "phone" });
   const [status, setStatus] = useState<"idle" | "booking" | "booked" | "error">("idle");
 
+  // Generate next 14 days, Mon-Sat (include Saturday, exclude Sunday)
   const availableDates = Array.from({ length: 14 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() + i + 1);
     const day = date.getDay();
-    if (day === 0 || day === 6) return null;
+    if (day === 0) return null; // Skip Sunday only
     return date.toISOString().split("T")[0];
   }).filter(Boolean) as string[];
 
-  useEffect(() => {
-    if (!selectedDate) return;
+  const fetchSlots = useCallback(async (dateStr: string) => {
     setLoading(true);
     setSelectedTime("");
-    // Generate default business hours slots (9 AM - 5 PM, 30 min intervals)
-    const defaultSlots: TimeSlot[] = [];
-    for (let hour = 9; hour < 17; hour++) {
-      for (let min = 0; min < 60; min += 30) {
-        const time = `${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
-        defaultSlots.push({ date: selectedDate, time });
+    try {
+      const res = await fetch(`/api/schedule/availability?date=${dateStr}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSlots(data.slots || []);
+      } else {
+        setSlots([]);
       }
+    } catch {
+      setSlots([]);
     }
-    setSlots(defaultSlots);
     setLoading(false);
-  }, [selectedDate]);
+  }, []);
+
+  useEffect(() => {
+    if (selectedDate) fetchSlots(selectedDate);
+  }, [selectedDate, fetchSlots]);
 
   const handleBook = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("booking");
     try {
-      const hour = parseInt(selectedTime.split(":")[0]);
-      const min = selectedTime.split(":")[1];
-      const ampm = hour >= 12 ? "PM" : "AM";
-      const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-      const timeDisplay = `${displayHour}:${min} ${ampm}`;
-      const dateDisplay = new Date(selectedDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+      const res = await fetch("/api/schedule/book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: selectedDate,
+          time: selectedTime,
+          ...formData,
+        }),
+      });
 
-      const subject = encodeURIComponent(`Consultation Request from ${formData.name}`);
-      const body = encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nType: ${formData.consultationType}\nPreferred Date: ${dateDisplay}\nPreferred Time: ${timeDisplay} PT\n\nReason:\n${formData.reason}`);
-      window.open(`mailto:brenda.vega@c21anew.com?subject=${subject}&body=${body}`, "_self");
-      setStatus("booked");
+      if (res.ok) {
+        setStatus("booked");
+      } else {
+        setStatus("error");
+      }
     } catch {
       setStatus("error");
     }
