@@ -1,25 +1,31 @@
-// NOTE: In-memory rate limiting works for development but is unreliable on
-// Cloudflare Workers (each request may hit a different isolate).
-// For production, migrate to Cloudflare KV or Durable Objects.
-const rateMap = new Map<string, { count: number; resetTime: number }>();
+interface RateLimitStore {
+  get(key: string): Promise<string | null>;
+  put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
+}
 
-export function checkRateLimit(
+export async function checkRateLimit(
+  store: RateLimitStore | null,
   key: string,
-  maxRequests: number = 3,
-  windowMs: number = 3600000
-): { allowed: boolean; remaining: number } {
-  const now = Date.now();
-  const entry = rateMap.get(key);
-
-  if (!entry || now > entry.resetTime) {
-    rateMap.set(key, { count: 1, resetTime: now + windowMs });
-    return { allowed: true, remaining: maxRequests - 1 };
+  maxRequests: number = 5,
+  windowSeconds: number = 3600
+): Promise<{ allowed: boolean; remaining: number }> {
+  // Fail-open: if no KV store available, allow the request
+  if (!store) {
+    return { allowed: true, remaining: maxRequests };
   }
 
-  if (entry.count >= maxRequests) {
-    return { allowed: false, remaining: 0 };
-  }
+  try {
+    const raw = await store.get(key);
+    const count = raw ? parseInt(raw, 10) : 0;
 
-  entry.count++;
-  return { allowed: true, remaining: maxRequests - entry.count };
+    if (count >= maxRequests) {
+      return { allowed: false, remaining: 0 };
+    }
+
+    await store.put(key, String(count + 1), { expirationTtl: windowSeconds });
+    return { allowed: true, remaining: maxRequests - (count + 1) };
+  } catch {
+    // Fail-open on KV errors
+    return { allowed: true, remaining: maxRequests };
+  }
 }
