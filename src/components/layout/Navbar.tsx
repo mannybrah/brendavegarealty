@@ -12,6 +12,7 @@ const navLinks = [
   { href: "/listings", label: "Listings" },
   { href: "/areas", label: "Areas" },
   { href: "/testimonials", label: "Testimonials" },
+  { href: "/blog", label: "Blog" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -50,7 +51,7 @@ export function Navbar() {
           </Link>
 
           <ul className="hidden desktop:flex gap-8 items-center list-none">
-            {navLinks.slice(0, 5).map((link) => (
+            {navLinks.slice(0, 6).map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
@@ -125,7 +126,7 @@ export function Navbar() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-40 bg-navy flex flex-col items-center justify-center gap-8 desktop:hidden"
           >
-            {navLinks.slice(0, 5).map((link, i) => (
+            {navLinks.slice(0, 6).map((link, i) => (
               <motion.div
                 key={link.href}
                 initial={{ opacity: 0, y: 20 }}
@@ -145,7 +146,7 @@ export function Navbar() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 5 * 0.08 }}
+              transition={{ delay: 6 * 0.08 }}
               className="flex flex-col items-center"
             >
               <button
@@ -176,7 +177,7 @@ export function Navbar() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 6 * 0.08 }}
+              transition={{ delay: 7 * 0.08 }}
             >
               <Link
                 href="/contact"
@@ -189,7 +190,7 @@ export function Navbar() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 7 * 0.08 }}
+              transition={{ delay: 8 * 0.08 }}
             >
               <Link
                 href="/contact#schedule"

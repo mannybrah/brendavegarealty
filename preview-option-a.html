@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Option A: Modern Coastal - Brenda Vega Realty</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Outfit:wght@300;400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary-dark: #1A2A3A;
+    --primary-mid: #243B4F;
+    --primary-light: #2E4D65;
+    --accent: #B8926A;
+    --accent-light: #CBAA87;
+    --accent-pale: #F0E8DD;
+    --action: #3D8B8B;
+    --action-light: #4BA3A3;
+    --sage: #7FA095;
+    --cream: #FAF7F2;
+    --warm-white: #FEFCF9;
+    --charcoal: #2D2D2D;
+    --charcoal-light: #6A6A6A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 300;
+    color: var(--charcoal);
+    background: var(--warm-white);
+    overflow-x: hidden;
+  }
+
+  /* NAVBAR */
+  .navbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.2rem 4rem;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(26,42,58,0.08);
+  }
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem; font-weight: 600;
+    color: var(--primary-dark);
+    letter-spacing: 0.05em;
+  }
+  .logo span { color: var(--accent); }
+  .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+  .nav-links a {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem; font-weight: 500;
+    color: var(--primary-dark);
+    text-decoration: none;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-cta {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem; font-weight: 500;
+    padding: 0.65rem 1.8rem;
+    background: var(--action);
+    color: white;
+    border: none; border-radius: 4px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  .nav-cta:hover { background: var(--action-light); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; align-items: center;
+    padding: 8rem 4rem 4rem;
+    gap: 4rem;
+  }
+  .hero-content { flex: 1; max-width: 580px; }
+  .hero-eyebrow {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.5rem, 4vw, 3.8rem);
+    font-weight: 600;
+    color: var(--primary-dark);
+    line-height: 1.15;
+    margin-bottom: 1.5rem;
+  }
+  .hero-title em {
+    color: var(--action);
+    font-style: italic;
+  }
+  .hero-desc {
+    font-size: 1.1rem;
+    color: var(--charcoal-light);
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+    max-width: 480px;
+  }
+  .hero-buttons { display: flex; gap: 1rem; }
+  .btn-primary {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; font-weight: 500;
+    padding: 0.9rem 2.2rem;
+    background: var(--action);
+    color: white;
+    border: none; border-radius: 4px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  .btn-primary:hover { background: var(--action-light); }
+  .btn-outline {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; font-weight: 500;
+    padding: 0.9rem 2.2rem;
+    background: transparent;
+    color: var(--primary-dark);
+    border: 1.5px solid var(--primary-dark);
+    border-radius: 4px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .btn-outline:hover { background: var(--primary-dark); color: white; }
+
+  .hero-image {
+    flex: 1; max-width: 560px;
+    position: relative;
+  }
+  .hero-image img {
+    width: 100%; height: 600px;
+    object-fit: cover; border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(26,42,58,0.15);
+  }
+  .hero-image::before {
+    content: '';
+    position: absolute; top: -12px; right: -12px;
+    width: 100%; height: 100%;
+    border: 2px solid var(--accent);
+    border-radius: 8px; z-index: -1;
+  }
+
+  /* STATS BAR */
+  .stats {
+    display: flex; justify-content: center; gap: 4rem;
+    padding: 3.5rem 4rem;
+    background: var(--primary-dark);
+  }
+  .stat { text-align: center; }
+  .stat-number {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.5rem; font-weight: 600;
+    color: var(--accent);
+  }
+  .stat-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem; font-weight: 400;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-top: 0.3rem;
+  }
+
+  /* ABOUT PREVIEW */
+  .about {
+    display: flex; align-items: center;
+    padding: 6rem 4rem; gap: 4rem;
+  }
+  .about-image {
+    flex: 1; max-width: 480px;
+  }
+  .about-image img {
+    width: 100%; height: 500px;
+    object-fit: cover; border-radius: 8px;
+  }
+  .about-content { flex: 1; max-width: 520px; }
+  .section-eyebrow {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem; font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.4rem; font-weight: 600;
+    color: var(--primary-dark);
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+  }
+  .about-text {
+    font-size: 1.05rem;
+    color: var(--charcoal-light);
+    line-height: 1.8;
+    margin-bottom: 2rem;
+  }
+
+  /* AREAS */
+  .areas {
+    padding: 6rem 4rem;
+    background: var(--cream);
+  }
+  .areas-header { text-align: center; margin-bottom: 3rem; }
+  .areas-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    max-width: 1200px; margin: 0 auto;
+  }
+  .area-card {
+    position: relative;
+    height: 280px;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .area-card img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+  }
+  .area-card:hover img { transform: scale(1.05); }
+  .area-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 1.5rem;
+    background: linear-gradient(transparent, rgba(26,42,58,0.85));
+  }
+  .area-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem; font-weight: 600;
+    color: white;
+  }
+  .area-count {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    color: var(--accent-light);
+    letter-spacing: 0.1em;
+  }
+
+  /* CTA SECTION */
+  .cta-section {
+    padding: 5rem 4rem;
+    background: var(--primary-dark);
+    text-align: center;
+  }
+  .cta-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.4rem; font-weight: 600;
+    color: white;
+    margin-bottom: 1rem;
+  }
+  .cta-desc {
+    font-size: 1.05rem;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 2rem;
+    max-width: 500px; margin-left: auto; margin-right: auto;
+    margin-bottom: 2rem;
+  }
+  .btn-gold {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; font-weight: 500;
+    padding: 0.9rem 2.5rem;
+    background: var(--accent);
+    color: white;
+    border: none; border-radius: 4px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  .btn-gold:hover { background: var(--accent-light); }
+
+  /* FOOTER */
+  .footer {
+    padding: 3rem 4rem;
+    background: var(--primary-dark);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem; font-weight: 600;
+    color: white;
+  }
+  .footer-logo span { color: var(--accent); }
+  .footer-text {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.5);
+  }
+
+  /* COLOR SWATCH */
+  .swatch-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: white;
+    border-top: 1px solid #e0e0e0;
+    padding: 1rem 2rem;
+    display: flex; align-items: center; justify-content: center; gap: 2rem;
+    z-index: 200;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .swatch-label {
+    font-size: 0.85rem; font-weight: 600;
+    color: #333;
+  }
+  .swatch {
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .swatch-color {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 2px solid rgba(0,0,0,0.1);
+  }
+  .swatch-name {
+    font-size: 0.7rem; color: #666;
+  }
+</style>
+</head>
+<body>
+
+<!-- COLOR SWATCH BAR -->
+<div class="swatch-bar">
+  <span class="swatch-label">OPTION A: Modern Coastal</span>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#1A2A3A"></div>
+    <span class="swatch-name">Slate Navy</span>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#B8926A"></div>
+    <span class="swatch-name">Warm Bronze</span>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#3D8B8B"></div>
+    <span class="swatch-name">Ocean Teal</span>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#FAF7F2"></div>
+    <span class="swatch-name">Sand</span>
+  </div>
+  <div class="swatch">
+    <div class="swatch-color" style="background:#7FA095"></div>
+    <span class="swatch-name">Coastal Sage</span>
+  </div>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="logo">Brenda <span>Vega</span></div>
+  <ul class="nav-links">
+    <li><a href="#">Home</a></li>
+    <li><a href="#">About</a></li>
+    <li><a href="#">Listings</a></li>
+    <li><a href="#">Areas</a></li>
+    <li><a href="#">Calculators</a></li>
+    <li><a href="#">Contact</a></li>
+  </ul>
+  <button class="nav-cta">Schedule a Call</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <p class="hero-eyebrow">South Bay Real Estate</p>
+    <h1 class="hero-title">Your Dream Home Starts <em>Here</em></h1>
+    <p class="hero-desc">Guiding families through the Bay Area real estate journey with expertise, integrity, and a personal touch that makes all the difference.</p>
+    <div class="hero-buttons">
+      <button class="btn-primary">View Listings</button>
+      <button class="btn-outline">Get in Touch</button>
+    </div>
+  </div>
+  <div class="hero-image">
+    <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=600&fit=crop" alt="Luxury home">
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat">
+    <div class="stat-number">150+</div>
+    <div class="stat-label">Homes Sold</div>
+  </div>
+  <div class="stat">
+    <div class="stat-number">$85M+</div>
+    <div class="stat-label">In Sales Volume</div>
+  </div>
+  <div class="stat">
+    <div class="stat-number">12+</div>
+    <div class="stat-label">Years Experience</div>
+  </div>
+  <div class="stat">
+    <div class="stat-number">98%</div>
+    <div class="stat-label">Client Satisfaction</div>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section class="about">
+  <div class="about-image">
+    <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&h=500&fit=crop" alt="Brenda Vega">
+  </div>
+  <div class="about-content">
+    <p class="section-eyebrow">About Brenda</p>
+    <h2 class="section-title">A Trusted Partner in Your Real Estate Journey</h2>
+    <p class="about-text">With over a decade of experience in the South Bay market, I bring deep local knowledge and genuine care to every client relationship. Whether you're buying your first home or selling a cherished property, I'm here to make the process seamless and rewarding.</p>
+    <button class="btn-primary">Learn More</button>
+  </div>
+</section>
+
+<!-- AREAS -->
+<section class="areas">
+  <div class="areas-header">
+    <p class="section-eyebrow">Service Areas</p>
+    <h2 class="section-title">Neighborhoods I Know Best</h2>
+  </div>
+  <div class="areas-grid">
+    <div class="area-card">
+      <img src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop" alt="Campbell">
+      <div class="area-overlay">
+        <div class="area-name">Campbell</div>
+        <div class="area-count">24 Active Listings</div>
+      </div>
+    </div>
+    <div class="area-card">
+      <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=300&fit=crop" alt="San Jose">
+      <div class="area-overlay">
+        <div class="area-name">San Jose</div>
+        <div class="area-count">86 Active Listings</div>
+      </div>
+    </div>
+    <div class="area-card">
+      <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&h=300&fit=crop" alt="Los Gatos">
+      <div class="area-overlay">
+        <div class="area-name">Los Gatos</div>
+        <div class="area-count">18 Active Listings</div>
+      </div>
+    </div>
+    <div class="area-card">
+      <img src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=400&h=300&fit=crop" alt="Saratoga">
+      <div class="area-overlay">
+        <div class="area-name">Saratoga</div>
+        <div class="area-count">12 Active Listings</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2 class="cta-title">Ready to Find Your Perfect Home?</h2>
+  <p class="cta-desc">Let's start a conversation about your real estate goals. I'm here to help every step of the way.</p>
+  <button class="btn-gold">Schedule a Consultation</button>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-logo">Brenda <span>Vega</span></div>
+  <div class="footer-text">DRE #02196981 | Century 21</div>
+</footer>
+
+<div style="height:70px"></div>
+</body>
+</html>
