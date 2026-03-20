@@ -2,7 +2,7 @@ import { AnimateOnScroll } from "@/components/ui/AnimateOnScroll";
 import { siteConfig } from "@/data/site";
 
 const stats = [
-  { value: siteConfig.stats.salesVolume, label: "Sales Volume" },
+  { value: siteConfig.stats.avgSalesPrice, label: "Avg. Sales Price" },
   { value: siteConfig.stats.satisfaction, label: "Client Satisfaction" },
   { value: siteConfig.stats.yearsExperience, label: "Years Experience" },
 ];

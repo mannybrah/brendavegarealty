@@ -13,7 +13,7 @@ export const siteConfig = {
     experience: "4+",
   },
   stats: {
-    salesVolume: "$12M+",
+    avgSalesPrice: "$1.5M",
     satisfaction: "100%",
     yearsExperience: "4+",
   },
