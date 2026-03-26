@@ -22,6 +22,11 @@ export default {
       return handleLead(request, env);
     }
 
+    // Submission stats
+    if (url.pathname === "/api/stats" && request.method === "GET") {
+      return handleStats(env);
+    }
+
     // Everything else: serve static assets
     return env.ASSETS.fetch(request);
   },
@@ -30,7 +35,7 @@ export default {
 function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
 }
@@ -42,6 +47,15 @@ function jsonResponse(data: object, status = 200) {
   });
 }
 
+function log(endpoint: string, status: "success" | "error", details: Record<string, unknown>) {
+  console.log(JSON.stringify({
+    timestamp: new Date().toISOString(),
+    endpoint,
+    status,
+    ...details,
+  }));
+}
+
 async function sendToFUB(apiKey: string, body: object): Promise<Response> {
   return fetch("https://api.followupboss.com/v1/events", {
     method: "POST",
@@ -51,6 +65,51 @@ async function sendToFUB(apiKey: string, body: object): Promise<Response> {
     },
     body: JSON.stringify(body),
   });
+}
+
+// GET /api/stats — check FUB connection and recent leads
+async function handleStats(env: Env): Promise<Response> {
+  if (!env.FOLLOW_UP_BOSS_API_KEY) {
+    return jsonResponse({
+      configured: false,
+      error: "FOLLOW_UP_BOSS_API_KEY is not set. No leads have been delivered.",
+    });
+  }
+
+  try {
+    const res = await fetch("https://api.followupboss.com/v1/events?sort=-created&limit=100", {
+      headers: {
+        Authorization: `Basic ${btoa(`${env.FOLLOW_UP_BOSS_API_KEY}:`)}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      return jsonResponse({ configured: true, error: `FUB API error: ${res.status}`, details: text });
+    }
+
+    const data = await res.json() as { _metadata?: { total: number }; events?: Array<{ id: number; created: string; source: string; type: string; message: string; personId: number }> };
+    const events = data.events || [];
+
+    const siteEvents = events.filter((e) => e.source === "brendavegarealty.com");
+
+    return jsonResponse({
+      configured: true,
+      totalFUBEvents: data._metadata?.total || events.length,
+      leadsFromSite: siteEvents.length,
+      leads: siteEvents.map((e) => ({
+        id: e.id,
+        personId: e.personId,
+        created: e.created,
+        type: e.type,
+        message: e.message,
+        source: e.source,
+      })),
+    });
+  } catch (err) {
+    return jsonResponse({ configured: true, error: `Failed to query FUB: ${err}` });
+  }
 }
 
 // POST /api/contact — contact form submissions
@@ -65,10 +124,12 @@ async function handleContact(request: Request, env: Env): Promise<Response> {
     };
 
     if (!name || !email || !phone) {
+      log("/api/contact", "error", { reason: "missing_fields", name: !!name, email: !!email, phone: !!phone });
       return jsonResponse({ error: "Missing required fields" }, 400);
     }
 
     if (!env.FOLLOW_UP_BOSS_API_KEY) {
+      log("/api/contact", "error", { reason: "no_api_key", leadName: name, leadEmail: email });
       return jsonResponse({ error: "CRM not configured" }, 500);
     }
 
@@ -90,13 +151,15 @@ async function handleContact(request: Request, env: Env): Promise<Response> {
     });
 
     if (!fubRes.ok) {
-      console.error("FUB error:", await fubRes.text());
+      const fubError = await fubRes.text();
+      log("/api/contact", "error", { reason: "fub_rejected", fubStatus: fubRes.status, fubError, leadName: name });
       return jsonResponse({ error: "Failed to submit" }, 500);
     }
 
+    log("/api/contact", "success", { leadName: name, leadEmail: email, type: type || "buyer" });
     return jsonResponse({ success: true });
   } catch (err) {
-    console.error("Contact error:", err);
+    log("/api/contact", "error", { reason: "exception", error: String(err) });
     return jsonResponse({ error: "Server error" }, 500);
   }
 }
@@ -116,10 +179,12 @@ async function handleLead(request: Request, env: Env): Promise<Response> {
       };
 
     if (!name || !email || !phone) {
+      log("/api/lead", "error", { reason: "missing_fields", source, name: !!name, email: !!email, phone: !!phone });
       return jsonResponse({ error: "Missing required fields" }, 400);
     }
 
     if (!env.FOLLOW_UP_BOSS_API_KEY) {
+      log("/api/lead", "error", { reason: "no_api_key", source, leadName: name, leadEmail: email });
       return jsonResponse({ error: "CRM not configured" }, 500);
     }
 
@@ -157,13 +222,15 @@ async function handleLead(request: Request, env: Env): Promise<Response> {
     });
 
     if (!fubRes.ok) {
-      console.error("FUB error:", await fubRes.text());
+      const fubError = await fubRes.text();
+      log("/api/lead", "error", { reason: "fub_rejected", fubStatus: fubRes.status, fubError, leadName: name, source });
       return jsonResponse({ error: "Failed to submit" }, 500);
     }
 
+    log("/api/lead", "success", { leadName: name, leadEmail: email, source, timeline });
     return jsonResponse({ success: true });
   } catch (err) {
-    console.error("Lead error:", err);
+    log("/api/lead", "error", { reason: "exception", source: "unknown", error: String(err) });
     return jsonResponse({ error: "Server error" }, 500);
   }
 }
