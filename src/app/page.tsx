@@ -1,5 +1,6 @@
 import { Hero } from "@/components/home/Hero";
 import { StatsBar } from "@/components/home/StatsBar";
+import { UpcomingEvent } from "@/components/home/UpcomingEvent";
 import { FeaturedListings } from "@/components/home/FeaturedListings";
 import { TestimonialHighlight } from "@/components/home/TestimonialHighlight";
 import { AreasPreview } from "@/components/home/AreasPreview";
@@ -10,6 +11,7 @@ export default function HomePage() {
     <>
       <Hero />
       <StatsBar />
+      <UpcomingEvent />
       <FeaturedListings />
       <section className="py-20">
         <TestimonialHighlight

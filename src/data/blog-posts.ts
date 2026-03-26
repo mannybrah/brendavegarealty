@@ -929,4 +929,80 @@ The break-even point? About 4 to 5 years. So if you're planning to stay in San J
 "I did the full breakdown with real numbers on my blog at brendavegarealty.com. Link in bio. Follow me for more Bay Area real estate math!"`,
     youtubeEmbed: "",
   },
+  {
+    slug: "free-easter-egg-hunt-2026",
+    title: "Free Easter Egg Hunt in the Bay Area — March 28 & 29, 2026 | Dixon & Campbell",
+    excerpt:
+      "Looking for a free Easter egg hunt near San Jose? Join us March 28 in Dixon and March 29 at John D. Morgan Park in Campbell. Free food, games for kids and families, prizes, and giveaways — no cost, just fun.",
+    category: "Neighborhoods",
+    date: "2026-03-26",
+    readTime: "3 min read",
+    metaDescription:
+      "Free Easter egg hunt in the Bay Area, March 28-29 2026. Two locations near San Jose: Albert Augustine Jr. Memorial Park in Dixon and John D. Morgan Park in Campbell. Free food, games, prizes for kids and families. RSVP now.",
+    keywords: [
+      "free easter egg hunt bay area",
+      "free easter egg hunt near me",
+      "easter egg hunt san jose 2026",
+      "free easter event bay area 2026",
+      "easter egg hunt campbell ca",
+      "easter egg hunt dixon ca",
+      "john d morgan park easter egg hunt",
+      "free easter events for kids bay area",
+      "free family events san jose",
+      "easter egg hunt near san jose",
+      "bay area easter events 2026",
+      "free things to do easter weekend bay area",
+      "easter egg hunt south bay",
+      "free community events campbell ca",
+      "easter activities for kids near me",
+    ],
+    content: `<img src="/images/blog/easter-egg-hunt-flyer.jpg" alt="Free Easter Egg Hunt in the Bay Area — March 28 and 29, 2026. Food, games, prizes for kids and families near San Jose, Dixon, and Campbell CA." style="max-width: 100%; border-radius: 12px; margin-bottom: 2rem;" />
+
+<h2>Free Easter Egg Hunt Near San Jose — March 28 &amp; 29, 2026</h2>
+<p>Looking for a <strong>free Easter egg hunt in the Bay Area</strong> this weekend? We're hosting two community events and you're invited! Whether you're in <strong>San Jose, Campbell, Dixon</strong>, or anywhere nearby — bring the whole family for a fun, completely free day out.</p>
+
+<h2>What's Included (100% Free)</h2>
+<ul>
+<li><strong>Free food &amp; drinks</strong> for everyone</li>
+<li>Games for all ages — kids and adults</li>
+<li><strong>Easter egg hunt</strong> for the little ones</li>
+<li>Free prizes and giveaways</li>
+</ul>
+<p>No tickets, no entry fee, no catch. Just show up and enjoy.</p>
+
+<h2>Event Dates, Times &amp; Locations</h2>
+<p>We're hosting <strong>two free Easter events</strong> on back-to-back days so you can pick the one closest to you:</p>
+
+<h3>Day 1 — Saturday, March 28, 2026</h3>
+<ul>
+<li><strong>Location:</strong> Albert Augustine Jr. Memorial Park, Dixon, CA (Landing Area A)</li>
+<li><strong>Time:</strong> 11:00 AM – 1:00 PM</li>
+</ul>
+
+<h3>Day 2 — Sunday, March 29, 2026</h3>
+<ul>
+<li><strong>Location:</strong> John D. Morgan Park, Campbell, CA (JDM Picnic Area #2)</li>
+<li><strong>Time:</strong> 11:00 AM – 1:00 PM</li>
+</ul>
+
+<h3>Schedule</h3>
+<ul>
+<li><strong>11:00 AM – 12:00 PM:</strong> Food, drinks, and games</li>
+<li><strong>12:00 PM – 1:00 PM:</strong> Easter egg hunt begins!</li>
+</ul>
+
+<h2>Who Can Come?</h2>
+<p>Everyone! Bring your kids, friends, family, neighbors — the more the merrier. This is a <strong>free community event</strong> open to all Bay Area families. Whether you live in <strong>Campbell, San Jose, Los Gatos, Saratoga, Milpitas, Santa Clara, Sunnyvale</strong>, or anywhere else in the South Bay — you're welcome.</p>
+
+<h2>RSVP — Let Us Know You're Coming</h2>
+<p>Help us plan for enough food and prizes by RSVPing below. It only takes a few seconds:</p>
+<p><a href="https://forms.gle/PXYpSu47XWyq5Jy7A" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: #c8a55b; color: #0f1d35; padding: 14px 32px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 1.1rem;">RSVP Now — It's Free</a></p>
+
+<h2>About the Host</h2>
+<p>This event is hosted by <strong>Brenda Vega</strong>, Century 21 Realtor serving the Bay Area. Brenda is passionate about giving back to the communities she serves — from Campbell and San Jose to Dixon and beyond. If you have questions about the event or about buying or selling a home in the Bay Area, reach out anytime at <strong>(501) 827-9619</strong> or <a href="mailto:brenda.vega@c21anew.com">brenda.vega@c21anew.com</a>.</p>
+
+<p>See you there!</p>`,
+    videoScript: "",
+    youtubeEmbed: "",
+  },
 ];
