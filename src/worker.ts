@@ -1,51 +1,297 @@
 interface Env {
   FOLLOW_UP_BOSS_API_KEY: string;
+  STUDIO_PASSWORD: string;
+  STUDIO_KV: KVNamespace;
   ASSETS: Fetcher;
 }
+
+const SESSION_COOKIE = "bvr_studio_session";
+const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
-    // Handle CORS preflight
+    // CORS preflight for API routes
     if (request.method === "OPTIONS" && url.pathname.startsWith("/api/")) {
       return new Response(null, { headers: corsHeaders() });
     }
 
-    // Contact form
+    // Public API (existing)
     if (url.pathname === "/api/contact" && request.method === "POST") {
       return handleContact(request, env);
     }
-
-    // Lead capture (calculators, phone modal, etc.)
     if (url.pathname === "/api/lead" && request.method === "POST") {
       return handleLead(request, env);
     }
-
-    // Submission stats
     if (url.pathname === "/api/stats" && request.method === "GET") {
       return handleStats(env);
     }
 
-    // Everything else: serve static assets
+    // Public read — YouTube URLs keyed by post slug (no auth)
+    if (url.pathname === "/api/public/blog-state" && request.method === "GET") {
+      return handlePublicBlogState(env);
+    }
+
+    // Studio auth
+    if (url.pathname === "/api/studio/auth" && request.method === "POST") {
+      return handleStudioLogin(request, env);
+    }
+    if (url.pathname === "/api/studio/auth" && request.method === "GET") {
+      return handleStudioWhoami(request, env);
+    }
+    if (url.pathname === "/api/studio/auth" && request.method === "DELETE") {
+      return handleStudioLogout();
+    }
+
+    // Studio state (auth required)
+    if (url.pathname === "/api/studio/state" && request.method === "GET") {
+      return requireStudio(request, env, () => handleStudioStateList(env));
+    }
+    const stateMatch = url.pathname.match(/^\/api\/studio\/state\/([a-z0-9-]+)$/);
+    if (stateMatch && request.method === "PATCH") {
+      return requireStudio(request, env, () =>
+        handleStudioStatePatch(stateMatch[1], request, env)
+      );
+    }
+
     return env.ASSETS.fetch(request);
   },
 } satisfies ExportedHandler<Env>;
 
+// ============================================================
+// Auth helpers
+// ============================================================
+
 function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Credentials": "true",
   };
 }
 
-function jsonResponse(data: object, status = 200) {
+function jsonResponse(data: object, status = 200, extraHeaders: Record<string, string> = {}) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "Content-Type": "application/json", ...corsHeaders() },
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store",
+      ...corsHeaders(),
+      ...extraHeaders,
+    },
   });
 }
+
+function b64urlEncode(bytes: Uint8Array): string {
+  let str = "";
+  for (const b of bytes) str += String.fromCharCode(b);
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function b64urlDecode(s: string): Uint8Array {
+  const padded = s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4);
+  const bin = atob(padded);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+async function hmacKey(secret: string): Promise<CryptoKey> {
+  return crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign", "verify"]
+  );
+}
+
+async function signSession(secret: string, expSec: number): Promise<string> {
+  const payload = JSON.stringify({ exp: expSec });
+  const payloadBytes = new TextEncoder().encode(payload);
+  const key = await hmacKey(secret);
+  const sig = new Uint8Array(await crypto.subtle.sign("HMAC", key, payloadBytes));
+  return `${b64urlEncode(payloadBytes)}.${b64urlEncode(sig)}`;
+}
+
+async function verifySession(secret: string, token: string | null): Promise<boolean> {
+  if (!token) return false;
+  const parts = token.split(".");
+  if (parts.length !== 2) return false;
+  try {
+    const payloadBytes = b64urlDecode(parts[0]);
+    const sig = b64urlDecode(parts[1]);
+    const key = await hmacKey(secret);
+    const valid = await crypto.subtle.verify("HMAC", key, sig, payloadBytes);
+    if (!valid) return false;
+    const payload = JSON.parse(new TextDecoder().decode(payloadBytes)) as { exp: number };
+    if (typeof payload.exp !== "number") return false;
+    return Math.floor(Date.now() / 1000) < payload.exp;
+  } catch {
+    return false;
+  }
+}
+
+function readCookie(request: Request, name: string): string | null {
+  const raw = request.headers.get("Cookie");
+  if (!raw) return null;
+  for (const part of raw.split(";")) {
+    const [k, ...rest] = part.trim().split("=");
+    if (k === name) return rest.join("=");
+  }
+  return null;
+}
+
+function sessionCookieHeader(value: string, maxAge: number): string {
+  return `${SESSION_COOKIE}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
+}
+
+// Constant-time string compare
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+async function requireStudio(
+  request: Request,
+  env: Env,
+  next: () => Promise<Response> | Response
+): Promise<Response> {
+  if (!env.STUDIO_PASSWORD) {
+    return jsonResponse({ error: "Studio not configured" }, 500);
+  }
+  const token = readCookie(request, SESSION_COOKIE);
+  const ok = await verifySession(env.STUDIO_PASSWORD, token);
+  if (!ok) return jsonResponse({ error: "unauthorized" }, 401);
+  return next();
+}
+
+// ============================================================
+// Studio handlers
+// ============================================================
+
+async function handleStudioLogin(request: Request, env: Env): Promise<Response> {
+  if (!env.STUDIO_PASSWORD) {
+    return jsonResponse({ error: "Studio not configured" }, 500);
+  }
+  try {
+    const { password } = (await request.json()) as { password?: string };
+    if (!password || !timingSafeEqual(password, env.STUDIO_PASSWORD)) {
+      // Minor delay to slow brute force
+      await new Promise((r) => setTimeout(r, 400));
+      return jsonResponse({ error: "invalid password" }, 401);
+    }
+    const exp = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
+    const token = await signSession(env.STUDIO_PASSWORD, exp);
+    return jsonResponse(
+      { ok: true },
+      200,
+      { "Set-Cookie": sessionCookieHeader(token, SESSION_TTL_SECONDS) }
+    );
+  } catch {
+    return jsonResponse({ error: "bad request" }, 400);
+  }
+}
+
+async function handleStudioWhoami(request: Request, env: Env): Promise<Response> {
+  if (!env.STUDIO_PASSWORD) return jsonResponse({ authed: false, configured: false });
+  const token = readCookie(request, SESSION_COOKIE);
+  const ok = await verifySession(env.STUDIO_PASSWORD, token);
+  return jsonResponse({ authed: ok, configured: true });
+}
+
+function handleStudioLogout(): Response {
+  return jsonResponse(
+    { ok: true },
+    200,
+    { "Set-Cookie": `${SESSION_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0` }
+  );
+}
+
+interface WorkflowState {
+  scriptReady?: boolean;
+  recorded?: boolean;
+  edited?: boolean;
+  postedToYouTube?: boolean;
+  youtubeUrl?: string | null;
+  notes?: string;
+  updatedAt?: string;
+}
+
+async function handleStudioStateList(env: Env): Promise<Response> {
+  const out: Record<string, WorkflowState> = {};
+  let cursor: string | undefined = undefined;
+  do {
+    const page: KVNamespaceListResult<unknown, string> = await env.STUDIO_KV.list({ cursor, limit: 1000 });
+    cursor = page.list_complete ? undefined : page.cursor;
+    await Promise.all(
+      page.keys.map(async (k) => {
+        const raw = await env.STUDIO_KV.get(k.name, "json");
+        if (raw && typeof raw === "object") out[k.name] = raw as WorkflowState;
+      })
+    );
+  } while (cursor);
+  return jsonResponse({ state: out });
+}
+
+async function handleStudioStatePatch(
+  slug: string,
+  request: Request,
+  env: Env
+): Promise<Response> {
+  let body: Partial<WorkflowState>;
+  try {
+    body = (await request.json()) as Partial<WorkflowState>;
+  } catch {
+    return jsonResponse({ error: "bad request" }, 400);
+  }
+  const existingRaw = await env.STUDIO_KV.get(slug, "json");
+  const existing = (existingRaw && typeof existingRaw === "object" ? existingRaw : {}) as WorkflowState;
+  const next: WorkflowState = {
+    scriptReady: body.scriptReady ?? existing.scriptReady,
+    recorded: body.recorded ?? existing.recorded,
+    edited: body.edited ?? existing.edited,
+    postedToYouTube: body.postedToYouTube ?? existing.postedToYouTube,
+    youtubeUrl: body.youtubeUrl !== undefined ? body.youtubeUrl : existing.youtubeUrl,
+    notes: body.notes !== undefined ? body.notes : existing.notes,
+    updatedAt: new Date().toISOString(),
+  };
+  await env.STUDIO_KV.put(slug, JSON.stringify(next));
+  return jsonResponse({ state: next });
+}
+
+// Public endpoint — exposes ONLY youtubeUrl per slug (no status, no notes)
+async function handlePublicBlogState(env: Env): Promise<Response> {
+  const out: Record<string, { youtubeUrl: string }> = {};
+  let cursor: string | undefined = undefined;
+  do {
+    const page: KVNamespaceListResult<unknown, string> = await env.STUDIO_KV.list({ cursor, limit: 1000 });
+    cursor = page.list_complete ? undefined : page.cursor;
+    await Promise.all(
+      page.keys.map(async (k) => {
+        const raw = (await env.STUDIO_KV.get(k.name, "json")) as WorkflowState | null;
+        if (raw && raw.youtubeUrl) out[k.name] = { youtubeUrl: raw.youtubeUrl };
+      })
+    );
+  } while (cursor);
+  return new Response(JSON.stringify({ state: out }), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+      // Edge-cached briefly — public videos don't need to be instant
+      "Cache-Control": "public, max-age=60",
+      ...corsHeaders(),
+    },
+  });
+}
+
+// ============================================================
+// Existing handlers (unchanged)
+// ============================================================
 
 function log(endpoint: string, status: "success" | "error", details: Record<string, unknown>) {
   console.log(JSON.stringify({
@@ -67,7 +313,6 @@ async function sendToFUB(apiKey: string, body: object): Promise<Response> {
   });
 }
 
-// GET /api/stats — check FUB connection and recent leads
 async function handleStats(env: Env): Promise<Response> {
   if (!env.FOLLOW_UP_BOSS_API_KEY) {
     return jsonResponse({
@@ -112,7 +357,6 @@ async function handleStats(env: Env): Promise<Response> {
   }
 }
 
-// POST /api/contact — contact form submissions
 async function handleContact(request: Request, env: Env): Promise<Response> {
   try {
     const { name, email, phone, message, type } = await request.json() as {
@@ -164,7 +408,6 @@ async function handleContact(request: Request, env: Env): Promise<Response> {
   }
 }
 
-// POST /api/lead — lead capture modal submissions
 async function handleLead(request: Request, env: Env): Promise<Response> {
   try {
     const { name, email, phone, workingWithAgent, timeline, source, calculatorSummary } =

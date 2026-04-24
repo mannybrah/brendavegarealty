@@ -8,13 +8,20 @@ import { blogPosts } from "@/data/blog-posts";
 
 const categories = ["All", "Buying", "Selling", "Neighborhoods", "Market Update"];
 
+// Filter future-dated posts out at build time. Redeploy makes scheduled posts go live.
+const BUILD_NOW = new Date();
+const visiblePosts = blogPosts.filter((p) => {
+  const d = new Date(p.date + "T23:59:59");
+  return d <= BUILD_NOW;
+});
+
 export default function BlogPage() {
   const [activeCategory, setActiveCategory] = useState("All");
 
   const filteredPosts =
     activeCategory === "All"
-      ? blogPosts
-      : blogPosts.filter((post) => post.category === activeCategory);
+      ? visiblePosts
+      : visiblePosts.filter((post) => post.category === activeCategory);
 
   return (
     <>

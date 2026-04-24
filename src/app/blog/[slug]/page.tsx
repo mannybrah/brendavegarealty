@@ -4,7 +4,14 @@ import Link from "next/link";
 import { AnimateOnScroll } from "@/components/ui/AnimateOnScroll";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { BlogCard } from "@/components/blog/BlogCard";
+import { BlogYouTubeEmbed } from "@/components/blog/BlogYouTubeEmbed";
 import { blogPosts } from "@/data/blog-posts";
+
+const BUILD_NOW = new Date();
+
+function isFuture(dateStr: string): boolean {
+  return new Date(dateStr + "T23:59:59") > BUILD_NOW;
+}
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -18,10 +25,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = blogPosts.find((p) => p.slug === slug);
   if (!post) return {};
+  const future = isFuture(post.date);
   return {
     title: `${post.title} | Brenda Vega Realty`,
     description: post.metaDescription,
     keywords: post.keywords,
+    robots: future
+      ? { index: false, follow: false }
+      : { index: true, follow: true },
   };
 }
 
@@ -111,24 +122,24 @@ export default async function BlogPostPage({ params }: Props) {
             />
           </AnimateOnScroll>
 
-          {/* YouTube Embed */}
-          {post.youtubeEmbed && (
-            <AnimateOnScroll>
-              <div className="mt-12 mb-12">
-                <h2 className="font-display font-light text-2xl text-navy mb-6">
-                  Watch the Video
-                </h2>
-                <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                  <iframe
-                    src={post.youtubeEmbed}
-                    title={post.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="absolute inset-0 w-full h-full"
-                  />
-                </div>
-              </div>
-            </AnimateOnScroll>
+          <BlogYouTubeEmbed
+            slug={post.slug}
+            title={post.title}
+            staticEmbed={post.youtubeEmbed}
+          />
+
+          {isFuture(post.date) && (
+            <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded text-sm text-amber-900 font-body">
+              This post is scheduled to publish on{" "}
+              <strong>
+                {new Date(post.date + "T00:00:00").toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </strong>
+              . It is not yet listed on the public blog.
+            </div>
           )}
 
           {/* Author Box */}

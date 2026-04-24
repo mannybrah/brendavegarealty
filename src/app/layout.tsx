@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Outfit, DM_Sans } from "next/font/google";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { MobileCTABar } from "@/components/layout/MobileCTABar";
-import { CookieConsent } from "@/components/ui/CookieConsent";
+import {
+  SiteChromeNav,
+  SiteChromeFooter,
+  SiteChromeExtras,
+  SiteMainPadding,
+} from "@/components/layout/SiteChrome";
 import { Analytics } from "@/components/Analytics";
 import { siteConfig } from "@/data/site";
 import { getLocalBusinessSchema } from "@/lib/seo";
@@ -66,11 +68,10 @@ export default function RootLayout({
       </head>
       <body>
         <Analytics />
-        <Navbar />
-        <main className="pt-[72px] pb-[60px] desktop:pb-0">{children}</main>
-        <Footer />
-        <MobileCTABar />
-        <CookieConsent />
+        <SiteChromeNav />
+        <SiteMainPadding>{children}</SiteMainPadding>
+        <SiteChromeFooter />
+        <SiteChromeExtras />
       </body>
     </html>
   );

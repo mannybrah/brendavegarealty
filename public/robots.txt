@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /api/
+Disallow: /studio
+Disallow: /studio/
 
 Sitemap: https://brendavegarealty.com/sitemap.xml

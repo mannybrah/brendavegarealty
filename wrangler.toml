@@ -6,3 +6,7 @@ main = "src/worker.ts"
 [assets]
 directory = "./out"
 binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "STUDIO_KV"
+id = "a5d099e3d9be4694859a6dbf009dd095"
