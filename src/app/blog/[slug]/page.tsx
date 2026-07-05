@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!post) return {};
   const future = isFuture(post.date);
   return {
-    title: `${post.title} | Brenda Vega Realty`,
+    title: post.title,
     description: post.metaDescription,
     keywords: post.keywords,
     robots: future
