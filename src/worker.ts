@@ -1,9 +1,5 @@
-interface Env {
-  FOLLOW_UP_BOSS_API_KEY: string;
-  STUDIO_PASSWORD: string;
-  STUDIO_KV: KVNamespace;
-  ASSETS: Fetcher;
-}
+import { Env } from "./worker-lib/env";
+import { corsHeaders, jsonResponse } from "./worker-lib/http";
 
 const SESSION_COOKIE = "bvr_studio_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
@@ -62,27 +58,6 @@ export default {
 // ============================================================
 // Auth helpers
 // ============================================================
-
-function corsHeaders() {
-  return {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Credentials": "true",
-  };
-}
-
-function jsonResponse(data: object, status = 200, extraHeaders: Record<string, string> = {}) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "no-store",
-      ...corsHeaders(),
-      ...extraHeaders,
-    },
-  });
-}
 
 function b64urlEncode(bytes: Uint8Array): string {
   let str = "";
