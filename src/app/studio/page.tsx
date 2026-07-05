@@ -11,6 +11,7 @@ const ACTIONS = [
   { href: "/studio/blog", label: "Write a Blog", desc: "Notes → polished post, live in minutes", icon: "✍️" },
   { href: "/studio/announcement", label: "Announcement", desc: "One-line banner across the site", icon: "📣" },
   { href: "/studio/calendar", label: "Video Calendar", desc: "Your YouTube Shorts workflow", icon: "🎬" },
+  { href: "/studio/listings", label: "Listings", desc: "Paste a listing site — get a page on yours", icon: "🏡", span: true },
 ];
 
 export default function StudioHomePage() {
@@ -43,7 +44,9 @@ function HomeInner() {
           <Link
             key={a.href}
             href={a.href}
-            className="bg-white rounded-2xl border border-navy/5 p-5 hover:border-teal/40 active:scale-[0.98] transition-all min-h-[130px] flex flex-col"
+            className={`bg-white rounded-2xl border border-navy/5 p-5 hover:border-teal/40 active:scale-[0.98] transition-all min-h-[130px] flex flex-col ${
+              a.span ? "col-span-2" : ""
+            }`}
           >
             <span className="text-2xl mb-2">{a.icon}</span>
             <span className="font-display font-normal text-base text-navy leading-snug">{a.label}</span>
