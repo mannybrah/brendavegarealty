@@ -34,6 +34,11 @@ export default function AreasPage() {
               </AnimateOnScroll>
             ))}
           </div>
+          <p className="mt-14 text-center font-body font-light text-[0.65rem] text-charcoal-light/60">
+            Area photography via Wikimedia Commons: Campbell water tower by Miles Gehm (CC BY 2.0)
+            &middot; San Jose skyline by Ben Loomis (CC BY 2.0) &middot; Hotel Los Gatos by Ramkumar
+            Menon (CC BY-SA 4.0) &middot; Hakone Gardens by Daderot (public domain).
+          </p>
         </div>
       </section>
       <FinalCTA />

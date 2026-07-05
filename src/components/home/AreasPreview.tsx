@@ -1,7 +1,16 @@
 import { AnimateOnScroll } from "@/components/ui/AnimateOnScroll";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import Link from "next/link";
+import Image from "next/image";
 
+/*
+ * Area card photography (public/images/areas/) — licenses:
+ *  campbell.jpg  — "Campbell CA - water tower at night" by Miles Gehm, CC BY 2.0 (Wikimedia Commons)
+ *  san-jose.jpg  — "San Jose CA skyline at night 2014" by Ben Loomis, CC BY 2.0 (Wikimedia Commons)
+ *  los-gatos.jpg — "Hotel Los Gatos" by Ramkumar Menon, CC BY-SA 4.0 (Wikimedia Commons)
+ *  saratoga.jpg  — "Hakone Gardens, Saratoga" by Daderot, Public domain (Wikimedia Commons)
+ * Visible attribution lives on the /areas page footer.
+ */
 const previewAreas = [
   { name: "Campbell", slug: "campbell" },
   { name: "San Jose", slug: "san-jose" },
@@ -24,10 +33,24 @@ export function AreasPreview() {
         <div className="grid grid-cols-2 desktop:grid-cols-4 gap-4">
           {previewAreas.map((area, i) => (
             <AnimateOnScroll key={area.slug} delay={i * 0.1}>
-              <Link href={`/areas/${area.slug}`} className="group block bg-navy rounded-md p-8 text-center hover:-translate-y-1 transition-all duration-300">
-                <span className="font-display font-light text-xl text-cream group-hover:text-gold transition-colors">
-                  {area.name}
-                </span>
+              <Link
+                href={`/areas/${area.slug}`}
+                className="group relative block aspect-[4/5] overflow-hidden rounded-md"
+              >
+                <Image
+                  src={`/images/areas/${area.slug}.jpg`}
+                  alt={`${area.name}, California`}
+                  fill
+                  sizes="(max-width: 1024px) 50vw, 25vw"
+                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-navy/85 via-navy/25 to-navy/10 transition-colors duration-300 group-hover:from-navy/90" />
+                <div className="absolute inset-3 border border-gold/25 rounded-sm pointer-events-none" />
+                <div className="absolute bottom-0 inset-x-0 p-5 text-center">
+                  <span className="font-display font-light text-xl text-cream group-hover:text-gold transition-colors">
+                    {area.name}
+                  </span>
+                </div>
               </Link>
             </AnimateOnScroll>
           ))}
