@@ -1,20 +1,19 @@
 // Fetches published studio-authored blog posts from Cloudflare KV and writes
 // src/data/kv-posts.json for the static build. Runs via package.json "prebuild".
-// No creds (local dev) -> keeps the existing file. Creds present but API fails
-// -> exits nonzero so CI fails instead of silently unpublishing posts.
+// Reads KV via the REST API when CI creds are set, else via the locally
+// authenticated wrangler CLI. A local build MUST NOT silently produce an
+// empty file when posts exist in KV — deploying such a build unpublishes
+// them — so with no working credential source at all it keeps the existing
+// file, and any read failure exits nonzero.
 import { writeFile } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
 
 const NS = "a5d099e3d9be4694859a6dbf009dd095";
 const OUT = "src/data/kv-posts.json";
 const token = process.env.KV_API_TOKEN || process.env.CLOUDFLARE_API_TOKEN;
 const account = process.env.CLOUDFLARE_ACCOUNT_ID;
 
-if (!token || !account) {
-  console.log("fetch-kv-posts: no Cloudflare creds; keeping existing kv-posts.json");
-  process.exit(0);
-}
-
-async function kvGet(key) {
+async function kvGetRest(key) {
   const r = await fetch(
     `https://api.cloudflare.com/client/v4/accounts/${account}/storage/kv/namespaces/${NS}/values/${encodeURIComponent(key)}`,
     { headers: { Authorization: `Bearer ${token}` } }
@@ -22,6 +21,43 @@ async function kvGet(key) {
   if (r.status === 404) return null;
   if (!r.ok) throw new Error(`KV read ${key} failed: ${r.status} ${await r.text()}`);
   return r.json();
+}
+
+function kvGetWrangler(key) {
+  try {
+    const out = execFileSync(
+      process.platform === "win32" ? "npx.cmd" : "npx",
+      ["wrangler", "kv", "key", "get", `--namespace-id=${NS}`, "--remote", key],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], shell: process.platform === "win32" }
+    ).trim();
+    if (!out) return null;
+    return JSON.parse(out);
+  } catch (err) {
+    const msg = String(err.stderr || err.message || err);
+    if (/not found|10009/i.test(msg)) return null; // key doesn't exist yet
+    throw new Error(`wrangler KV read ${key} failed: ${msg.slice(0, 200)}`);
+  }
+}
+
+let kvGet;
+if (token && account) {
+  kvGet = kvGetRest;
+} else {
+  // Local build: fall back to the wrangler CLI (OAuth login). Probe once so a
+  // machine with no credentials at all keeps the existing file instead of
+  // failing every local build.
+  try {
+    execFileSync(
+      process.platform === "win32" ? "npx.cmd" : "npx",
+      ["wrangler", "whoami"],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], shell: process.platform === "win32" }
+    );
+    kvGet = kvGetWrangler;
+    console.log("fetch-kv-posts: using wrangler CLI auth (local build)");
+  } catch {
+    console.log("fetch-kv-posts: no Cloudflare creds; keeping existing kv-posts.json");
+    process.exit(0);
+  }
 }
 
 const publishedIds = (await kvGet("blog:published")) ?? [];
