@@ -9,11 +9,12 @@ import { blogPosts } from "@/data/blog-posts";
 const categories = ["All", "Buying", "Selling", "Neighborhoods", "Market Update"];
 
 // Filter future-dated posts out at build time. Redeploy makes scheduled posts go live.
-const BUILD_NOW = new Date();
-const visiblePosts = blogPosts.filter((p) => {
-  const d = new Date(p.date + "T23:59:59");
-  return d <= BUILD_NOW;
-});
+// post.date is always a Pacific YYYY-MM-DD string, so compare as strings against
+// today's Pacific date rather than constructing Date objects (which would compare
+// in the CI runner's UTC timezone and hide same-day Pacific publishes until the
+// next UTC midnight).
+const todayPacific = new Date().toLocaleDateString("en-CA", { timeZone: "America/Los_Angeles" });
+const visiblePosts = blogPosts.filter((p) => p.date <= todayPacific);
 
 export default function BlogPage() {
   const [activeCategory, setActiveCategory] = useState("All");

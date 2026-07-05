@@ -23,11 +23,15 @@ jobs:
 
       - run: npm ci
 
+      - name: Test and typecheck
+        run: npx jest && npm run typecheck:worker
+
       - name: Build Next.js static export
         run: npm run build
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          KV_API_TOKEN: ${{ secrets.KV_API_TOKEN }}
 
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3

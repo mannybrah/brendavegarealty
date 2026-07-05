@@ -79,7 +79,9 @@ export async function handleBlogPatch(id: string, request: Request, env: Env): P
   if (typeof body.title === "string" && body.title.trim()) draft.title = body.title.trim();
   if (typeof body.category === "string" && body.category.trim()) draft.category = body.category.trim();
   if (typeof body.rawNotes === "string") draft.rawNotes = body.rawNotes;
-  if (typeof body.heroImageKey === "string") draft.heroImageKey = body.heroImageKey;
+  if (typeof body.heroImageKey === "string" && /^(feed|blog)\/[a-zA-Z0-9-]+\.(jpg|png|webp)$/.test(body.heroImageKey)) {
+    draft.heroImageKey = body.heroImageKey;
+  }
   if (typeof body.slug === "string" && /^[a-z0-9-]+$/.test(body.slug) && draft.status !== "published") {
     draft.slug = body.slug;
   }
@@ -114,7 +116,7 @@ export async function handleBlogPolish(id: string, env: Env): Promise<Response> 
     },
     body: JSON.stringify({
       model: "claude-sonnet-5",
-      max_tokens: 8192,
+      max_tokens: 16000,
       system: POLISH_SYSTEM,
       messages: [{ role: "user", content: buildPolishPrompt(draft) }],
     }),
@@ -124,7 +126,10 @@ export async function handleBlogPolish(id: string, env: Env): Promise<Response> 
     console.log(JSON.stringify({ endpoint: "blog/polish", status: "error", api: res.status, detail: detail.slice(0, 300) }));
     return jsonResponse({ error: `AI request failed (${res.status}) — try again` }, 502);
   }
-  const data = (await res.json()) as { content: Array<{ type: string; text?: string }> };
+  const data = (await res.json()) as { content: Array<{ type: string; text?: string }>; stop_reason: string };
+  if (data.stop_reason === "max_tokens") {
+    return jsonResponse({ error: "The AI response was cut off — try again, or trim your notes a bit" }, 502);
+  }
   const text = data.content.find((c) => c.type === "text")?.text ?? "";
   try {
     draft.polished = parsePolishResponse(text);

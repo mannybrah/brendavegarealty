@@ -28,6 +28,15 @@ ${draft.rawNotes}
 Return the JSON object now.`;
 }
 
+export function sanitizeContentHtml(html: string): string {
+  return html
+    .replace(/<script\b[\s\S]*?<\/script\s*>/gi, "")
+    .replace(/<style\b[\s\S]*?<\/style\s*>/gi, "")
+    .replace(/\son\w+\s*=\s*"[^"]*"/gi, "")
+    .replace(/\son\w+\s*=\s*'[^']*'/gi, "")
+    .replace(/(href|src)\s*=\s*(["'])\s*javascript:[^"']*\2/gi, '$1=$2#$2');
+}
+
 export function parsePolishResponse(text: string): BlogDraftPolished {
   let raw = text.trim();
   const fence = raw.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
@@ -49,7 +58,7 @@ export function parsePolishResponse(text: string): BlogDraftPolished {
     excerpt: obj.excerpt as string,
     metaDescription: (obj.metaDescription as string).slice(0, 160),
     keywords: obj.keywords as string[],
-    contentHtml: obj.contentHtml as string,
+    contentHtml: sanitizeContentHtml(obj.contentHtml as string),
     videoScript: obj.videoScript as string,
   };
 }

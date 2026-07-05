@@ -7,10 +7,14 @@ import { BlogCard } from "@/components/blog/BlogCard";
 import { BlogYouTubeEmbed } from "@/components/blog/BlogYouTubeEmbed";
 import { blogPosts } from "@/data/blog-posts";
 
-const BUILD_NOW = new Date();
+// post.date is always a Pacific YYYY-MM-DD string, so compare as strings against
+// today's Pacific date rather than constructing Date objects (which would compare
+// in the CI runner's UTC timezone and hide same-day Pacific publishes until the
+// next UTC midnight).
+const todayPacific = new Date().toLocaleDateString("en-CA", { timeZone: "America/Los_Angeles" });
 
 function isFuture(dateStr: string): boolean {
-  return new Date(dateStr + "T23:59:59") > BUILD_NOW;
+  return dateStr > todayPacific;
 }
 
 interface Props {
@@ -72,7 +76,7 @@ export default async function BlogPostPage({ params }: Props) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
 
       <article className="py-20 px-6">
