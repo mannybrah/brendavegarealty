@@ -91,7 +91,9 @@ export function Navbar() {
 
           <div className="hidden desktop:block">
             <Link href="/contact#schedule">
-              <Button variant="primary">Book Consultation</Button>
+              <Button variant="primary" className="px-5! py-2.5! min-h-0! text-[0.7rem]! whitespace-nowrap">
+                Book Consultation
+              </Button>
             </Link>
           </div>
 

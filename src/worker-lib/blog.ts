@@ -1,10 +1,41 @@
 import { Env } from "./env";
 import { jsonResponse } from "./http";
 import { BlogDraft, BlogDraftPolished } from "../lib/blogStudio";
-import { POLISH_SYSTEM, buildPolishPrompt, parsePolishResponse } from "../lib/blogPolish";
+import {
+  ARTICLE_SYSTEM,
+  META_SYSTEM,
+  META_OUTPUT_SCHEMA,
+  buildArticlePrompt,
+  buildMetaPrompt,
+  parseArticleHtml,
+  parseMetaResponse,
+} from "../lib/blogPolish";
 
 const DRAFT_PREFIX = "blogdraft:";
 const PUBLISHED_KEY = "blog:published";
+
+// Returns the response's text content, or an error Response ready to return.
+async function callClaude(env: Env, body: Record<string, unknown>): Promise<string | Response> {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": env.ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    console.log(JSON.stringify({ endpoint: "blog/polish", status: "error", api: res.status, detail: detail.slice(0, 300) }));
+    return jsonResponse({ error: `AI request failed (${res.status}) — try again` }, 502);
+  }
+  const data = (await res.json()) as { content: Array<{ type: string; text?: string }>; stop_reason: string };
+  if (data.stop_reason === "max_tokens") {
+    return jsonResponse({ error: "The AI response was cut off — try again, or trim your notes a bit" }, 502);
+  }
+  return data.content.find((c) => c.type === "text")?.text ?? "";
+}
 
 async function getDraft(id: string, env: Env): Promise<BlogDraft | null> {
   const raw = await env.STUDIO_KV.get(DRAFT_PREFIX + id, "json");
@@ -107,34 +138,35 @@ export async function handleBlogPolish(id: string, env: Env): Promise<Response> 
   if (!env.ANTHROPIC_API_KEY || env.ANTHROPIC_API_KEY === "placeholder") {
     return jsonResponse({ error: "AI polish is not configured" }, 500);
   }
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-5",
-      max_tokens: 16000,
-      system: POLISH_SYSTEM,
-      messages: [{ role: "user", content: buildPolishPrompt(draft) }],
-    }),
+  // Step 1: the article as plain HTML (full length, no JSON escaping issues)
+  const articleResult = await callClaude(env, {
+    model: "claude-sonnet-5",
+    max_tokens: 16000,
+    system: ARTICLE_SYSTEM,
+    messages: [{ role: "user", content: buildArticlePrompt(draft) }],
   });
-  if (!res.ok) {
-    const detail = await res.text();
-    console.log(JSON.stringify({ endpoint: "blog/polish", status: "error", api: res.status, detail: detail.slice(0, 300) }));
-    return jsonResponse({ error: `AI request failed (${res.status}) — try again` }, 502);
-  }
-  const data = (await res.json()) as { content: Array<{ type: string; text?: string }>; stop_reason: string };
-  if (data.stop_reason === "max_tokens") {
-    return jsonResponse({ error: "The AI response was cut off — try again, or trim your notes a bit" }, 502);
-  }
-  const text = data.content.find((c) => c.type === "text")?.text ?? "";
+  if (articleResult instanceof Response) return articleResult;
+  let contentHtml: string;
   try {
-    draft.polished = parsePolishResponse(text);
+    contentHtml = parseArticleHtml(articleResult);
   } catch (err) {
-    console.log(JSON.stringify({ endpoint: "blog/polish", status: "error", reason: String(err) }));
+    console.log(JSON.stringify({ endpoint: "blog/polish", status: "error", step: "article", reason: String(err) }));
+    return jsonResponse({ error: "AI returned an unusable draft — try again" }, 502);
+  }
+  // Step 2: metadata via structured outputs (guaranteed-valid JSON)
+  const metaResult = await callClaude(env, {
+    model: "claude-sonnet-5",
+    max_tokens: 3000,
+    thinking: { type: "disabled" },
+    system: META_SYSTEM,
+    output_config: { format: { type: "json_schema", schema: META_OUTPUT_SCHEMA } },
+    messages: [{ role: "user", content: buildMetaPrompt(draft, contentHtml) }],
+  });
+  if (metaResult instanceof Response) return metaResult;
+  try {
+    draft.polished = { ...parseMetaResponse(metaResult), contentHtml };
+  } catch (err) {
+    console.log(JSON.stringify({ endpoint: "blog/polish", status: "error", step: "meta", reason: String(err) }));
     return jsonResponse({ error: "AI returned an unusable draft — try again" }, 502);
   }
   draft.status = draft.status === "published" ? "published" : "polished";
