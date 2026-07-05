@@ -1,6 +1,13 @@
 import { Env } from "./worker-lib/env";
 import { corsHeaders, jsonResponse } from "./worker-lib/http";
 import { handleMediaUpload, handleMediaGet } from "./worker-lib/media";
+import {
+  handleHomeState,
+  handleFeedCreate,
+  handleFeedPatch,
+  handleFeedDelete,
+  handleAnnouncementPut,
+} from "./worker-lib/feed";
 
 const SESSION_COOKIE = "bvr_studio_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
@@ -59,6 +66,24 @@ export default {
     }
     if (url.pathname === "/api/studio/upload" && request.method === "POST") {
       return requireStudio(request, env, () => handleMediaUpload(request, env));
+    }
+
+    // Home page feed / announcement
+    if (url.pathname === "/api/public/home-state" && request.method === "GET") {
+      return handleHomeState(env);
+    }
+    if (url.pathname === "/api/studio/feed" && request.method === "POST") {
+      return requireStudio(request, env, () => handleFeedCreate(request, env));
+    }
+    const feedMatch = url.pathname.match(/^\/api\/studio\/feed\/([a-f0-9-]+)$/);
+    if (feedMatch && request.method === "PATCH") {
+      return requireStudio(request, env, () => handleFeedPatch(feedMatch[1], request, env));
+    }
+    if (feedMatch && request.method === "DELETE") {
+      return requireStudio(request, env, () => handleFeedDelete(feedMatch[1], env));
+    }
+    if (url.pathname === "/api/studio/announcement" && request.method === "PUT") {
+      return requireStudio(request, env, () => handleAnnouncementPut(request, env));
     }
 
     return env.ASSETS.fetch(request);
@@ -215,6 +240,7 @@ async function handleStudioStateList(env: Env): Promise<Response> {
     cursor = page.list_complete ? undefined : page.cursor;
     await Promise.all(
       page.keys.map(async (k) => {
+        if (k.name.includes(":")) return;
         const raw = await env.STUDIO_KV.get(k.name, "json");
         if (raw && typeof raw === "object") out[k.name] = raw as WorkflowState;
       })
@@ -258,6 +284,7 @@ async function handlePublicBlogState(env: Env): Promise<Response> {
     cursor = page.list_complete ? undefined : page.cursor;
     await Promise.all(
       page.keys.map(async (k) => {
+        if (k.name.includes(":")) return;
         const raw = (await env.STUDIO_KV.get(k.name, "json")) as WorkflowState | null;
         if (raw && raw.youtubeUrl) out[k.name] = { youtubeUrl: raw.youtubeUrl };
       })
