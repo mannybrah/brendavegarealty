@@ -12,7 +12,9 @@ export interface BlogPost {
   youtubeEmbed: string;
 }
 
-export const blogPosts: BlogPost[] = [
+import kvPostsData from "./kv-posts.json";
+
+const authoredPosts: BlogPost[] = [
   {
     slug: "first-time-home-buyers-guide-south-bay",
     title: "First-Time Home Buyer's Guide to the South Bay",
@@ -2430,4 +2432,11 @@ Number three: Monte Sereno has half-acre lots and ZERO tourist traffic. Saratoga
 I wrote the full side-by-side breakdown on my blog at brendavegarealty.com. Read it before you tour. Follow me for more South Bay luxury insights!"`,
     youtubeEmbed: "",
   },
+];
+
+const kvPosts = kvPostsData as BlogPost[];
+const kvSlugs = new Set(kvPosts.map((p) => p.slug));
+export const blogPosts: BlogPost[] = [
+  ...kvPosts,
+  ...authoredPosts.filter((p) => !kvSlugs.has(p.slug)),
 ];
