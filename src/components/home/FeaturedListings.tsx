@@ -22,7 +22,7 @@ export function FeaturedListings() {
         <div className="grid tablet:grid-cols-2 desktop:grid-cols-3 gap-6">
           {placeholderListings.map((listing, i) => (
             <AnimateOnScroll key={listing.id} delay={i * 0.1}>
-              <div className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
+              <div className="group bg-white rounded-md overflow-hidden shadow-sm hover:shadow-md transition-all hover:-translate-y-1">
                 <div className="h-48 bg-gradient-to-br from-navy to-navy-light relative">
                   <span className="absolute top-4 left-4 bg-gold text-navy font-ui font-medium text-xs tracking-wider px-3 py-1 rounded-full">
                     Featured

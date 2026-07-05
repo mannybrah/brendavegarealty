@@ -20,10 +20,10 @@ export function Footer() {
               Navigate
             </h4>
             <ul className="space-y-2 list-none p-0">
-              {["Home", "About", "Listings", "Areas", "Testimonials", "Contact"].map((item) => (
+              {["Home", "About", "Listings", "Areas", "Testimonials", "Blog", "Calculators", "Contact"].map((item) => (
                 <li key={item}>
                   <Link
-                    href={`/${item === "Home" ? "" : item.toLowerCase()}`}
+                    href={item === "Home" ? "/" : item === "Calculators" ? "/calculators/qualify" : `/${item.toLowerCase()}`}
                     className="font-body font-light text-sm text-sage hover:text-cream transition-colors"
                   >
                     {item}

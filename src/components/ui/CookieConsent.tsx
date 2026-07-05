@@ -19,15 +19,20 @@ export function CookieConsent() {
   if (!show) return null;
 
   return (
-    <div className="fixed bottom-[76px] desktop:bottom-4 left-4 right-4 desktop:left-auto desktop:right-4 desktop:max-w-sm z-50 bg-white rounded-xl shadow-lg border border-navy/10 p-5">
-      <p className="font-body font-light text-sm text-charcoal-light mb-4">
-        We use cookies to improve your experience and analyze site traffic.
-        See our{" "}
-        <a href="/privacy" className="text-teal underline">Privacy Policy</a>.
-      </p>
-      <Button variant="primary" onClick={accept} className="text-xs py-2 px-6">
-        Accept
-      </Button>
+    <div className="fixed bottom-[60px] desktop:bottom-0 left-0 right-0 z-40 bg-navy/95 backdrop-blur-sm border-t border-gold/25">
+      <div className="max-w-[1200px] mx-auto px-6 py-3 flex items-center justify-center gap-5 flex-wrap">
+        <p className="font-body font-light text-xs text-cream/75">
+          We use cookies to improve your experience and analyze site traffic.{" "}
+          <a href="/privacy" className="text-gold underline underline-offset-2">Privacy Policy</a>
+        </p>
+        <Button
+          variant="gold"
+          onClick={accept}
+          className="px-5! py-1.5! min-h-0! text-[0.65rem]!"
+        >
+          Accept
+        </Button>
+      </div>
     </div>
   );
 }

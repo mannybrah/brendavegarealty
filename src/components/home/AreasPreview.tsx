@@ -24,7 +24,7 @@ export function AreasPreview() {
         <div className="grid grid-cols-2 desktop:grid-cols-4 gap-4">
           {previewAreas.map((area, i) => (
             <AnimateOnScroll key={area.slug} delay={i * 0.1}>
-              <Link href={`/areas/${area.slug}`} className="group block bg-navy rounded-xl p-8 text-center hover:-translate-y-1 transition-all duration-300">
+              <Link href={`/areas/${area.slug}`} className="group block bg-navy rounded-md p-8 text-center hover:-translate-y-1 transition-all duration-300">
                 <span className="font-display font-light text-xl text-cream group-hover:text-gold transition-colors">
                   {area.name}
                 </span>

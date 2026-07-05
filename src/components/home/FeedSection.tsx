@@ -14,7 +14,7 @@ export function FeedCard({ post, index = 0 }: { post: FeedPost; index?: number }
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.6, delay: index * 0.08, ease: [0.2, 0, 0, 1] }}
-      className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1 transition-all"
+      className="bg-white rounded-md overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1 transition-all"
     >
       {post.imageKeys[0] && (
         <div className="relative">

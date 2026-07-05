@@ -11,7 +11,7 @@ export function TestimonialHighlight({ quote, author, location }: TestimonialHig
   return (
     <AnimateOnScroll>
       <div className="max-w-[1200px] mx-auto px-6">
-        <div className="bg-navy rounded-2xl p-10 desktop:p-16 relative overflow-hidden">
+        <div className="bg-navy rounded-md p-10 desktop:p-16 relative overflow-hidden">
           <span className="absolute top-4 left-10 font-display text-[10rem] text-gold/10 leading-none select-none">
             &ldquo;
           </span>
