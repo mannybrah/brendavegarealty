@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { AnimateOnScroll } from "@/components/ui/AnimateOnScroll";
 import { IDXEmbed } from "@/components/listings/IDXEmbed";
+import { BrendaListings } from "@/components/listings/BrendaListings";
 
 export const metadata: Metadata = {
   title: "Property Listings",
@@ -23,6 +24,7 @@ export default function ListingsPage() {
             </p>
           </div>
         </AnimateOnScroll>
+        <BrendaListings />
         <IDXEmbed />
       </div>
     </section>
