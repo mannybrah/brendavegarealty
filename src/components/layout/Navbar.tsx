@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
+import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -36,6 +37,7 @@ export function Navbar() {
             : "bg-transparent"
         }`}
       >
+        <AnnouncementBar />
         <nav className="max-w-[1200px] mx-auto flex items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-3">
             <Image
