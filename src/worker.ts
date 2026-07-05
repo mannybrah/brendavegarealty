@@ -8,6 +8,15 @@ import {
   handleFeedDelete,
   handleAnnouncementPut,
 } from "./worker-lib/feed";
+import {
+  handleBlogList,
+  handleBlogCreate,
+  handleBlogGet,
+  handleBlogPatch,
+  handleBlogDelete,
+  handleBlogPolish,
+  handleBlogPublish,
+} from "./worker-lib/blog";
 
 const SESSION_COOKIE = "bvr_studio_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
@@ -84,6 +93,32 @@ export default {
     }
     if (url.pathname === "/api/studio/announcement" && request.method === "PUT") {
       return requireStudio(request, env, () => handleAnnouncementPut(request, env));
+    }
+
+    // Blog studio (drafts, polish, publish)
+    if (url.pathname === "/api/studio/blog" && request.method === "GET") {
+      return requireStudio(request, env, () => handleBlogList(env));
+    }
+    if (url.pathname === "/api/studio/blog" && request.method === "POST") {
+      return requireStudio(request, env, () => handleBlogCreate(request, env));
+    }
+    const blogActionMatch = url.pathname.match(/^\/api\/studio\/blog\/([a-f0-9-]+)\/(polish|publish)$/);
+    if (blogActionMatch && request.method === "POST") {
+      return requireStudio(request, env, () =>
+        blogActionMatch[2] === "polish"
+          ? handleBlogPolish(blogActionMatch[1], env)
+          : handleBlogPublish(blogActionMatch[1], env)
+      );
+    }
+    const blogMatch = url.pathname.match(/^\/api\/studio\/blog\/([a-f0-9-]+)$/);
+    if (blogMatch && request.method === "GET") {
+      return requireStudio(request, env, () => handleBlogGet(blogMatch[1], env));
+    }
+    if (blogMatch && request.method === "PATCH") {
+      return requireStudio(request, env, () => handleBlogPatch(blogMatch[1], request, env));
+    }
+    if (blogMatch && request.method === "DELETE") {
+      return requireStudio(request, env, () => handleBlogDelete(blogMatch[1], env));
     }
 
     return env.ASSETS.fetch(request);
