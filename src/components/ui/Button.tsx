@@ -22,7 +22,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
-        className={`font-ui font-medium text-[0.78rem] tracking-wider uppercase px-9 py-4 rounded-md cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] hover:-translate-y-[3px] min-h-[48px] ${variantStyles[variant]} ${className}`}
+        className={`font-ui font-medium text-[0.78rem] tracking-wider uppercase px-9 py-4 rounded-md cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] hover:-translate-y-[3px] active:translate-y-0 active:scale-[0.97] min-h-[48px] ${variantStyles[variant]} ${className}`}
         {...props}
       >
         {children}

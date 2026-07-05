@@ -19,7 +19,7 @@ export function CookieConsent() {
   if (!show) return null;
 
   return (
-    <div className="fixed bottom-16 desktop:bottom-4 left-4 right-4 desktop:left-auto desktop:right-4 desktop:max-w-sm z-50 bg-white rounded-xl shadow-lg border border-navy/10 p-5">
+    <div className="fixed bottom-[76px] desktop:bottom-4 left-4 right-4 desktop:left-auto desktop:right-4 desktop:max-w-sm z-50 bg-white rounded-xl shadow-lg border border-navy/10 p-5">
       <p className="font-body font-light text-sm text-charcoal-light mb-4">
         We use cookies to improve your experience and analyze site traffic.
         See our{" "}

@@ -1,4 +1,5 @@
 import { AnimateOnScroll } from "@/components/ui/AnimateOnScroll";
+import { CountUp } from "@/components/ui/CountUp";
 import { siteConfig } from "@/data/site";
 
 const stats = [
@@ -15,7 +16,7 @@ export function StatsBar() {
           {stats.map((stat) => (
             <div key={stat.label} className="bg-navy py-9 px-6 text-center">
               <div className="font-display font-semibold text-[clamp(1.8rem,3vw,2.5rem)] text-gold leading-none mb-2">
-                {stat.value}
+                <CountUp value={stat.value} />
               </div>
               <div className="font-body font-normal text-[0.75rem] tracking-[0.15em] uppercase text-cream/70">
                 {stat.label}
