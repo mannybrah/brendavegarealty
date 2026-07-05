@@ -34,7 +34,10 @@ function Dashboard() {
     (async () => {
       try {
         const r = await fetch("/api/studio/state", { credentials: "include" });
-        if (!r.ok) return;
+        if (!r.ok) {
+          if (r.status === 401) window.location.reload();
+          return;
+        }
         const j = (await r.json()) as StateResponse;
         setState(j.state || {});
       } finally {
