@@ -17,6 +17,18 @@ import {
   handleBlogPolish,
   handleBlogPublish,
 } from "./worker-lib/blog";
+import {
+  handleListingExtract,
+  handleListingList,
+  handleListingGet,
+  handleListingPatch,
+  handleListingDelete,
+  handleListingPublish,
+  handleListingUnpublish,
+  handlePublicListings,
+  findLiveListingBySlug,
+} from "./worker-lib/listing";
+import { renderListingPage } from "./worker-lib/listingPage";
 
 const SESSION_COOKIE = "bvr_studio_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
@@ -69,7 +81,9 @@ export default {
     }
 
     // Media (R2)
-    const mediaMatch = url.pathname.match(/^\/media\/((?:feed|blog)\/[a-zA-Z0-9-]+\.(?:jpg|png|webp))$/);
+    const mediaMatch = url.pathname.match(
+      /^\/media\/((?:feed|blog)\/[a-zA-Z0-9-]+\.(?:jpg|png|webp)|listing\/[a-f0-9-]+\/[0-9]+\.jpg)$/
+    );
     if (mediaMatch && request.method === "GET") {
       return handleMediaGet(mediaMatch[1], env);
     }
@@ -119,6 +133,50 @@ export default {
     }
     if (blogMatch && request.method === "DELETE") {
       return requireStudio(request, env, () => handleBlogDelete(blogMatch[1], env));
+    }
+
+    // Listings (studio CRUD + extract/publish, public feed, worker-rendered pages)
+    if (url.pathname === "/api/public/listings" && request.method === "GET") {
+      return handlePublicListings(env);
+    }
+    if (url.pathname === "/api/studio/listing/extract" && request.method === "POST") {
+      return requireStudio(request, env, () => handleListingExtract(request, env));
+    }
+    if (url.pathname === "/api/studio/listing" && request.method === "GET") {
+      return requireStudio(request, env, () => handleListingList(env));
+    }
+    const listingActionMatch = url.pathname.match(/^\/api\/studio\/listing\/([a-f0-9-]+)\/(publish|unpublish)$/);
+    if (listingActionMatch && request.method === "POST") {
+      return requireStudio(request, env, () =>
+        listingActionMatch[2] === "publish"
+          ? handleListingPublish(listingActionMatch[1], request, env)
+          : handleListingUnpublish(listingActionMatch[1], env)
+      );
+    }
+    const listingMatch = url.pathname.match(/^\/api\/studio\/listing\/([a-f0-9-]+)$/);
+    if (listingMatch && request.method === "GET") {
+      return requireStudio(request, env, () => handleListingGet(listingMatch[1], env));
+    }
+    if (listingMatch && request.method === "PATCH") {
+      return requireStudio(request, env, () => handleListingPatch(listingMatch[1], request, env));
+    }
+    if (listingMatch && request.method === "DELETE") {
+      return requireStudio(request, env, () => handleListingDelete(listingMatch[1], env));
+    }
+
+    // Worker-rendered public listing page (falls through to static /listings
+    // index + 404s when there's no live listing at that slug).
+    const listingPageMatch = url.pathname.match(/^\/listings\/([a-z0-9-]+)$/);
+    if (listingPageMatch && request.method === "GET") {
+      const listing = await findLiveListingBySlug(listingPageMatch[1], env);
+      if (listing) {
+        return new Response(renderListingPage(listing), {
+          headers: {
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "public, max-age=60",
+          },
+        });
+      }
     }
 
     return env.ASSETS.fetch(request);

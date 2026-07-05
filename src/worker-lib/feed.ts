@@ -3,10 +3,11 @@ import { corsHeaders, jsonResponse } from "./http";
 import { deleteMediaKeys } from "./media";
 import { Announcement, FeedPost, validateFeedInput } from "../lib/feed";
 
-const FEED_KEY = "feed:posts";
+export const FEED_KEY = "feed:posts";
 const ANNOUNCEMENT_KEY = "announcement:main";
 
-async function readFeed(env: Env): Promise<FeedPost[]> {
+// Exported for reuse by listing.ts (publish cross-post) — same KV shape/key.
+export async function readFeed(env: Env): Promise<FeedPost[]> {
   const raw = await env.STUDIO_KV.get(FEED_KEY, "json");
   return Array.isArray(raw) ? (raw as FeedPost[]) : [];
 }
