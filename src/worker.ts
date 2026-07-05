@@ -1,5 +1,6 @@
 import { Env } from "./worker-lib/env";
 import { corsHeaders, jsonResponse } from "./worker-lib/http";
+import { handleMediaUpload, handleMediaGet } from "./worker-lib/media";
 
 const SESSION_COOKIE = "bvr_studio_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
@@ -49,6 +50,15 @@ export default {
       return requireStudio(request, env, () =>
         handleStudioStatePatch(stateMatch[1], request, env)
       );
+    }
+
+    // Media (R2)
+    const mediaMatch = url.pathname.match(/^\/media\/((?:feed|blog)\/[a-zA-Z0-9-]+\.(?:jpg|png|webp))$/);
+    if (mediaMatch && request.method === "GET") {
+      return handleMediaGet(mediaMatch[1], env);
+    }
+    if (url.pathname === "/api/studio/upload" && request.method === "POST") {
+      return requireStudio(request, env, () => handleMediaUpload(request, env));
     }
 
     return env.ASSETS.fetch(request);
