@@ -7,6 +7,9 @@ describe("slugify", () => {
   it("collapses whitespace and trims hyphens", () => {
     expect(slugify("  Hello   World  ")).toBe("hello-world");
   });
+  it("strips curly apostrophes (U+2019)", () => {
+    expect(slugify("Buyer's Guide")).toBe("buyers-guide");
+  });
 });
 
 describe("readTimeFromHtml", () => {
