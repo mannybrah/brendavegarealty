@@ -43,7 +43,13 @@ function EditBlog() {
   if (!draft) return <div className="font-body text-sm text-charcoal-light">Loading…</div>;
 
   async function api(path: string, init: RequestInit): Promise<BlogDraft | null> {
-    const r = await fetch(path, { credentials: "include", ...init });
+    let r: Response;
+    try {
+      r = await fetch(path, { credentials: "include", ...init });
+    } catch {
+      setErr("Network error — check your connection and try again.");
+      return null;
+    }
     if (r.status === 401) {
       window.location.reload();
       return null;
@@ -109,7 +115,14 @@ function EditBlog() {
     if (!confirm("Publish this post to brendavegarealty.com? It will be live in a few minutes.")) return;
     setErr(null);
     setBusy("Publishing…");
-    const r = await fetch(`/api/studio/blog/${id}/publish`, { method: "POST", credentials: "include" });
+    let r: Response;
+    try {
+      r = await fetch(`/api/studio/blog/${id}/publish`, { method: "POST", credentials: "include" });
+    } catch {
+      setBusy(null);
+      setErr("Network error — check your connection and try again.");
+      return;
+    }
     setBusy(null);
     if (!r.ok) {
       setErr("Publish failed — try again.");
