@@ -109,6 +109,7 @@ function EditListing() {
   }
 
   async function removePhoto(i: number) {
+    if (!confirm("Remove this photo from the listing?")) return;
     if (!listing) return;
     setErr(null);
     const nextKeys = listing.photoKeys.filter((_, j) => j !== i);
@@ -160,7 +161,7 @@ function EditListing() {
         description: form.description,
         features,
         status: form.status,
-        openHouses: form.openHouses,
+        openHouses: form.openHouses.filter((oh) => oh.date && oh.start && oh.end),
       }),
     });
     setBusy(null);
