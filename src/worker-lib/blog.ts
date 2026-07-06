@@ -1,7 +1,8 @@
 import { Env } from "./env";
 import { jsonResponse } from "./http";
 import { callClaude } from "./claude";
-import { BlogDraft, BlogDraftPolished } from "../lib/blogStudio";
+import { BlogDraft, BlogDraftPolished, isYouTubeUrl } from "../lib/blogStudio";
+import { deleteMediaKeys } from "./media";
 import {
   ARTICLE_SYSTEM,
   META_SYSTEM,
@@ -90,6 +91,23 @@ export async function handleBlogPatch(id: string, request: Request, env: Env): P
   if (typeof body.rawNotes === "string") draft.rawNotes = body.rawNotes;
   if (typeof body.heroImageKey === "string" && /^(feed|blog)\/[a-zA-Z0-9-]+\.(jpg|png|webp)$/.test(body.heroImageKey)) {
     draft.heroImageKey = body.heroImageKey;
+  }
+  if (Array.isArray(body.imageKeys)) {
+    const valid = body.imageKeys.filter(
+      (k): k is string => typeof k === "string" && /^blog\/[a-zA-Z0-9-]+\.(jpg|png|webp)$/.test(k)
+    );
+    if (valid.length === body.imageKeys.length && valid.length <= 10) {
+      // clean up R2 objects for images dropped from the article (never the hero)
+      const removed = (draft.imageKeys ?? []).filter(
+        (k) => !valid.includes(k) && k !== draft.heroImageKey
+      );
+      if (removed.length) await deleteMediaKeys(removed, env);
+      draft.imageKeys = valid;
+    }
+  }
+  if (typeof body.videoUrl === "string") {
+    const v = body.videoUrl.trim();
+    if (v === "" || isYouTubeUrl(v)) draft.videoUrl = v;
   }
   if (typeof body.slug === "string" && /^[a-z0-9-]+$/.test(body.slug) && draft.status !== "published") {
     draft.slug = body.slug;

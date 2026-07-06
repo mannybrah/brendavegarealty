@@ -8,7 +8,7 @@ import { FeedPost, FEED_TYPE_LABELS, relativeTime } from "@/lib/feed";
 
 export function FeedCard({ post, index = 0 }: { post: FeedPost; index?: number }) {
   const reduced = useReducedMotion();
-  return (
+  const card = (
     <motion.article
       initial={reduced ? false : { opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -46,6 +46,12 @@ export function FeedCard({ post, index = 0 }: { post: FeedPost; index?: number }
         </div>
       </div>
     </motion.article>
+  );
+  if (!post.link) return card;
+  return post.link.startsWith("/") ? (
+    <Link href={post.link} className="block">{card}</Link>
+  ) : (
+    <a href={post.link} target="_blank" rel="noopener noreferrer" className="block">{card}</a>
   );
 }
 

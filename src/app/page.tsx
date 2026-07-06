@@ -35,9 +35,9 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+      <FeedSection />
       <SignatureStrip />
       <StatsBar />
-      <FeedSection />
       <FeaturedListings />
       <Hairline />
       <section className="py-20">

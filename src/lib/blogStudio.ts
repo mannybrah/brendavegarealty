@@ -16,6 +16,8 @@ export interface BlogDraft {
   category: string;
   rawNotes: string;
   heroImageKey?: string;
+  imageKeys?: string[];
+  videoUrl?: string;
   polished?: BlogDraftPolished;
   status: "draft" | "polished" | "published";
   createdAt: string;
@@ -33,4 +35,8 @@ export function slugify(title: string): string {
 export function readTimeFromHtml(html: string): string {
   const words = html.replace(/<[^>]+>/g, " ").trim().split(/\s+/).filter(Boolean).length;
   return `${Math.max(1, Math.ceil(words / 200))} min read`;
+}
+
+export function isYouTubeUrl(url: string): boolean {
+  return /^https?:\/\/(www\.)?(youtube\.com\/(watch\?|shorts\/|embed\/)|youtu\.be\/)/.test(url.trim());
 }

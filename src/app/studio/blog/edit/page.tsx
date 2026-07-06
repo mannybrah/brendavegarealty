@@ -20,6 +20,7 @@ function EditBlog() {
   const router = useRouter();
   const id = useSearchParams().get("id");
   const fileInput = useRef<HTMLInputElement>(null);
+  const photosInput = useRef<HTMLInputElement>(null);
   const [draft, setDraft] = useState<BlogDraft | null>(null);
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
@@ -109,6 +110,59 @@ function EditBlog() {
       setErr(String(e instanceof Error ? e.message : e));
     }
     setBusy(null);
+  }
+
+  async function addArticlePhotos(files: FileList | null) {
+    if (!files || files.length === 0 || !draft) return;
+    const existing = draft.imageKeys ?? [];
+    const room = 10 - existing.length;
+    const picked = Array.from(files).slice(0, room);
+    if (picked.length === 0) {
+      setErr("You can add up to 10 photos per post.");
+      return;
+    }
+    setErr(null);
+    try {
+      const keys: string[] = [];
+      for (let i = 0; i < picked.length; i++) {
+        setBusy(`Uploading photo ${i + 1} of ${picked.length}…`);
+        keys.push(await uploadImage(picked[i], "blog"));
+      }
+      const d = await api(`/api/studio/blog/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageKeys: [...existing, ...keys] }),
+      });
+      if (d) setDraft(d);
+    } catch (e) {
+      setErr(String(e instanceof Error ? e.message : e));
+    }
+    setBusy(null);
+  }
+
+  async function removeArticlePhoto(key: string) {
+    if (!confirm("Remove this photo from the post?")) return;
+    const d = await api(`/api/studio/blog/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imageKeys: (draft?.imageKeys ?? []).filter((k) => k !== key) }),
+    });
+    if (d) setDraft(d);
+  }
+
+  async function saveVideoUrl(value: string) {
+    const v = value.trim();
+    if (v && !/youtube\.com|youtu\.be/.test(v)) {
+      setErr("That doesn't look like a YouTube link.");
+      return;
+    }
+    setErr(null);
+    const d = await api(`/api/studio/blog/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ videoUrl: v }),
+    });
+    if (d) setDraft(d);
   }
 
   async function publish() {
@@ -206,6 +260,66 @@ function EditBlog() {
               + Add cover photo (optional)
             </button>
           )}
+
+          {/* Article photos */}
+          <div>
+            <div className="font-ui text-xs tracking-wider uppercase text-charcoal-light mb-2">
+              Photos in the article
+            </div>
+            <input
+              ref={photosInput}
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              onChange={(e) => {
+                addArticlePhotos(e.target.files);
+                e.target.value = "";
+              }}
+            />
+            <div className="grid grid-cols-4 gap-2">
+              {(draft.imageKeys ?? []).map((k) => (
+                <div key={k} className="relative aspect-square">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/media/${k}`} alt="" className="w-full h-full object-cover rounded-md" />
+                  <button
+                    aria-label="Remove photo"
+                    onClick={() => removeArticlePhoto(k)}
+                    className="absolute -top-1.5 -right-1.5 bg-navy text-cream rounded-full w-6 h-6 text-xs"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              {(draft.imageKeys ?? []).length < 10 && (
+                <button
+                  onClick={() => photosInput.current?.click()}
+                  className="aspect-square rounded-md border-2 border-dashed border-navy/20 text-navy/50 text-3xl hover:border-teal/50 transition-colors"
+                >
+                  +
+                </button>
+              )}
+            </div>
+            <p className="mt-2 font-body font-light text-xs text-charcoal-light">
+              Photos are placed through the article automatically when it publishes.
+            </p>
+          </div>
+
+          {/* YouTube video */}
+          <label className="block">
+            <span className="font-ui text-xs tracking-wider uppercase text-charcoal-light">
+              YouTube video (optional)
+            </span>
+            <input
+              defaultValue={draft.videoUrl ?? ""}
+              onBlur={(e) => (e.target.value.trim() !== (draft.videoUrl ?? "")) && saveVideoUrl(e.target.value)}
+              placeholder="https://youtube.com/watch?v=… or a Short link"
+              className="mt-2 w-full bg-white border border-navy/10 rounded-xl p-4 font-body text-sm focus:outline-none focus:border-teal"
+            />
+            <p className="mt-2 font-body font-light text-xs text-charcoal-light">
+              The video appears at the top of the post — perfect for your matching Short.
+            </p>
+          </label>
 
           <div className="flex items-center justify-between">
             <span className="font-ui text-xs tracking-wider uppercase text-charcoal-light">Preview</span>

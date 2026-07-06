@@ -13,6 +13,7 @@ export interface FeedPost {
   type: FeedType;
   caption: string;
   imageKeys: string[];
+  link?: string;
   createdAt: string; // ISO
 }
 
@@ -30,7 +31,7 @@ export interface HomeState {
 
 export function validateFeedInput(
   body: unknown
-): { ok: true; value: { type: FeedType; caption: string; imageKeys: string[] } } | { ok: false; error: string } {
+): { ok: true; value: { type: FeedType; caption: string; imageKeys: string[]; link?: string } } | { ok: false; error: string } {
   if (!body || typeof body !== "object") return { ok: false, error: "bad body" };
   const b = body as Record<string, unknown>;
   if (typeof b.type !== "string" || !(FEED_TYPES as readonly string[]).includes(b.type)) {
@@ -41,7 +42,11 @@ export function validateFeedInput(
   const imageKeys = Array.isArray(b.imageKeys) ? b.imageKeys.filter((k): k is string => typeof k === "string") : [];
   if (imageKeys.length > 4) return { ok: false, error: "max 4 images" };
   if (!caption && imageKeys.length === 0) return { ok: false, error: "caption or image required" };
-  return { ok: true, value: { type: b.type as FeedType, caption, imageKeys } };
+  const link = typeof b.link === "string" ? b.link.trim() : "";
+  if (link && (link.length > 300 || !(link.startsWith("/") || /^https?:\/\//.test(link)))) {
+    return { ok: false, error: "invalid link" };
+  }
+  return { ok: true, value: { type: b.type as FeedType, caption, imageKeys, ...(link ? { link } : {}) } };
 }
 
 export function relativeTime(iso: string, now: Date = new Date()): string {

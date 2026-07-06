@@ -60,13 +60,38 @@ if (token && account) {
   }
 }
 
+
+// Distribute article photos evenly between paragraphs (after the intro).
+function injectImages(content, imageKeys) {
+  if (!imageKeys || imageKeys.length === 0) return content;
+  const parts = content.split("</p>");
+  const paraCount = parts.length - 1;
+  if (paraCount < 2) {
+    return content + imageKeys.map((k) =>
+      `<p><img src="/media/${k}" alt="" loading="lazy" style="width:100%;border-radius:8px;" /></p>`
+    ).join("");
+  }
+  const n = imageKeys.length;
+  const positions = imageKeys.map((_, i) => Math.max(1, Math.round(((i + 1) * paraCount) / (n + 1))));
+  let out = "";
+  parts.forEach((part, idx) => {
+    out += part + (idx < paraCount ? "</p>" : "");
+    positions.forEach((pos, i) => {
+      if (pos === idx + 1) {
+        out += `<p><img src="/media/${imageKeys[i]}" alt="" loading="lazy" style="width:100%;border-radius:8px;" /></p>`;
+      }
+    });
+  });
+  return out;
+}
+
 const publishedIds = (await kvGet("blog:published")) ?? [];
 const posts = [];
 for (const id of publishedIds) {
   const d = await kvGet(`blogdraft:${id}`);
   if (!d || d.status !== "published" || !d.polished || !d.publishedAt) continue;
   const p = d.polished;
-  let content = p.contentHtml;
+  let content = injectImages(p.contentHtml, d.imageKeys);
   if (d.heroImageKey) {
     const alt = p.title.replace(/"/g, "&quot;");
     content = `<p><img src="/media/${d.heroImageKey}" alt="${alt}" style="width:100%;border-radius:12px;" /></p>` + content;
@@ -83,7 +108,7 @@ for (const id of publishedIds) {
     keywords: p.keywords,
     content,
     videoScript: p.videoScript,
-    youtubeEmbed: "",
+    youtubeEmbed: d.videoUrl || "",
   });
 }
 posts.sort((a, b) => b.date.localeCompare(a.date));

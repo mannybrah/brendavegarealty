@@ -63,10 +63,13 @@ export async function handleFeedPatch(id: string, request: Request, env: Env): P
     type: body.type ?? post.type,
     caption: body.caption ?? post.caption,
     imageKeys: post.imageKeys,
+    link: (body as { link?: string }).link ?? post.link,
   });
   if (!merged.ok) return jsonResponse({ error: merged.error }, 400);
   post.type = merged.value.type;
   post.caption = merged.value.caption;
+  if (merged.value.link) post.link = merged.value.link;
+  else if ((body as { link?: string }).link === "") delete post.link;
   await env.STUDIO_KV.put(FEED_KEY, JSON.stringify(posts));
   return jsonResponse({ post });
 }

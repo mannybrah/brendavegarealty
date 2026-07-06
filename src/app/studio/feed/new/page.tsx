@@ -19,6 +19,7 @@ function UpdateForm() {
   const fileInput = useRef<HTMLInputElement>(null);
   const [type, setType] = useState<FeedType>("update");
   const [caption, setCaption] = useState("");
+  const [link, setLink] = useState("");
   const [previews, setPreviews] = useState<{ url: string; file: File }[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -50,7 +51,7 @@ function UpdateForm() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, caption: caption.trim(), imageKeys }),
+        body: JSON.stringify({ type, caption: caption.trim(), imageKeys, ...(link.trim() ? { link: link.trim() } : {}) }),
       });
       if (!r.ok) throw new Error(((await r.json()) as { error?: string }).error ?? "failed");
       router.push("/studio");
@@ -120,6 +121,13 @@ function UpdateForm() {
         maxLength={1000}
         placeholder="Write a caption… (e.g. Just listed in Campbell — 3 bed, 2 bath, open Sat 1-4)"
         className="w-full bg-white border border-navy/10 rounded-xl p-4 font-body text-base focus:outline-none focus:border-teal"
+      />
+
+      <input
+        value={link}
+        onChange={(e) => setLink(e.target.value)}
+        placeholder="Link (optional) — e.g. /listings/… or https://…"
+        className="w-full bg-white border border-navy/10 rounded-xl p-4 font-body text-sm focus:outline-none focus:border-teal"
       />
 
       {err && <div className="text-sm text-red-600 font-body">{err}</div>}

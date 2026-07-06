@@ -355,6 +355,7 @@ export async function handleListingPublish(id: string, request: Request, env: En
       type: "just-listed",
       caption,
       imageKeys: cover ? [cover] : [],
+      link: `/listings/${listing.slug}`,
       createdAt: new Date().toISOString(),
     };
     const posts = await readFeed(env);
