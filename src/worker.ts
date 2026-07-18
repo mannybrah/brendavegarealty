@@ -56,7 +56,7 @@ const SESSION_COOKIE = "bvr_studio_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
 
     // CORS preflight for API routes
@@ -66,10 +66,10 @@ export default {
 
     // Public API (existing)
     if (url.pathname === "/api/contact" && request.method === "POST") {
-      return handleContact(request, env);
+      return handleContact(request, env, ctx);
     }
     if (url.pathname === "/api/lead" && request.method === "POST") {
-      return handleLead(request, env);
+      return handleLead(request, env, ctx);
     }
     if (url.pathname === "/api/stats" && request.method === "GET") {
       return handleStats(env);
@@ -525,7 +525,7 @@ async function handleStats(env: Env): Promise<Response> {
   }
 }
 
-async function handleContact(request: Request, env: Env): Promise<Response> {
+async function handleContact(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   try {
     const { name, email, phone, message, type } = await request.json() as {
       name: string;
@@ -549,15 +549,13 @@ async function handleContact(request: Request, env: Env): Promise<Response> {
       meta: { type },
     });
 
-    try {
-      await sendPushToAll(env, {
+    ctx.waitUntil(
+      sendPushToAll(env, {
         title: "New lead 🔔",
         body: `${name} · contact form`,
         url: `/studio/crm/contact?id=${contactId}`,
-      });
-    } catch (err) {
-      log("/api/contact", "error", { reason: "push_failed", error: String(err) });
-    }
+      }).catch(() => {})
+    );
 
     log("/api/contact", "success", { leadName: name, leadEmail: email, type: type || "buyer" });
     return jsonResponse({ success: true });
@@ -567,7 +565,7 @@ async function handleContact(request: Request, env: Env): Promise<Response> {
   }
 }
 
-async function handleLead(request: Request, env: Env): Promise<Response> {
+async function handleLead(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   try {
     const { name, email, phone, workingWithAgent, timeline, source, calculatorSummary } =
       await request.json() as {
@@ -606,15 +604,13 @@ async function handleLead(request: Request, env: Env): Promise<Response> {
       meta: { timeline, workingWithAgent, calculatorSummary },
     });
 
-    try {
-      await sendPushToAll(env, {
+    ctx.waitUntil(
+      sendPushToAll(env, {
         title: "New lead 🔔",
         body: `${name} · ${sourceLabel(leadSource)}`,
         url: `/studio/crm/contact?id=${contactId}`,
-      });
-    } catch (err) {
-      log("/api/lead", "error", { reason: "push_failed", error: String(err) });
-    }
+      }).catch(() => {})
+    );
 
     log("/api/lead", "success", { leadName: name, leadEmail: email, source, timeline });
     return jsonResponse({ success: true });
