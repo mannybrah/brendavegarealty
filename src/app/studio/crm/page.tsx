@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { StudioShell } from "@/components/studio/StudioShell";
+import { CrmTabs } from "@/components/studio/crm/CrmTabs";
 import { ContactListItem, ContactRow } from "@/components/studio/crm/ContactListItem";
 import { STAGES, STAGE_LABELS, Stage } from "@/lib/crm/normalize";
 
@@ -54,6 +55,7 @@ function ClientsInner() {
 
   return (
     <div className="space-y-4">
+      <CrmTabs active="inbox" />
       <div className="sticky top-16 z-30 bg-cream -mx-5 px-5 pt-1 pb-3 space-y-3">
         <div className="flex items-center gap-3">
           <input
