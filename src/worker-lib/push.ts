@@ -42,8 +42,13 @@ function vapidKeys(env: Env): VapidKeys {
 // sendPushToAll — never throws
 // ============================================================
 
-export async function sendPushToAll(env: Env, msg: PushMsg): Promise<void> {
-  if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) return;
+export interface PushSendResult {
+  attempted: number;
+  delivered: number;
+}
+
+export async function sendPushToAll(env: Env, msg: PushMsg): Promise<PushSendResult> {
+  if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) return { attempted: 0, delivered: 0 };
 
   let rows: PushSubscriptionRow[] = [];
   try {
@@ -51,11 +56,13 @@ export async function sendPushToAll(env: Env, msg: PushMsg): Promise<void> {
     rows = results ?? [];
   } catch (err) {
     console.error("sendPushToAll: failed to load subscriptions", err);
-    return;
+    return { attempted: 0, delivered: 0 };
   }
 
   const vapid = vapidKeys(env);
-  await Promise.all(rows.map((row) => sendPushToOne(env, row, msg, vapid)));
+  const results = await Promise.all(rows.map((row) => sendPushToOne(env, row, msg, vapid)));
+  const delivered = results.filter(Boolean).length;
+  return { attempted: rows.length, delivered };
 }
 
 async function sendPushToOne(
@@ -63,7 +70,7 @@ async function sendPushToOne(
   row: PushSubscriptionRow,
   msg: PushMsg,
   vapid: VapidKeys
-): Promise<void> {
+): Promise<boolean> {
   try {
     const subscription: WebPushSubscription = {
       endpoint: row.endpoint,
@@ -76,17 +83,19 @@ async function sendPushToOne(
 
     if (res.status === 404 || res.status === 410) {
       await env.CRM_DB.prepare("DELETE FROM push_subscriptions WHERE id = ?1").bind(row.id).run();
-      return;
+      return false;
     }
     if (res.ok) {
       await env.CRM_DB.prepare("UPDATE push_subscriptions SET last_ok_at = ?1 WHERE id = ?2")
         .bind(new Date().toISOString(), row.id)
         .run();
-    } else {
-      console.error("sendPushToAll: push failed", { endpoint: row.endpoint, status: res.status });
+      return true;
     }
+    console.error("sendPushToAll: push failed", { endpoint: row.endpoint, status: res.status });
+    return false;
   } catch (err) {
     console.error("sendPushToAll: push error", { endpoint: row.endpoint, error: String(err) });
+    return false;
   }
 }
 
@@ -146,12 +155,12 @@ export async function handlePushUnsubscribe(request: Request, env: Env): Promise
 }
 
 export async function handlePushTest(env: Env): Promise<Response> {
-  await sendPushToAll(env, {
+  const { attempted, delivered } = await sendPushToAll(env, {
     title: "Brenda Vega Studio",
     body: "Push notifications are working.",
     url: "/studio",
   });
-  return jsonResponse({ ok: true });
+  return jsonResponse({ ok: true, attempted, delivered });
 }
 
 // ============================================================
@@ -214,11 +223,12 @@ export async function runReminderSweep(env: Env): Promise<void> {
       const task = taskById.get(id);
       if (!task) return;
       try {
-        await sendPushToAll(env, {
+        const { delivered } = await sendPushToAll(env, {
           title: "Task due",
           body: task.title,
           url: "/studio/crm/tasks",
         });
+        if (delivered < 1) return;
         await env.CRM_DB.prepare("UPDATE tasks SET notified_at = ?1 WHERE id = ?2").bind(nowIso, id).run();
       } catch (err) {
         console.error("runReminderSweep: task reminder failed", { id, error: String(err) });
@@ -228,11 +238,12 @@ export async function runReminderSweep(env: Env): Promise<void> {
       const milestone = milestoneById.get(id);
       if (!milestone) return;
       try {
-        await sendPushToAll(env, {
+        const { delivered } = await sendPushToAll(env, {
           title: `Tomorrow: ${milestone.title}`,
           body: milestone.deal_address || "",
           url: `/studio/crm/deal?id=${milestone.deal_id}`,
         });
+        if (delivered < 1) return;
         await env.CRM_DB.prepare("UPDATE milestones SET reminded_day_before = ?1 WHERE id = ?2")
           .bind(nowIso, id)
           .run();
@@ -244,11 +255,12 @@ export async function runReminderSweep(env: Env): Promise<void> {
       const milestone = milestoneById.get(id);
       if (!milestone) return;
       try {
-        await sendPushToAll(env, {
+        const { delivered } = await sendPushToAll(env, {
           title: `Today: ${milestone.title}`,
           body: milestone.deal_address || "",
           url: `/studio/crm/deal?id=${milestone.deal_id}`,
         });
+        if (delivered < 1) return;
         await env.CRM_DB.prepare("UPDATE milestones SET reminded_day_of = ?1 WHERE id = ?2")
           .bind(nowIso, id)
           .run();
