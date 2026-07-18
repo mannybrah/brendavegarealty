@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { StudioSW } from "@/components/studio/StudioSW";
 
 export const metadata: Metadata = {
   title: "Studio — Brenda Vega",
@@ -11,5 +12,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { themeColor: "#0F1D35" };
 
 export default function StudioLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      <StudioSW />
+      {children}
+    </>
+  );
 }

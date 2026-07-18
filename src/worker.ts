@@ -42,6 +42,13 @@ import {
   handleTaskPatch,
   handleTaskDelete,
 } from "./worker-lib/crm";
+import {
+  handlePushVapid,
+  handlePushSubscribe,
+  handlePushUnsubscribe,
+  handlePushTest,
+  runReminderSweep,
+} from "./worker-lib/push";
 
 const SESSION_COOKIE = "bvr_studio_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
@@ -215,6 +222,20 @@ export default {
       return requireStudio(request, env, () => handleTaskDelete(crmTaskMatch[1], env));
     }
 
+    // Web push (VAPID) — subscribe/unsubscribe + manual test
+    if (url.pathname === "/api/studio/crm/push/vapid" && request.method === "GET") {
+      return requireStudio(request, env, () => handlePushVapid(env));
+    }
+    if (url.pathname === "/api/studio/crm/push/subscribe" && request.method === "POST") {
+      return requireStudio(request, env, () => handlePushSubscribe(request, env));
+    }
+    if (url.pathname === "/api/studio/crm/push/subscribe" && request.method === "DELETE") {
+      return requireStudio(request, env, () => handlePushUnsubscribe(request, env));
+    }
+    if (url.pathname === "/api/studio/crm/push/test" && request.method === "POST") {
+      return requireStudio(request, env, () => handlePushTest(env));
+    }
+
     // Worker-rendered public listing page (falls through to static /listings
     // index + 404s when there's no live listing at that slug).
     const listingPageMatch = url.pathname.match(/^\/listings\/([a-z0-9-]+)$/);
@@ -231,6 +252,10 @@ export default {
     }
 
     return env.ASSETS.fetch(request);
+  },
+
+  async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil(runReminderSweep(env));
   },
 } satisfies ExportedHandler<Env>;
 
