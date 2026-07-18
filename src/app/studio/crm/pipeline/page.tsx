@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { StudioShell } from "@/components/studio/StudioShell";
 import { CrmTabs } from "@/components/studio/crm/CrmTabs";
@@ -44,9 +44,16 @@ function PipelineInner() {
   const [contacts, setContacts] = useState<ContactRow[] | null>(null);
   const [sheetContact, setSheetContact] = useState<ContactRow | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  // Single-flight guard: every call aborts the prior in-flight request so an
+  // older response can never overwrite state from a newer one (mount effect
+  // and moveStage() both call this same function).
+  const fetchControllerRef = useRef<AbortController | null>(null);
 
-  function fetchContacts(signal?: AbortSignal) {
-    fetch(`/api/studio/crm/contacts`, { credentials: "include", cache: "no-store", signal })
+  function fetchContacts() {
+    fetchControllerRef.current?.abort();
+    const controller = new AbortController();
+    fetchControllerRef.current = controller;
+    fetch(`/api/studio/crm/contacts`, { credentials: "include", cache: "no-store", signal: controller.signal })
       .then((r) => (r.ok ? r.json() : { contacts: [] }))
       .then((j: { contacts: ContactRow[] }) => setContacts(j.contacts ?? []))
       .catch((e) => {
@@ -56,9 +63,8 @@ function PipelineInner() {
   }
 
   useEffect(() => {
-    const controller = new AbortController();
-    fetchContacts(controller.signal);
-    return () => controller.abort();
+    fetchContacts();
+    return () => fetchControllerRef.current?.abort();
   }, []);
 
   const grouped = groupByStage(contacts ?? []);

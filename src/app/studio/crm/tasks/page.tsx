@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { StudioShell } from "@/components/studio/StudioShell";
 import { CrmTabs } from "@/components/studio/crm/CrmTabs";
@@ -41,9 +41,18 @@ function TasksInner() {
   const [contacts, setContacts] = useState<ContactRow[]>([]);
   const [showDone, setShowDone] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  // Single-flight guards: each fetch function aborts its own prior in-flight
+  // request so an older response can never overwrite state from a newer one.
+  // The mount effect and fetchAll() (called by toggleTask and QuickAdd) both
+  // funnel through these same two functions.
+  const openControllerRef = useRef<AbortController | null>(null);
+  const doneControllerRef = useRef<AbortController | null>(null);
 
-  function fetchOpen(signal?: AbortSignal) {
-    fetch(`/api/studio/crm/tasks?view=open`, { credentials: "include", cache: "no-store", signal })
+  function fetchOpen() {
+    openControllerRef.current?.abort();
+    const controller = new AbortController();
+    openControllerRef.current = controller;
+    fetch(`/api/studio/crm/tasks?view=open`, { credentials: "include", cache: "no-store", signal: controller.signal })
       .then((r) => (r.ok ? r.json() : { tasks: [], today: null }))
       .then((j: { tasks: TaskRow[]; today: string }) => {
         setOpenTasks(j.tasks ?? []);
@@ -55,8 +64,11 @@ function TasksInner() {
       });
   }
 
-  function fetchDone(signal?: AbortSignal) {
-    fetch(`/api/studio/crm/tasks?view=done`, { credentials: "include", cache: "no-store", signal })
+  function fetchDone() {
+    doneControllerRef.current?.abort();
+    const controller = new AbortController();
+    doneControllerRef.current = controller;
+    fetch(`/api/studio/crm/tasks?view=done`, { credentials: "include", cache: "no-store", signal: controller.signal })
       .then((r) => (r.ok ? r.json() : { tasks: [] }))
       .then((j: { tasks: TaskRow[] }) => setDoneTasks(j.tasks ?? []))
       .catch((e) => {
@@ -71,13 +83,10 @@ function TasksInner() {
   }
 
   useEffect(() => {
-    const c1 = new AbortController();
-    const c2 = new AbortController();
-    fetchOpen(c1.signal);
-    fetchDone(c2.signal);
+    fetchAll();
     return () => {
-      c1.abort();
-      c2.abort();
+      openControllerRef.current?.abort();
+      doneControllerRef.current?.abort();
     };
   }, []);
 

@@ -46,6 +46,9 @@
 
 html {
   scroll-behavior: smooth;
+  /* Guards vw-based full-bleed sections (e.g. w-screen breakouts) against
+     classic-scrollbar gutters adding page-level horizontal scroll. */
+  overflow-x: clip;
 }
 
 body {
