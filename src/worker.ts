@@ -29,6 +29,15 @@ import {
   findLiveListingBySlug,
 } from "./worker-lib/listing";
 import { renderListingPage } from "./worker-lib/listingPage";
+import {
+  handleCrmSummary,
+  handleContactList,
+  handleContactCreate,
+  handleContactGet,
+  handleContactPatch,
+  handleContactDelete,
+  handleEventCreate,
+} from "./worker-lib/crm";
 
 const SESSION_COOKIE = "bvr_studio_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
@@ -162,6 +171,31 @@ export default {
     }
     if (listingMatch && request.method === "DELETE") {
       return requireStudio(request, env, () => handleListingDelete(listingMatch[1], env));
+    }
+
+    // CRM (studio-gated contacts/events/summary)
+    if (url.pathname === "/api/studio/crm/summary" && request.method === "GET") {
+      return requireStudio(request, env, () => handleCrmSummary(env));
+    }
+    if (url.pathname === "/api/studio/crm/contacts" && request.method === "GET") {
+      return requireStudio(request, env, () => handleContactList(request, env));
+    }
+    if (url.pathname === "/api/studio/crm/contacts" && request.method === "POST") {
+      return requireStudio(request, env, () => handleContactCreate(request, env));
+    }
+    const crmEventMatch = url.pathname.match(/^\/api\/studio\/crm\/contacts\/([a-f0-9-]+)\/events$/);
+    if (crmEventMatch && request.method === "POST") {
+      return requireStudio(request, env, () => handleEventCreate(crmEventMatch[1], request, env));
+    }
+    const crmContactMatch = url.pathname.match(/^\/api\/studio\/crm\/contacts\/([a-f0-9-]+)$/);
+    if (crmContactMatch && request.method === "GET") {
+      return requireStudio(request, env, () => handleContactGet(crmContactMatch[1], env));
+    }
+    if (crmContactMatch && request.method === "PATCH") {
+      return requireStudio(request, env, () => handleContactPatch(crmContactMatch[1], request, env));
+    }
+    if (crmContactMatch && request.method === "DELETE") {
+      return requireStudio(request, env, () => handleContactDelete(crmContactMatch[1], env));
     }
 
     // Worker-rendered public listing page (falls through to static /listings
