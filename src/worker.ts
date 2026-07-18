@@ -306,7 +306,7 @@ export default {
     // Worker-rendered client portal (public, token-gated). Any other GET
     // under /portal/... — including malformed tokens — gets the expired page
     // rather than falling through to the static asset 404.
-    if (url.pathname.startsWith("/portal/") && request.method === "GET") {
+    if ((url.pathname === "/portal" || url.pathname.startsWith("/portal/")) && request.method === "GET") {
       const portalMatch = url.pathname.match(/^\/portal\/([A-Za-z0-9]{10,64})$/);
       const portalData = portalMatch ? await findDealByPortalToken(portalMatch[1], env) : null;
       const html = portalData ? renderPortalPage(portalData) : renderPortalExpiredPage();
