@@ -422,6 +422,7 @@ function DetailsCard({
     }
     const j = (await r.json()) as { contact: ContactRow };
     onSaved(j.contact);
+    setForm(formFromContact(j.contact));
   }
 
   const field = "mt-2 w-full bg-white border border-navy/10 rounded-xl p-3 font-body text-sm focus:outline-none focus:border-teal";
@@ -647,6 +648,7 @@ function TasksCard({
   const [title, setTitle] = useState("");
   const [dueAt, setDueAt] = useState("");
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   async function toggle(t: TaskRow) {
     const nextDone = !t.done_at;
@@ -673,6 +675,7 @@ function TasksCard({
 
   async function addTask() {
     if (!title.trim()) return;
+    setErr(null);
     setBusy(true);
     let r: Response | null;
     try {
@@ -692,12 +695,16 @@ function TasksCard({
       setTasks((cur) => [j.task, ...cur]);
       setTitle("");
       setDueAt("");
+    } else {
+      setErr("Couldn't save — try again.");
     }
   }
 
   return (
     <section className="bg-white rounded-2xl border border-navy/5 p-4 space-y-3">
       <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light">Tasks</h2>
+
+      {err && <div className="font-body text-sm text-red-600">{err}</div>}
 
       {tasks.length === 0 && <div className="font-body text-sm text-charcoal-light">No tasks yet.</div>}
 
@@ -764,9 +771,11 @@ function TimelineCard({
   const [kind, setKind] = useState<(typeof NOTE_KINDS)[number]["kind"]>("note");
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
 
   async function log() {
     if (!body.trim()) return;
+    setErr(null);
     setBusy(true);
     let r: Response | null;
     try {
@@ -787,12 +796,16 @@ function TimelineCard({
       setBody("");
       setKind("note");
       onLogged();
+    } else {
+      setErr("Couldn't save — try again.");
     }
   }
 
   return (
     <section className="bg-white rounded-2xl border border-navy/5 p-4 space-y-4">
       <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light">Timeline</h2>
+
+      {err && <div className="font-body text-sm text-red-600">{err}</div>}
 
       <div className="space-y-2">
         <div className="flex gap-2">
