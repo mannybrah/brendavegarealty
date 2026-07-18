@@ -7,10 +7,12 @@ import { LoginForm } from "./LoginForm";
 export function StudioShell({
   title,
   backHref,
+  headerActions,
   children,
 }: {
   title?: string;
   backHref?: string;
+  headerActions?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const { auth, setAuthed } = useStudioAuth();
@@ -44,12 +46,15 @@ export function StudioShell({
               {title ?? "Studio"}
             </div>
           </div>
-          <button
-            onClick={logout}
-            className="font-ui text-[0.65rem] tracking-wider uppercase text-charcoal-light hover:text-navy transition-colors shrink-0"
-          >
-            Sign out
-          </button>
+          <div className="flex items-center gap-4 shrink-0">
+            {headerActions}
+            <button
+              onClick={logout}
+              className="font-ui text-[0.65rem] tracking-wider uppercase text-charcoal-light hover:text-navy transition-colors shrink-0"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </header>
       <div className="max-w-[640px] mx-auto px-5 py-6">{children}</div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { StudioShell } from "@/components/studio/StudioShell";
 import { CrmTabs } from "@/components/studio/crm/CrmTabs";
@@ -9,7 +10,15 @@ import { STAGES, STAGE_LABELS, Stage } from "@/lib/crm/normalize";
 
 export default function CrmClientsPage() {
   return (
-    <StudioShell title="Clients" backHref="/studio">
+    <StudioShell
+      title="Clients"
+      backHref="/studio"
+      headerActions={
+        <Link href="/studio/crm/settings" aria-label="Settings" className="text-navy text-lg leading-none">
+          ⚙️
+        </Link>
+      }
+    >
       <ClientsInner />
     </StudioShell>
   );
@@ -98,8 +107,14 @@ function ClientsInner() {
       {contacts === null && <div className="font-body text-sm text-charcoal-light">Loading…</div>}
 
       {contacts !== null && list.length === 0 && (
-        <div className="font-body text-sm text-charcoal-light">
-          No leads yet — they&apos;ll land here automatically from the website.
+        <div className="font-body text-sm text-charcoal-light space-y-2">
+          <p>No leads yet — they&apos;ll land here automatically from the website.</p>
+          <p>
+            Have a list already?{" "}
+            <Link href="/studio/crm/import" className="text-teal">
+              Import contacts from CSV
+            </Link>
+          </p>
         </div>
       )}
 
