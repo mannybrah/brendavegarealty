@@ -27,18 +27,25 @@ function ClientsInner() {
     return () => clearTimeout(t);
   }, [query]);
 
-  function fetchContacts() {
+  function fetchContacts(signal?: AbortSignal) {
     const params = new URLSearchParams();
     if (debouncedQuery) params.set("q", debouncedQuery);
     if (stage) params.set("stage", stage);
     const qs = params.toString();
-    fetch(`/api/studio/crm/contacts${qs ? `?${qs}` : ""}`, { credentials: "include", cache: "no-store" })
+    fetch(`/api/studio/crm/contacts${qs ? `?${qs}` : ""}`, { credentials: "include", cache: "no-store", signal })
       .then((r) => (r.ok ? r.json() : { contacts: [] }))
       .then((j: { contacts: ContactRow[] }) => setContacts(j.contacts ?? []))
-      .catch(() => setContacts([]));
+      .catch((e) => {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        setContacts([]);
+      });
   }
 
-  useEffect(fetchContacts, [debouncedQuery, stage]);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchContacts(controller.signal);
+    return () => controller.abort();
+  }, [debouncedQuery, stage]);
 
   const unfiltered = !debouncedQuery && !stage;
   const list = contacts ?? [];
@@ -160,6 +167,7 @@ function AddContactSheet({ onClose, onCreated }: { onClose: () => void; onCreate
       const r = await fetch("/api/studio/crm/contacts", {
         method: "POST",
         credentials: "include",
+        cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
@@ -168,7 +176,13 @@ function AddContactSheet({ onClose, onCreated }: { onClose: () => void; onCreate
           type,
         }),
       });
-      if (!r.ok) throw new Error(((await r.json()) as { error?: string }).error ?? "failed");
+      if (!r.ok) {
+        const message = await r
+          .json()
+          .then((j: { error?: string }) => j.error ?? "Something went wrong — try again.")
+          .catch(() => "Something went wrong — try again.");
+        throw new Error(message);
+      }
       const j = (await r.json()) as { contact: { id: string } };
       onCreated(j.contact.id);
     } catch (e) {
