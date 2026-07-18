@@ -37,6 +37,10 @@ import {
   handleContactPatch,
   handleContactDelete,
   handleEventCreate,
+  handleTaskList,
+  handleTaskCreate,
+  handleTaskPatch,
+  handleTaskDelete,
 } from "./worker-lib/crm";
 
 const SESSION_COOKIE = "bvr_studio_session";
@@ -196,6 +200,19 @@ export default {
     }
     if (crmContactMatch && request.method === "DELETE") {
       return requireStudio(request, env, () => handleContactDelete(crmContactMatch[1], env));
+    }
+    if (url.pathname === "/api/studio/crm/tasks" && request.method === "GET") {
+      return requireStudio(request, env, () => handleTaskList(request, env));
+    }
+    if (url.pathname === "/api/studio/crm/tasks" && request.method === "POST") {
+      return requireStudio(request, env, () => handleTaskCreate(request, env));
+    }
+    const crmTaskMatch = url.pathname.match(/^\/api\/studio\/crm\/tasks\/([a-f0-9-]+)$/);
+    if (crmTaskMatch && request.method === "PATCH") {
+      return requireStudio(request, env, () => handleTaskPatch(crmTaskMatch[1], request, env));
+    }
+    if (crmTaskMatch && request.method === "DELETE") {
+      return requireStudio(request, env, () => handleTaskDelete(crmTaskMatch[1], env));
     }
 
     // Worker-rendered public listing page (falls through to static /listings

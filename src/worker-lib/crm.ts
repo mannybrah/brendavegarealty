@@ -243,6 +243,125 @@ export async function handleEventCreate(id: string, request: Request, env: Env):
 }
 
 // ============================================================
+// Tasks
+// ============================================================
+
+interface TaskRow {
+  id: string;
+  contact_id: string | null;
+  deal_id: string | null;
+  milestone_id: string | null;
+  title: string;
+  due_at: string | null;
+  done_at: string | null;
+  notified_at: string | null;
+  created_at: string;
+}
+
+export async function handleTaskList(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const view = url.searchParams.get("view") === "done" ? "done" : "open";
+
+  const selectBase = `
+    SELECT tasks.*,
+      CASE WHEN contacts.id IS NOT NULL THEN TRIM(contacts.first_name || ' ' || contacts.last_name) ELSE NULL END AS contact_name,
+      deals.property_address AS deal_address
+    FROM tasks
+    LEFT JOIN contacts ON contacts.id = tasks.contact_id
+    LEFT JOIN deals ON deals.id = tasks.deal_id
+  `;
+
+  const stmt =
+    view === "done"
+      ? env.CRM_DB.prepare(`${selectBase} WHERE tasks.done_at IS NOT NULL ORDER BY tasks.done_at DESC LIMIT 100`)
+      : env.CRM_DB.prepare(
+          `${selectBase} WHERE tasks.done_at IS NULL ORDER BY (tasks.due_at IS NULL) ASC, tasks.due_at ASC`
+        );
+
+  const { results } = await stmt.all<TaskRow & { contact_name: string | null; deal_address: string | null }>();
+  return jsonResponse({ tasks: results ?? [], today: pacificToday() });
+}
+
+export async function handleTaskCreate(request: Request, env: Env): Promise<Response> {
+  let body: { title?: string; dueAt?: string | null; contactId?: string | null };
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return jsonResponse({ error: "bad request" }, 400);
+  }
+  const title = typeof body.title === "string" ? body.title.trim() : "";
+  if (!title) return jsonResponse({ error: "title is required" }, 400);
+
+  const dueAt = typeof body.dueAt === "string" && body.dueAt.trim() ? body.dueAt.trim() : null;
+  const contactId = typeof body.contactId === "string" && body.contactId.trim() ? body.contactId.trim() : null;
+
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+
+  await env.CRM_DB.prepare(
+    "INSERT INTO tasks (id, contact_id, deal_id, milestone_id, title, due_at, done_at, notified_at, created_at) VALUES (?1, ?2, NULL, NULL, ?3, ?4, NULL, NULL, ?5)"
+  )
+    .bind(id, contactId, title, dueAt, now)
+    .run();
+
+  const task = await env.CRM_DB.prepare("SELECT * FROM tasks WHERE id = ?1").bind(id).first<TaskRow>();
+  return jsonResponse({ task }, 201);
+}
+
+export async function handleTaskPatch(id: string, request: Request, env: Env): Promise<Response> {
+  const existing = await env.CRM_DB.prepare("SELECT * FROM tasks WHERE id = ?1").bind(id).first<TaskRow>();
+  if (!existing) return jsonResponse({ error: "not found" }, 404);
+
+  let body: { title?: string; dueAt?: string | null; done?: boolean };
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return jsonResponse({ error: "bad request" }, 400);
+  }
+
+  const title = typeof body.title === "string" && body.title.trim() ? body.title.trim() : existing.title;
+  const dueAt = body.dueAt !== undefined ? (typeof body.dueAt === "string" && body.dueAt.trim() ? body.dueAt.trim() : null) : existing.due_at;
+
+  const now = new Date().toISOString();
+  let doneAt = existing.done_at;
+  const statements = [];
+
+  if (body.done === true && !existing.done_at) {
+    doneAt = now;
+    if (existing.contact_id) {
+      statements.push(
+        env.CRM_DB.prepare(
+          "INSERT INTO events (id, contact_id, kind, body, meta, created_at) VALUES (?1, ?2, 'task_done', ?3, NULL, ?4)"
+        ).bind(crypto.randomUUID(), existing.contact_id, title, now),
+        env.CRM_DB.prepare("UPDATE contacts SET last_activity_at = ?1, updated_at = ?1 WHERE id = ?2").bind(
+          now,
+          existing.contact_id
+        )
+      );
+    }
+  } else if (body.done === false) {
+    doneAt = null;
+  }
+
+  statements.unshift(
+    env.CRM_DB.prepare("UPDATE tasks SET title=?1, due_at=?2, done_at=?3 WHERE id=?4").bind(title, dueAt, doneAt, id)
+  );
+
+  await env.CRM_DB.batch(statements);
+
+  const task = await env.CRM_DB.prepare("SELECT * FROM tasks WHERE id = ?1").bind(id).first<TaskRow>();
+  return jsonResponse({ task });
+}
+
+export async function handleTaskDelete(id: string, env: Env): Promise<Response> {
+  const existing = await env.CRM_DB.prepare("SELECT id FROM tasks WHERE id = ?1").bind(id).first();
+  if (!existing) return jsonResponse({ error: "not found" }, 404);
+
+  await env.CRM_DB.prepare("DELETE FROM tasks WHERE id = ?1").bind(id).run();
+  return jsonResponse({ ok: true });
+}
+
+// ============================================================
 // Lead ingest (dedupe/merge core — used by public intake + CSV import)
 // ============================================================
 
