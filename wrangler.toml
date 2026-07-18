@@ -14,3 +14,11 @@ id = "a5d099e3d9be4694859a6dbf009dd095"
 [[r2_buckets]]
 binding = "MEDIA"
 bucket_name = "bvr-media"
+
+[[d1_databases]]
+binding = "CRM_DB"
+database_name = "bvr-crm"
+database_id = "0c3791e6-3f23-404d-b7c7-831e202384e6"
+
+[triggers]
+crons = ["*/15 * * * *"]
