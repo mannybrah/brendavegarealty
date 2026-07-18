@@ -1,5 +1,5 @@
 import { renderPortalPage, renderPortalExpiredPage } from "../../../worker-lib/portalPage";
-import type { PortalData, DealRow, MilestoneRow } from "../../../worker-lib/deals";
+import type { PortalData, DealRow, MilestoneRow } from "../portalTypes";
 
 function makeDeal(overrides: Partial<DealRow> = {}): DealRow {
   return {

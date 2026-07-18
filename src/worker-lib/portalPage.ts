@@ -1,5 +1,5 @@
 import { siteConfig } from "../data/site";
-import { PortalData, MilestoneRow } from "./deals";
+import type { PortalData, MilestoneRow } from "../lib/crm/portalTypes";
 
 const SITE_URL = `https://${siteConfig.domain}`;
 
