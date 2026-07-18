@@ -41,6 +41,7 @@ import {
   handleTaskCreate,
   handleTaskPatch,
   handleTaskDelete,
+  ingestLead,
 } from "./worker-lib/crm";
 import {
   handlePushVapid,
@@ -48,6 +49,7 @@ import {
   handlePushUnsubscribe,
   handlePushTest,
   runReminderSweep,
+  sendPushToAll,
 } from "./worker-lib/push";
 
 const SESSION_COOKIE = "bvr_studio_session";
@@ -483,58 +485,43 @@ function log(endpoint: string, status: "success" | "error", details: Record<stri
   }));
 }
 
-async function sendToFUB(apiKey: string, body: object): Promise<Response> {
-  return fetch("https://api.followupboss.com/v1/events", {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${btoa(`${apiKey}:`)}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body),
-  });
+// Human-friendly label for a lead source enum value, e.g. "cost-calculator" -> "cost calculator".
+function sourceLabel(source: string): string {
+  return source.replace(/-/g, " ");
+}
+
+interface LeadEventRow {
+  id: string;
+  created_at: string;
+  body: string;
+  contact_id: string;
+  contact_name: string | null;
 }
 
 async function handleStats(env: Env): Promise<Response> {
-  if (!env.FOLLOW_UP_BOSS_API_KEY) {
-    return jsonResponse({
-      configured: false,
-      error: "FOLLOW_UP_BOSS_API_KEY is not set. No leads have been delivered.",
-    });
-  }
-
   try {
-    const res = await fetch("https://api.followupboss.com/v1/events?sort=-created&limit=100", {
-      headers: {
-        Authorization: `Basic ${btoa(`${env.FOLLOW_UP_BOSS_API_KEY}:`)}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      return jsonResponse({ configured: true, error: `FUB API error: ${res.status}`, details: text });
-    }
-
-    const data = await res.json() as { _metadata?: { total: number }; events?: Array<{ id: number; created: string; source: string; type: string; message: string; personId: number }> };
-    const events = data.events || [];
-
-    const siteEvents = events.filter((e) => e.source === "brendavegarealty.com");
+    const [contactsRow, newLeadsRow, leadsRes] = await Promise.all([
+      env.CRM_DB.prepare("SELECT COUNT(*) AS n FROM contacts").first<{ n: number }>(),
+      env.CRM_DB.prepare("SELECT COUNT(*) AS n FROM contacts WHERE stage = 'new'").first<{ n: number }>(),
+      env.CRM_DB.prepare(
+        `SELECT events.id, events.created_at, events.body, events.contact_id,
+                TRIM(contacts.first_name || ' ' || contacts.last_name) AS contact_name
+         FROM events
+         LEFT JOIN contacts ON contacts.id = events.contact_id
+         WHERE events.kind = 'lead_submission'
+         ORDER BY events.created_at DESC
+         LIMIT 20`
+      ).all<LeadEventRow>(),
+    ]);
 
     return jsonResponse({
       configured: true,
-      totalFUBEvents: data._metadata?.total || events.length,
-      leadsFromSite: siteEvents.length,
-      leads: siteEvents.map((e) => ({
-        id: e.id,
-        personId: e.personId,
-        created: e.created,
-        type: e.type,
-        message: e.message,
-        source: e.source,
-      })),
+      contacts: contactsRow?.n ?? 0,
+      newLeads: newLeadsRow?.n ?? 0,
+      leads: leadsRes.results ?? [],
     });
   } catch (err) {
-    return jsonResponse({ configured: true, error: `Failed to query FUB: ${err}` });
+    return jsonResponse({ configured: true, error: `Failed to query D1: ${err}` }, 500);
   }
 }
 
@@ -553,32 +540,23 @@ async function handleContact(request: Request, env: Env): Promise<Response> {
       return jsonResponse({ error: "Missing required fields" }, 400);
     }
 
-    if (!env.FOLLOW_UP_BOSS_API_KEY) {
-      log("/api/contact", "error", { reason: "no_api_key", leadName: name, leadEmail: email });
-      return jsonResponse({ error: "CRM not configured" }, 500);
-    }
-
-    const nameParts = name.trim().split(" ");
-    const firstName = nameParts[0] || "";
-    const lastName = nameParts.slice(1).join(" ") || "";
-
-    const fubRes = await sendToFUB(env.FOLLOW_UP_BOSS_API_KEY, {
-      source: "brendavegarealty.com",
-      type: "Registration",
-      person: {
-        firstName,
-        lastName,
-        emails: [{ value: email }],
-        phones: [{ value: phone }],
-        tags: [type || "buyer", "contact-form"],
-      },
+    const { contactId } = await ingestLead(env, {
+      name,
+      email,
+      phone,
+      source: "contact-form",
       message: message || `New ${type || "buyer"} lead from contact form`,
+      meta: { type },
     });
 
-    if (!fubRes.ok) {
-      const fubError = await fubRes.text();
-      log("/api/contact", "error", { reason: "fub_rejected", fubStatus: fubRes.status, fubError, leadName: name });
-      return jsonResponse({ error: "Failed to submit" }, 500);
+    try {
+      await sendPushToAll(env, {
+        title: "New lead 🔔",
+        body: `${name} · contact form`,
+        url: `/studio/crm/contact?id=${contactId}`,
+      });
+    } catch (err) {
+      log("/api/contact", "error", { reason: "push_failed", error: String(err) });
     }
 
     log("/api/contact", "success", { leadName: name, leadEmail: email, type: type || "buyer" });
@@ -607,20 +585,6 @@ async function handleLead(request: Request, env: Env): Promise<Response> {
       return jsonResponse({ error: "Missing required fields" }, 400);
     }
 
-    if (!env.FOLLOW_UP_BOSS_API_KEY) {
-      log("/api/lead", "error", { reason: "no_api_key", source, leadName: name, leadEmail: email });
-      return jsonResponse({ error: "CRM not configured" }, 500);
-    }
-
-    const nameParts = name.trim().split(" ");
-    const firstName = nameParts[0] || "";
-    const lastName = nameParts.slice(1).join(" ") || "";
-
-    const tags = [source || "website"];
-    if (timeline) tags.push(`timeline-${timeline}`);
-    if (workingWithAgent === false) tags.push("no-agent");
-    if (workingWithAgent === true) tags.push("has-agent");
-
     let messageText = `Lead from ${source || "website"}`;
     if (timeline) messageText += ` | Timeline: ${timeline}`;
     if (workingWithAgent !== undefined) messageText += ` | Working with agent: ${workingWithAgent ? "Yes" : "No"}`;
@@ -632,23 +596,24 @@ async function handleLead(request: Request, env: Env): Promise<Response> {
       if (s.city) messageText += ` | City: ${s.city}`;
     }
 
-    const fubRes = await sendToFUB(env.FOLLOW_UP_BOSS_API_KEY, {
-      source: "brendavegarealty.com",
-      type: "Registration",
-      person: {
-        firstName,
-        lastName,
-        emails: [{ value: email }],
-        phones: [{ value: phone }],
-        tags,
-      },
+    const leadSource = source || "contact-form";
+    const { contactId } = await ingestLead(env, {
+      name,
+      email,
+      phone,
+      source: leadSource,
       message: messageText,
+      meta: { timeline, workingWithAgent, calculatorSummary },
     });
 
-    if (!fubRes.ok) {
-      const fubError = await fubRes.text();
-      log("/api/lead", "error", { reason: "fub_rejected", fubStatus: fubRes.status, fubError, leadName: name, source });
-      return jsonResponse({ error: "Failed to submit" }, 500);
+    try {
+      await sendPushToAll(env, {
+        title: "New lead 🔔",
+        body: `${name} · ${sourceLabel(leadSource)}`,
+        url: `/studio/crm/contact?id=${contactId}`,
+      });
+    } catch (err) {
+      log("/api/lead", "error", { reason: "push_failed", error: String(err) });
     }
 
     log("/api/lead", "success", { leadName: name, leadEmail: email, source, timeline });
