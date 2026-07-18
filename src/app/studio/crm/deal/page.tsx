@@ -379,7 +379,16 @@ function MilestonesCard({
       patchMilestone(m.id, { sortOrder: other.sort_order }),
       patchMilestone(other.id, { sortOrder: m.sort_order }),
     ]);
-    if (!a || !b) onError("Couldn't reorder — try again.");
+    if (!a || !b) {
+      onError("Couldn't reorder — try again.");
+      if (a && !b) {
+        // m's swap succeeded, other's failed — restore m's original sort_order
+        await patchMilestone(m.id, { sortOrder: m.sort_order });
+      } else if (b && !a) {
+        // other's swap succeeded, m's failed — restore other's original sort_order
+        await patchMilestone(other.id, { sortOrder: other.sort_order });
+      }
+    }
     onRefetch();
   }
 

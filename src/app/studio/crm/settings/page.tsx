@@ -120,13 +120,23 @@ function SettingsInner() {
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.getSubscription();
       if (sub) {
-        await fetch("/api/studio/crm/push/subscribe", {
-          method: "DELETE",
-          credentials: "include",
-          cache: "no-store",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ endpoint: sub.endpoint }),
-        }).catch(() => null);
+        let r: Response | null;
+        try {
+          r = await fetch("/api/studio/crm/push/subscribe", {
+            method: "DELETE",
+            credentials: "include",
+            cache: "no-store",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ endpoint: sub.endpoint }),
+          });
+        } catch {
+          r = null;
+        }
+        if (!r || !r.ok) {
+          setErr("Couldn't disable on the server — try again.");
+          setBusy(false);
+          return;
+        }
         await sub.unsubscribe();
       }
       await refreshStatus();
