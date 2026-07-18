@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { StudioShell } from "@/components/studio/StudioShell";
+import { SummaryStrip } from "@/components/studio/crm/SummaryStrip";
 import { FeedPost, FEED_TYPE_LABELS, relativeTime } from "@/lib/feed";
 import { BlogDraft } from "@/lib/blogStudio";
 
 const ACTIONS = [
+  { href: "/studio/crm", label: "Clients", desc: "Leads, pipeline & deals", icon: "👥", span: true },
   { href: "/studio/feed/new", label: "Post an Update", desc: "Photo + caption → homepage, instantly", icon: "📸" },
   { href: "/studio/blog", label: "Write a Blog", desc: "Notes → polished post, live in minutes", icon: "✍️" },
   { href: "/studio/announcement", label: "Announcement", desc: "One-line banner across the site", icon: "📣" },
@@ -39,6 +41,7 @@ function HomeInner() {
 
   return (
     <>
+      <SummaryStrip />
       <div className="grid grid-cols-2 gap-3">
         {ACTIONS.map((a) => (
           <Link

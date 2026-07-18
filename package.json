@@ -12,6 +12,7 @@
     "typecheck:worker": "tsc -p tsconfig.worker.json"
   },
   "dependencies": {
+    "@block65/webcrypto-web-push": "^1.0.2",
     "@cloudflare/next-on-pages": "^1.13.16",
     "framer-motion": "^12.37.0",
     "jose": "^6.2.1",
