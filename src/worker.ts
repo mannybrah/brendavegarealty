@@ -44,6 +44,17 @@ import {
   ingestLead,
 } from "./worker-lib/crm";
 import {
+  handleDealCreate,
+  handleDealGet,
+  handleDealPatch,
+  handleDealDelete,
+  handleMilestoneCreate,
+  handleMilestonePatch,
+  handleMilestoneDelete,
+  handlePortalEnable,
+  handlePortalDisable,
+} from "./worker-lib/deals";
+import {
   handlePushVapid,
   handlePushSubscribe,
   handlePushUnsubscribe,
@@ -222,6 +233,39 @@ export default {
     }
     if (crmTaskMatch && request.method === "DELETE") {
       return requireStudio(request, env, () => handleTaskDelete(crmTaskMatch[1], env));
+    }
+
+    // CRM deals, milestones & client portal tokens
+    if (url.pathname === "/api/studio/crm/deals" && request.method === "POST") {
+      return requireStudio(request, env, () => handleDealCreate(request, env));
+    }
+    const crmDealPortalMatch = url.pathname.match(/^\/api\/studio\/crm\/deals\/([a-f0-9-]+)\/portal$/);
+    if (crmDealPortalMatch && request.method === "POST") {
+      return requireStudio(request, env, () => handlePortalEnable(crmDealPortalMatch[1], env));
+    }
+    if (crmDealPortalMatch && request.method === "DELETE") {
+      return requireStudio(request, env, () => handlePortalDisable(crmDealPortalMatch[1], env));
+    }
+    const crmDealMilestonesMatch = url.pathname.match(/^\/api\/studio\/crm\/deals\/([a-f0-9-]+)\/milestones$/);
+    if (crmDealMilestonesMatch && request.method === "POST") {
+      return requireStudio(request, env, () => handleMilestoneCreate(crmDealMilestonesMatch[1], request, env));
+    }
+    const crmDealMatch = url.pathname.match(/^\/api\/studio\/crm\/deals\/([a-f0-9-]+)$/);
+    if (crmDealMatch && request.method === "GET") {
+      return requireStudio(request, env, () => handleDealGet(crmDealMatch[1], env));
+    }
+    if (crmDealMatch && request.method === "PATCH") {
+      return requireStudio(request, env, () => handleDealPatch(crmDealMatch[1], request, env));
+    }
+    if (crmDealMatch && request.method === "DELETE") {
+      return requireStudio(request, env, () => handleDealDelete(crmDealMatch[1], env));
+    }
+    const crmMilestoneMatch = url.pathname.match(/^\/api\/studio\/crm\/milestones\/([a-f0-9-]+)$/);
+    if (crmMilestoneMatch && request.method === "PATCH") {
+      return requireStudio(request, env, () => handleMilestonePatch(crmMilestoneMatch[1], request, env));
+    }
+    if (crmMilestoneMatch && request.method === "DELETE") {
+      return requireStudio(request, env, () => handleMilestoneDelete(crmMilestoneMatch[1], env));
     }
 
     // Web push (VAPID) — subscribe/unsubscribe + manual test
