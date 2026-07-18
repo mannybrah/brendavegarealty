@@ -43,6 +43,7 @@ import {
   handleTaskDelete,
   ingestLead,
 } from "./worker-lib/crm";
+import { handleImport } from "./worker-lib/crmImport";
 import {
   handleDealCreate,
   handleDealGet,
@@ -53,7 +54,9 @@ import {
   handleMilestoneDelete,
   handlePortalEnable,
   handlePortalDisable,
+  findDealByPortalToken,
 } from "./worker-lib/deals";
+import { renderPortalPage, renderPortalExpiredPage } from "./worker-lib/portalPage";
 import {
   handlePushVapid,
   handlePushSubscribe,
@@ -221,6 +224,9 @@ export default {
     if (crmContactMatch && request.method === "DELETE") {
       return requireStudio(request, env, () => handleContactDelete(crmContactMatch[1], env));
     }
+    if (url.pathname === "/api/studio/crm/import" && request.method === "POST") {
+      return requireStudio(request, env, () => handleImport(request, env));
+    }
     if (url.pathname === "/api/studio/crm/tasks" && request.method === "GET") {
       return requireStudio(request, env, () => handleTaskList(request, env));
     }
@@ -295,6 +301,23 @@ export default {
           },
         });
       }
+    }
+
+    // Worker-rendered client portal (public, token-gated). Any other GET
+    // under /portal/... — including malformed tokens — gets the expired page
+    // rather than falling through to the static asset 404.
+    if (url.pathname.startsWith("/portal/") && request.method === "GET") {
+      const portalMatch = url.pathname.match(/^\/portal\/([A-Za-z0-9]{10,64})$/);
+      const portalData = portalMatch ? await findDealByPortalToken(portalMatch[1], env) : null;
+      const html = portalData ? renderPortalPage(portalData) : renderPortalExpiredPage();
+      return new Response(html, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Cache-Control": "private, no-store",
+          "X-Robots-Tag": "noindex",
+        },
+      });
     }
 
     return env.ASSETS.fetch(request);

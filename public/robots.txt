@@ -3,5 +3,6 @@ Allow: /
 Disallow: /api/
 Disallow: /studio
 Disallow: /studio/
+Disallow: /portal/
 
 Sitemap: https://brendavegarealty.com/sitemap.xml
