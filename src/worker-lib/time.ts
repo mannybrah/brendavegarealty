@@ -30,7 +30,10 @@ export function pacificNow(): { date: string; hhmm: string; hour: number } {
   const hour = Number(p.hour) % 24;
   return {
     date: `${p.year}-${p.month}-${p.day}`,
-    hhmm: `${p.hour.padStart(2, "0")}:${p.minute}`,
+    // Build hhmm from the normalized hour, not the raw Intl part — otherwise
+    // a locale/runtime that reports midnight as "24" yields "24:xx", which
+    // breaks lexicographic hhmm comparisons in selectReminders().
+    hhmm: `${String(hour).padStart(2, "0")}:${p.minute}`,
     hour,
   };
 }

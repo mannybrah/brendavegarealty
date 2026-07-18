@@ -86,7 +86,7 @@ export default {
       return handleLead(request, env, ctx);
     }
     if (url.pathname === "/api/stats" && request.method === "GET") {
-      return handleStats(env);
+      return requireStudio(request, env, () => handleStats(env));
     }
 
     // Public read — YouTube URLs keyed by post slug (no auth)

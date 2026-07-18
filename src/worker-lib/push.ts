@@ -11,7 +11,7 @@ import { selectReminders, tomorrow } from "./reminders";
 
 export { selectReminders, tomorrow };
 
-const VAPID_SUBJECT = "mailto:brenda.vega@c21anew.com";
+const VAPID_SUBJECT = "https://brendavegarealty.com";
 
 interface PushSubscriptionRow {
   id: string;
