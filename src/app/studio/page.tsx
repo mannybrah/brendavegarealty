@@ -8,7 +8,6 @@ import { FeedPost, FEED_TYPE_LABELS, relativeTime } from "@/lib/feed";
 import { BlogDraft } from "@/lib/blogStudio";
 
 const ACTIONS = [
-  { href: "/studio/crm", label: "Clients", desc: "Leads, pipeline & deals", icon: "👥", span: true },
   { href: "/studio/feed/new", label: "Post an Update", desc: "Photo + caption → homepage, instantly", icon: "📸" },
   { href: "/studio/blog", label: "Write a Blog", desc: "Notes → polished post, live in minutes", icon: "✍️" },
   { href: "/studio/announcement", label: "Announcement", desc: "One-line banner across the site", icon: "📣" },
@@ -41,17 +40,27 @@ function HomeInner() {
 
   return (
     <>
-      <SummaryStrip />
       <div className="grid grid-cols-2 gap-3">
+        <Link
+          href="/studio/crm"
+          className="col-span-2 bg-navy rounded-lg shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-5 active:scale-[0.98] transition-all flex flex-col"
+        >
+          <span className="text-2xl mb-2">👥</span>
+          <span className="font-display font-medium text-xl text-gold leading-snug">Clients</span>
+          <span className="font-body font-light text-xs text-cream/70 mt-1 leading-snug">Leads, pipeline & deals</span>
+          <SummaryStrip />
+        </Link>
         {ACTIONS.map((a) => (
           <Link
             key={a.href}
             href={a.href}
-            className={`bg-white rounded-2xl border border-navy/5 p-5 hover:border-teal/40 active:scale-[0.98] transition-all min-h-[130px] flex flex-col ${
+            className={`bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-5 hover:border-teal/40 active:scale-[0.98] transition-all min-h-[130px] flex flex-col ${
               a.span ? "col-span-2" : ""
             }`}
           >
-            <span className="text-2xl mb-2">{a.icon}</span>
+            <span className="w-10 h-10 rounded-full bg-gold/15 flex items-center justify-center text-lg mb-2">
+              {a.icon}
+            </span>
             <span className="font-display font-normal text-base text-navy leading-snug">{a.label}</span>
             <span className="font-body font-light text-xs text-charcoal-light mt-1 leading-snug">{a.desc}</span>
           </Link>
@@ -61,7 +70,7 @@ function HomeInner() {
       {feed.length > 0 && (
         <section className="mt-8">
           <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light mb-3">Recent updates</h2>
-          <div className="bg-white rounded-2xl border border-navy/5 divide-y divide-navy/5">
+          <div className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] divide-y divide-navy/5">
             {feed.map((p) => (
               <Link key={p.id} href={`/studio/feed/edit?id=${p.id}`} className="flex items-center gap-3 p-4">
                 {p.imageKeys[0] ? (
@@ -86,7 +95,7 @@ function HomeInner() {
       {drafts.length > 0 && (
         <section className="mt-8">
           <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light mb-3">Recent blog posts</h2>
-          <div className="bg-white rounded-2xl border border-navy/5 divide-y divide-navy/5">
+          <div className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] divide-y divide-navy/5">
             {drafts.map((d) => (
               <Link key={d.id} href={`/studio/blog/edit?id=${d.id}`} className="flex items-center gap-3 p-4">
                 <div className="min-w-0 flex-1">

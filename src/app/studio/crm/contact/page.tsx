@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { StudioShell } from "@/components/studio/StudioShell";
 import { StagePill } from "@/components/studio/crm/StagePill";
+import { STAGE_COLORS } from "@/components/studio/crm/stageColors";
+import { CardTitle } from "@/components/studio/crm/CardTitle";
 import { ContactRow } from "@/components/studio/crm/ContactListItem";
 import { STAGES, STAGE_LABELS, Stage } from "@/lib/crm/normalize";
 import type { DealRow, MilestoneRow } from "@/lib/crm/portalTypes";
@@ -40,6 +42,20 @@ const EVENT_ICON: Record<string, string> = {
   task_done: "✅",
   deal: "🏠",
   system: "⚙️",
+};
+
+// Per-kind dot color, reusing the same accent hexes as the stage color
+// system so the timeline reads as part of the same brand palette.
+const EVENT_KIND_COLOR: Record<string, string> = {
+  lead_submission: STAGE_COLORS.new.accent, // gold
+  note: STAGE_COLORS.sphere.accent, // stone
+  call: STAGE_COLORS.active.accent, // teal
+  text: STAGE_COLORS.contacted.accent, // steel
+  email: STAGE_COLORS.contacted.accent, // steel
+  stage_change: "#0F1D35", // navy
+  task_done: STAGE_COLORS.closed.accent, // green
+  deal: STAGE_COLORS.under_contract.accent, // amber
+  system: STAGE_COLORS.archived.accent, // gray
 };
 
 function relativeTime(iso: string, now: Date = new Date()): string {
@@ -219,17 +235,22 @@ function ContactDetail() {
 
       {/* 2. Stage stepper */}
       <div className="flex gap-2 overflow-x-auto -mx-5 px-5">
-        {STAGES.map((s) => (
-          <button
-            key={s}
-            onClick={() => changeStage(s)}
-            className={`shrink-0 font-ui text-xs tracking-wider uppercase px-4 py-2 rounded-full transition-colors ${
-              contact.stage === s ? "bg-navy text-cream" : "bg-white text-charcoal-light border border-navy/10"
-            }`}
-          >
-            {STAGE_LABELS[s]}
-          </button>
-        ))}
+        {STAGES.map((s) => {
+          const c = STAGE_COLORS[s];
+          const active = contact.stage === s;
+          return (
+            <button
+              key={s}
+              onClick={() => changeStage(s)}
+              className={`shrink-0 font-ui text-xs tracking-wider uppercase px-4 py-2 rounded-full border transition-colors ${
+                active ? "" : `bg-white ${c.text} ${c.border}`
+              }`}
+              style={active ? { backgroundColor: c.solid.bg, borderColor: c.solid.bg, color: c.solid.text } : undefined}
+            >
+              {STAGE_LABELS[s]}
+            </button>
+          );
+        })}
       </div>
 
       {/* 3. Details card */}
@@ -237,8 +258,11 @@ function ContactDetail() {
 
       {/* 4. Deals */}
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light">Deals</h2>
+        <div className="flex items-end justify-between">
+          <div>
+            <h2 className="font-display font-medium text-base text-navy leading-tight">Deals</h2>
+            <div className="w-8 h-px bg-gold mt-1.5" />
+          </div>
           <button onClick={() => setShowDealSheet(true)} className="font-ui text-[0.65rem] tracking-wider uppercase text-teal">
             + Start deal
           </button>
@@ -253,7 +277,7 @@ function ContactDetail() {
               <Link
                 key={d.id}
                 href={`/studio/crm/deal?id=${d.id}`}
-                className="block bg-white rounded-2xl border border-navy/5 p-4"
+                className="block bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2 min-w-0">
@@ -288,13 +312,13 @@ function ContactDetail() {
         <button
           onClick={archive}
           disabled={contact.stage === "archived"}
-          className="flex-1 bg-white border border-navy/10 text-charcoal-light font-ui text-xs tracking-wider uppercase py-3.5 rounded-xl disabled:opacity-50"
+          className="flex-1 bg-white border border-navy/20 text-navy font-ui text-xs tracking-wider uppercase py-3.5 rounded-md disabled:opacity-50"
         >
           {contact.stage === "archived" ? "Archived" : "Archive"}
         </button>
         <button
           onClick={remove}
-          className="flex-1 bg-white border border-red-200 text-red-600 font-ui text-xs tracking-wider uppercase py-3.5 rounded-xl"
+          className="flex-1 bg-white border border-red-700/30 text-red-700 font-ui text-xs tracking-wider uppercase py-3.5 rounded-md"
         >
           Delete
         </button>
@@ -324,7 +348,7 @@ function ActionLink({ href, icon, label }: { href: string | null; icon: string; 
     );
   }
   return (
-    <a href={href} className={`${base} bg-white border border-navy/10 text-navy active:scale-[0.98] transition-transform`}>
+    <a href={href} className={`${base} bg-white border border-navy/20 text-navy active:scale-[0.98] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2`}>
       <span className="text-lg">{icon}</span>
       {label}
     </a>
@@ -429,7 +453,7 @@ function DetailsCard({
   const label = "font-ui text-xs tracking-wider uppercase text-charcoal-light";
 
   return (
-    <section className="bg-white rounded-2xl border border-navy/5 p-4 space-y-4">
+    <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4 space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
           <span className={label}>First name</span>
@@ -505,7 +529,7 @@ function DetailsCard({
         <button
           onClick={save}
           disabled={saving}
-          className="w-full bg-teal text-white font-ui font-medium text-sm tracking-wider uppercase py-3.5 rounded-xl active:scale-[0.98] transition-transform disabled:opacity-60"
+          className="w-full bg-navy text-gold hover:bg-navy/90 font-ui font-medium text-sm tracking-wider uppercase py-3.5 rounded-md active:scale-[0.98] transition-transform disabled:opacity-60"
         >
           {saving ? "Saving…" : "Save"}
         </button>
@@ -613,14 +637,14 @@ function StartDealSheet({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 bg-white border border-navy/10 text-charcoal-light font-ui text-xs tracking-wider uppercase py-3.5 rounded-xl"
+            className="flex-1 bg-white border border-navy/20 text-navy font-ui text-xs tracking-wider uppercase py-3.5 rounded-md"
           >
             Cancel
           </button>
           <button
             onClick={submit}
             disabled={busy}
-            className="flex-1 bg-teal text-white font-ui font-medium text-xs tracking-wider uppercase py-3.5 rounded-xl active:scale-[0.98] transition-transform disabled:opacity-60"
+            className="flex-1 bg-navy text-gold hover:bg-navy/90 font-ui font-medium text-xs tracking-wider uppercase py-3.5 rounded-md active:scale-[0.98] transition-transform disabled:opacity-60"
           >
             {busy ? "Starting…" : "Start deal"}
           </button>
@@ -701,8 +725,8 @@ function TasksCard({
   }
 
   return (
-    <section className="bg-white rounded-2xl border border-navy/5 p-4 space-y-3">
-      <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light">Tasks</h2>
+    <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4 space-y-3">
+      <CardTitle>Tasks</CardTitle>
 
       {err && <div className="font-body text-sm text-red-600">{err}</div>}
 
@@ -711,7 +735,7 @@ function TasksCard({
       <div className="space-y-2">
         {tasks.map((t) => (
           <label key={t.id} className="flex items-center gap-3 cursor-pointer">
-            <input type="checkbox" checked={!!t.done_at} onChange={() => toggle(t)} className="w-4 h-4 shrink-0 accent-teal" />
+            <input type="checkbox" checked={!!t.done_at} onChange={() => toggle(t)} className="w-4 h-4 shrink-0 accent-gold" />
             <span className={`font-body text-sm flex-1 min-w-0 truncate ${t.done_at ? "line-through text-charcoal-light" : "text-navy"}`}>
               {t.title}
             </span>
@@ -737,7 +761,7 @@ function TasksCard({
         <button
           onClick={addTask}
           disabled={busy || !title.trim()}
-          className="shrink-0 bg-navy text-cream font-ui text-xs tracking-wider uppercase px-4 py-2.5 rounded-xl disabled:opacity-50"
+          className="shrink-0 bg-navy text-gold hover:bg-navy/90 font-ui text-xs tracking-wider uppercase px-4 py-2.5 rounded-md disabled:opacity-50"
         >
           Add
         </button>
@@ -802,8 +826,8 @@ function TimelineCard({
   }
 
   return (
-    <section className="bg-white rounded-2xl border border-navy/5 p-4 space-y-4">
-      <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light">Timeline</h2>
+    <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4 space-y-4">
+      <CardTitle>Timeline</CardTitle>
 
       {err && <div className="font-body text-sm text-red-600">{err}</div>}
 
@@ -831,25 +855,34 @@ function TimelineCard({
         <button
           onClick={log}
           disabled={busy || !body.trim()}
-          className="w-full bg-teal text-white font-ui font-medium text-xs tracking-wider uppercase py-2.5 rounded-xl active:scale-[0.98] transition-transform disabled:opacity-60"
+          className="w-full bg-navy text-gold hover:bg-navy/90 font-ui font-medium text-xs tracking-wider uppercase py-2.5 rounded-md active:scale-[0.98] transition-transform disabled:opacity-60"
         >
           {busy ? "Logging…" : `Log ${kind}`}
         </button>
       </div>
 
-      <div className="space-y-3 divide-y divide-navy/5">
-        {events.length === 0 && <div className="font-body text-sm text-charcoal-light pt-1">No activity yet.</div>}
-        {events.map((e) => (
-          <div key={e.id} className="flex items-start gap-3 pt-3 first:pt-0">
-            <span className="text-base shrink-0">{EVENT_ICON[e.kind] ?? "•"}</span>
-            <div className="min-w-0 flex-1">
-              <div className="font-body text-sm text-navy whitespace-pre-wrap break-words">{e.body}</div>
-              <div className="font-ui text-[0.6rem] tracking-wider uppercase text-charcoal-light mt-1">
-                {relativeTime(e.created_at)}
+      <div className="relative space-y-4">
+        {events.length === 0 && <div className="font-body text-sm text-charcoal-light">No activity yet.</div>}
+        {events.length > 1 && <div className="absolute left-[15px] top-4 bottom-4 w-px bg-gold/30" />}
+        {events.map((e) => {
+          const color = EVENT_KIND_COLOR[e.kind] ?? STAGE_COLORS.archived.accent;
+          return (
+            <div key={e.id} className="flex items-start gap-3 relative">
+              <span
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xs shrink-0 relative z-10 border-2 border-[#FCFBF7]"
+                style={{ backgroundColor: `${color}26` }}
+              >
+                {EVENT_ICON[e.kind] ?? "•"}
+              </span>
+              <div className="min-w-0 flex-1 pt-1.5">
+                <div className="font-body text-sm text-navy whitespace-pre-wrap break-words">{e.body}</div>
+                <div className="font-ui text-[0.6rem] tracking-wider uppercase text-charcoal-light mt-1">
+                  {relativeTime(e.created_at)}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );

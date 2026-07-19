@@ -10,13 +10,13 @@ export type CrmTab = (typeof TABS)[number]["key"];
 
 export function CrmTabs({ active }: { active: CrmTab }) {
   return (
-    <div className="flex gap-5 -mx-5 px-5 border-b border-navy/10">
+    <div className="flex gap-6 px-4 bg-navy rounded-lg">
       {TABS.map((t) => (
         <Link
           key={t.key}
           href={t.href}
-          className={`font-ui text-xs tracking-wider uppercase pb-3 pt-1 border-b-2 transition-colors ${
-            t.key === active ? "border-gold text-navy" : "border-transparent text-charcoal-light"
+          className={`font-ui text-xs tracking-wider uppercase pb-3 pt-3 border-b-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy rounded-t ${
+            t.key === active ? "border-gold text-gold" : "border-transparent text-cream/60 hover:text-cream/90"
           }`}
         >
           {t.label}
