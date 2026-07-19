@@ -102,7 +102,7 @@ function normalizeStageKey(raw: string | undefined): string {
   return (raw ?? "").trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-function mapStage(raw: string | undefined): Stage {
+export function mapStage(raw: string | undefined): Stage {
   const key = normalizeStageKey(raw);
   const exact = STAGE_MAP[key];
   if (exact && STAGES.includes(exact)) return exact;
