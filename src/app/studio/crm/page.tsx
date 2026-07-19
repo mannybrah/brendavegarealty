@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { StudioShell } from "@/components/studio/StudioShell";
 import { CrmTabs } from "@/components/studio/crm/CrmTabs";
 import { ContactListItem, ContactRow } from "@/components/studio/crm/ContactListItem";
+import { STAGE_COLORS } from "@/components/studio/crm/stageColors";
+import { CardTitle } from "@/components/studio/crm/CardTitle";
 import { STAGES, STAGE_LABELS, Stage } from "@/lib/crm/normalize";
 
 export default function CrmClientsPage() {
@@ -14,7 +16,11 @@ export default function CrmClientsPage() {
       title="Clients"
       backHref="/studio"
       headerActions={
-        <Link href="/studio/crm/settings" aria-label="Settings" className="text-navy text-lg leading-none">
+        <Link
+          href="/studio/crm/settings"
+          aria-label="Settings"
+          className="text-gold-light hover:text-gold text-lg leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy rounded"
+        >
           ⚙️
         </Link>
       }
@@ -75,7 +81,7 @@ function ClientsInner() {
           />
           <button
             onClick={() => setShowAdd(true)}
-            className="shrink-0 bg-teal text-white font-ui text-xs tracking-wider uppercase px-4 py-3 rounded-xl active:scale-[0.98] transition-transform"
+            className="shrink-0 bg-navy text-gold hover:bg-navy/90 font-ui text-xs tracking-wider uppercase px-4 py-3 rounded-md active:scale-[0.98] transition-transform"
           >
             + Add
           </button>
@@ -84,23 +90,32 @@ function ClientsInner() {
         <div className="flex gap-2 overflow-x-auto">
           <button
             onClick={() => setStage(null)}
-            className={`shrink-0 font-ui text-xs tracking-wider uppercase px-4 py-2 rounded-full transition-colors ${
-              stage === null ? "bg-navy text-cream" : "bg-white text-charcoal-light border border-navy/10"
+            className={`shrink-0 font-ui text-xs tracking-wider uppercase px-4 py-2 rounded-full border transition-colors ${
+              stage === null ? "bg-navy text-cream border-navy" : "bg-white text-navy border-navy/20"
             }`}
           >
             All
           </button>
-          {STAGES.map((s) => (
-            <button
-              key={s}
-              onClick={() => setStage(s)}
-              className={`shrink-0 font-ui text-xs tracking-wider uppercase px-4 py-2 rounded-full transition-colors ${
-                stage === s ? "bg-navy text-cream" : "bg-white text-charcoal-light border border-navy/10"
-              }`}
-            >
-              {STAGE_LABELS[s]}
-            </button>
-          ))}
+          {STAGES.map((s) => {
+            const c = STAGE_COLORS[s];
+            const selected = stage === s;
+            return (
+              <button
+                key={s}
+                onClick={() => setStage(s)}
+                className={`shrink-0 font-ui text-xs tracking-wider uppercase px-4 py-2 rounded-full border transition-colors ${
+                  selected ? "" : `bg-white ${c.text} ${c.border}`
+                }`}
+                style={
+                  selected
+                    ? { backgroundColor: c.solid.bg, borderColor: c.solid.bg, color: c.solid.text }
+                    : undefined
+                }
+              >
+                {STAGE_LABELS[s]}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -122,8 +137,8 @@ function ClientsInner() {
         <>
           {newContacts.length > 0 && (
             <section>
-              <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light mb-2">New</h2>
-              <div className="bg-white rounded-2xl border border-navy/5 divide-y divide-navy/5">
+              <CardTitle>New</CardTitle>
+              <div className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] divide-y divide-navy/5">
                 {newContacts.map((c) => (
                   <ContactListItem key={c.id} contact={c} />
                 ))}
@@ -132,8 +147,8 @@ function ClientsInner() {
           )}
           {restContacts.length > 0 && (
             <section>
-              <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light mb-2">Everyone</h2>
-              <div className="bg-white rounded-2xl border border-navy/5 divide-y divide-navy/5">
+              <CardTitle>Everyone</CardTitle>
+              <div className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] divide-y divide-navy/5">
                 {restContacts.map((c) => (
                   <ContactListItem key={c.id} contact={c} />
                 ))}
@@ -144,7 +159,7 @@ function ClientsInner() {
       )}
 
       {contacts !== null && list.length > 0 && !unfiltered && (
-        <div className="bg-white rounded-2xl border border-navy/5 divide-y divide-navy/5">
+        <div className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] divide-y divide-navy/5">
           {list.map((c) => (
             <ContactListItem key={c.id} contact={c} />
           ))}
@@ -267,14 +282,14 @@ function AddContactSheet({ onClose, onCreated }: { onClose: () => void; onCreate
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 bg-white border border-navy/10 text-charcoal-light font-ui text-xs tracking-wider uppercase py-3.5 rounded-xl"
+            className="flex-1 bg-white border border-navy/20 text-navy font-ui text-xs tracking-wider uppercase py-3.5 rounded-md"
           >
             Cancel
           </button>
           <button
             onClick={submit}
             disabled={busy || !name.trim()}
-            className="flex-1 bg-teal text-white font-ui font-medium text-xs tracking-wider uppercase py-3.5 rounded-xl active:scale-[0.98] transition-transform disabled:opacity-60"
+            className="flex-1 bg-navy text-gold hover:bg-navy/90 font-ui font-medium text-xs tracking-wider uppercase py-3.5 rounded-md active:scale-[0.98] transition-transform disabled:opacity-60"
           >
             {busy ? "Saving…" : "Save"}
           </button>

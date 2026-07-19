@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { StudioShell } from "@/components/studio/StudioShell";
+import { CardTitle } from "@/components/studio/crm/CardTitle";
 import { parseCsv, autoMapColumns, rowsToImportContacts, type ImportField, type ImportContact } from "@/lib/crm/csv";
 
 const CHUNK_SIZE = 200;
@@ -191,13 +192,13 @@ function ImportInner() {
 
       {err && <div className="font-body text-sm text-red-600">{err}</div>}
 
-      <section className="bg-white rounded-2xl border border-navy/5 p-4 space-y-3">
-        <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light">1. Choose a file</h2>
+      <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4 space-y-3">
+        <CardTitle>1. Choose a file</CardTitle>
         <input
           type="file"
           accept=".csv"
           onChange={onFileChange}
-          className="w-full font-body text-sm text-navy file:mr-3 file:bg-navy file:text-cream file:font-ui file:text-xs file:tracking-wider file:uppercase file:px-4 file:py-2.5 file:rounded-xl file:border-0"
+          className="w-full font-body text-sm text-navy file:mr-3 file:bg-navy file:text-gold file:font-ui file:text-xs file:tracking-wider file:uppercase file:px-4 file:py-2.5 file:rounded-md file:border-0"
         />
         {fileName && (
           <div className="font-body text-xs text-charcoal-light">
@@ -207,8 +208,8 @@ function ImportInner() {
       </section>
 
       {hasFile && (
-        <section className="bg-white rounded-2xl border border-navy/5 p-4 space-y-3">
-          <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light">2. Map columns</h2>
+        <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4 space-y-3">
+          <CardTitle>2. Map columns</CardTitle>
           <div className="space-y-2">
             {FIELD_ORDER.map((f) => (
               <div key={f} className="flex items-center justify-between gap-3">
@@ -228,10 +229,10 @@ function ImportInner() {
       )}
 
       {hasFile && (
-        <section className="bg-white rounded-2xl border border-navy/5 p-4 space-y-3">
-          <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light">
+        <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4 space-y-3">
+          <CardTitle>
             3. Preview ({mappedContacts.length} contact{mappedContacts.length === 1 ? "" : "s"} will import)
-          </h2>
+          </CardTitle>
           {mappedContacts.length === 0 ? (
             <div className="font-body text-sm text-charcoal-light">
               No rows matched — map at least a name, email, or phone column above.
@@ -264,7 +265,7 @@ function ImportInner() {
           <button
             onClick={startImport}
             disabled={mappedContacts.length === 0 || importing}
-            className="w-full bg-teal text-white font-ui font-medium text-sm tracking-wider uppercase py-3.5 rounded-xl active:scale-[0.98] transition-transform disabled:opacity-60"
+            className="w-full bg-navy text-gold hover:bg-navy/90 font-ui font-medium text-sm tracking-wider uppercase py-3.5 rounded-md active:scale-[0.98] transition-transform disabled:opacity-60"
           >
             {importing ? "Importing…" : `Import ${mappedContacts.length} contact${mappedContacts.length === 1 ? "" : "s"}`}
           </button>
@@ -272,9 +273,9 @@ function ImportInner() {
       )}
 
       {started && (
-        <section className="bg-white rounded-2xl border border-navy/5 p-4 space-y-3">
-          <div className="h-2 bg-navy/5 rounded-full overflow-hidden">
-            <div className="h-full bg-teal transition-all" style={{ width: `${progressPct}%` }} />
+        <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4 space-y-3">
+          <div className="h-2 bg-navy/10 rounded-full overflow-hidden">
+            <div className="h-full bg-gold transition-all" style={{ width: `${progressPct}%` }} />
           </div>
           <div className="font-ui text-[0.65rem] tracking-wider uppercase text-charcoal-light">
             {progressDone}/{progressTotal} batches
@@ -293,7 +294,7 @@ function ImportInner() {
                   </div>
                   <button
                     onClick={retryFailed}
-                    className="w-full bg-navy text-cream font-ui text-xs tracking-wider uppercase py-3 rounded-xl active:scale-[0.98] transition-transform"
+                    className="w-full bg-navy text-gold hover:bg-navy/90 font-ui text-xs tracking-wider uppercase py-3 rounded-md active:scale-[0.98] transition-transform"
                   >
                     Retry failed batches
                   </button>

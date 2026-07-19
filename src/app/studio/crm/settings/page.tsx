@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { StudioShell } from "@/components/studio/StudioShell";
+import { CardTitle } from "@/components/studio/crm/CardTitle";
 
 const IOS_HELP = "On iPhone, add the studio to your Home Screen first — notifications require it.";
 
@@ -184,8 +185,8 @@ function SettingsInner() {
 
   return (
     <div className="space-y-6">
-      <section className="bg-white rounded-2xl border border-navy/5 p-4 space-y-4">
-        <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light">Notifications</h2>
+      <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4 space-y-4">
+        <CardTitle>Notifications</CardTitle>
 
         {err && <div className="font-body text-sm text-red-600">{err}</div>}
 
@@ -197,7 +198,7 @@ function SettingsInner() {
               <button
                 onClick={enable}
                 disabled={busy}
-                className="flex-1 bg-teal text-white font-ui font-medium text-sm tracking-wider uppercase py-3.5 rounded-xl active:scale-[0.98] transition-transform disabled:opacity-60"
+                className="flex-1 bg-navy text-gold hover:bg-navy/90 font-ui font-medium text-sm tracking-wider uppercase py-3.5 rounded-md active:scale-[0.98] transition-transform disabled:opacity-60"
               >
                 {busy ? "Enabling…" : "Enable on this device"}
               </button>
@@ -205,7 +206,7 @@ function SettingsInner() {
               <button
                 onClick={disable}
                 disabled={busy}
-                className="flex-1 bg-white border border-navy/10 text-charcoal-light font-ui text-xs tracking-wider uppercase py-3.5 rounded-xl disabled:opacity-60"
+                className="flex-1 bg-white border border-navy/20 text-navy font-ui text-xs tracking-wider uppercase py-3.5 rounded-md disabled:opacity-60"
               >
                 {busy ? "Disabling…" : "Disable on this device"}
               </button>
@@ -217,7 +218,7 @@ function SettingsInner() {
           <button
             onClick={sendTest}
             disabled={busy}
-            className="w-full bg-navy text-cream font-ui text-xs tracking-wider uppercase py-3 rounded-xl active:scale-[0.98] transition-transform disabled:opacity-60"
+            className="w-full bg-navy text-gold hover:bg-navy/90 font-ui text-xs tracking-wider uppercase py-3 rounded-md active:scale-[0.98] transition-transform disabled:opacity-60"
           >
             Send test notification
           </button>
@@ -230,7 +231,7 @@ function SettingsInner() {
 
       <Link
         href="/studio/crm/import"
-        className="flex items-center justify-between bg-white rounded-2xl border border-navy/5 p-4"
+        className="flex items-center justify-between bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4"
       >
         <span className="font-body text-sm text-navy">Import contacts from CSV</span>
         <span className="text-charcoal-light">&rarr;</span>

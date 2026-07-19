@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { StudioShell } from "@/components/studio/StudioShell";
+import { CardTitle } from "@/components/studio/crm/CardTitle";
 import type { DealRow, MilestoneRow, ChecklistRow } from "@/lib/crm/portalTypes";
 
 interface ContactSummary {
@@ -112,8 +113,8 @@ function DealDetail() {
               {visibleDone}/{visible.length}
             </span>
           </div>
-          <div className="h-2 bg-navy/5 rounded-full overflow-hidden">
-            <div className="h-full bg-teal transition-all" style={{ width: `${progressPct}%` }} />
+          <div className="h-2 bg-navy/10 rounded-full overflow-hidden">
+            <div className="h-full bg-gold transition-all" style={{ width: `${progressPct}%` }} />
           </div>
         </div>
       )}
@@ -203,7 +204,7 @@ function DealHeaderCard({
   const label = "font-ui text-xs tracking-wider uppercase text-charcoal-light";
 
   return (
-    <section className="bg-white rounded-2xl border border-navy/5 p-4 space-y-4">
+    <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4 space-y-4">
       <div className="flex items-center gap-2">
         <span className="text-2xl leading-none">{deal.side === "buyer" ? "🏠" : "💰"}</span>
         <span className="font-ui text-xs tracking-wider uppercase text-charcoal-light">
@@ -247,7 +248,7 @@ function DealHeaderCard({
         <button
           onClick={save}
           disabled={saving}
-          className="w-full bg-teal text-white font-ui font-medium text-sm tracking-wider uppercase py-3.5 rounded-xl active:scale-[0.98] transition-transform disabled:opacity-60"
+          className="w-full bg-navy text-gold hover:bg-navy/90 font-ui font-medium text-sm tracking-wider uppercase py-3.5 rounded-md active:scale-[0.98] transition-transform disabled:opacity-60"
         >
           {saving ? "Saving…" : "Save"}
         </button>
@@ -432,9 +433,9 @@ function MilestonesCard({
   }
 
   return (
-    <section className="bg-white rounded-2xl border border-navy/5 divide-y divide-navy/5">
+    <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] divide-y divide-navy/5">
       <div className="p-4 pb-2">
-        <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light">Milestones</h2>
+        <CardTitle>Milestones</CardTitle>
       </div>
       {milestones.map((m, i) => (
         <MilestoneRowItem
@@ -463,7 +464,7 @@ function MilestonesCard({
         <button
           onClick={addStep}
           disabled={adding || !newTitle.trim()}
-          className="shrink-0 bg-navy text-cream font-ui text-xs tracking-wider uppercase px-4 py-2.5 rounded-xl disabled:opacity-50"
+          className="shrink-0 bg-navy text-gold hover:bg-navy/90 font-ui text-xs tracking-wider uppercase px-4 py-2.5 rounded-md disabled:opacity-50"
         >
           Add
         </button>
@@ -520,7 +521,7 @@ function MilestoneRowItem({
         onClick={onToggleDone}
         aria-label={done ? "Mark not done" : "Mark done"}
         className={`shrink-0 w-6 h-6 rounded-full border flex items-center justify-center text-xs ${
-          done ? "bg-teal border-teal text-white" : "border-navy/20 text-transparent"
+          done ? "bg-gold border-gold text-navy" : "border-navy/20 text-transparent"
         }`}
       >
         ✓
@@ -607,7 +608,7 @@ function MilestoneRowItem({
                   setMenuOpen(false);
                   onDelete();
                 }}
-                className="w-full text-left px-3 py-2 font-body text-xs text-red-600 hover:bg-cream"
+                className="w-full text-left px-3 py-2 font-body text-xs text-red-700 hover:bg-cream"
               >
                 Delete
               </button>
@@ -772,12 +773,12 @@ function ChecklistCard({
 
   if (checklist.length === 0) {
     return (
-      <section className="bg-white rounded-2xl border border-navy/5 p-4 space-y-3">
-        <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light">Listing checklist</h2>
+      <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4 space-y-3">
+        <CardTitle>Listing checklist</CardTitle>
         <button
           onClick={seed}
           disabled={seeding}
-          className="w-full bg-teal text-white font-ui font-medium text-sm tracking-wider uppercase py-3.5 rounded-xl active:scale-[0.98] transition-transform disabled:opacity-60"
+          className="w-full bg-navy text-gold hover:bg-navy/90 font-ui font-medium text-sm tracking-wider uppercase py-3.5 rounded-md active:scale-[0.98] transition-transform disabled:opacity-60"
         >
           {seeding ? "Adding…" : "Add listing checklist"}
         </button>
@@ -786,9 +787,12 @@ function ChecklistCard({
   }
 
   return (
-    <section className="bg-white rounded-2xl border border-navy/5 divide-y divide-navy/5">
-      <div className="p-4 pb-2 flex items-center justify-between">
-        <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light">Listing checklist</h2>
+    <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] divide-y divide-navy/5">
+      <div className="p-4 pb-2 flex items-end justify-between">
+        <div>
+          <h2 className="font-display font-medium text-base text-navy leading-tight">Listing checklist</h2>
+          <div className="w-8 h-px bg-gold mt-1.5" />
+        </div>
         <span className="font-ui text-xs tracking-wider text-charcoal-light">
           {done}/{checklist.length}
         </span>
@@ -804,8 +808,13 @@ function ChecklistCard({
               onClick={() => setExpanded((cur) => ({ ...cur, [phase]: !cur[phase] }))}
               className="w-full flex items-center justify-between px-4 py-3 text-left"
             >
-              <span className="font-ui text-sm text-navy">
-                {isOpen ? "▾" : "▸"} {CHECKLIST_PHASE_LABELS[phase] ?? `Phase ${phase}`}
+              <span className="flex items-center gap-2.5">
+                <span className="shrink-0 w-6 h-6 rounded bg-gold/15 text-[#7a5f30] font-display font-medium text-sm flex items-center justify-center">
+                  {phase}
+                </span>
+                <span className="font-ui text-sm text-navy">
+                  {isOpen ? "▾" : "▸"} {CHECKLIST_PHASE_LABELS[phase] ?? `Phase ${phase}`}
+                </span>
               </span>
               <span className="font-ui text-xs tracking-wider text-charcoal-light">
                 {phaseDone}/{items.length}
@@ -820,7 +829,7 @@ function ChecklistCard({
                       onClick={() => toggleDone(item)}
                       aria-label={item.done_at ? "Mark not done" : "Mark done"}
                       className={`shrink-0 w-6 h-6 rounded-full border flex items-center justify-center text-xs ${
-                        item.done_at ? "bg-teal border-teal text-white" : "border-navy/20 text-transparent"
+                        item.done_at ? "bg-gold border-gold text-navy" : "border-navy/20 text-transparent"
                       }`}
                     >
                       ✓
@@ -852,7 +861,7 @@ function ChecklistCard({
                   <button
                     onClick={() => addItem(phase)}
                     disabled={adding || !(newTitleByPhase[phase] ?? "").trim()}
-                    className="shrink-0 bg-navy text-cream font-ui text-xs tracking-wider uppercase px-4 py-2 rounded-xl disabled:opacity-50"
+                    className="shrink-0 bg-navy text-gold hover:bg-navy/90 font-ui text-xs tracking-wider uppercase px-4 py-2 rounded-md disabled:opacity-50"
                   >
                     Add
                   </button>
@@ -867,7 +876,7 @@ function ChecklistCard({
         <button
           onClick={removeAll}
           disabled={removing}
-          className="w-full text-center font-ui text-xs tracking-wider uppercase text-red-600 py-2 disabled:opacity-60"
+          className="w-full text-center bg-white border border-red-700/30 text-red-700 font-ui text-xs tracking-wider uppercase py-2.5 rounded-md disabled:opacity-60"
         >
           Remove checklist
         </button>
@@ -957,14 +966,14 @@ function PortalCard({
   }
 
   return (
-    <section className="bg-white rounded-2xl border border-navy/5 p-4 space-y-3">
-      <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light">Client portal</h2>
+    <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4 space-y-3">
+      <CardTitle>Client portal</CardTitle>
 
       {!token && (
         <button
           onClick={create}
           disabled={busy}
-          className="w-full bg-teal text-white font-ui font-medium text-sm tracking-wider uppercase py-3.5 rounded-xl active:scale-[0.98] transition-transform disabled:opacity-60"
+          className="w-full bg-navy text-gold hover:bg-navy/90 font-ui font-medium text-sm tracking-wider uppercase py-3.5 rounded-md active:scale-[0.98] transition-transform disabled:opacity-60"
         >
           {busy ? "Creating…" : "Create client portal link"}
         </button>
@@ -984,21 +993,21 @@ function PortalCard({
               href={relPath ?? "#"}
               target="_blank"
               rel="noreferrer"
-              className="flex-1 text-center bg-navy text-cream font-ui text-xs tracking-wider uppercase py-3 rounded-xl active:scale-[0.98] transition-transform"
+              className="flex-1 text-center bg-navy text-gold hover:bg-navy/90 font-ui text-xs tracking-wider uppercase py-3 rounded-md active:scale-[0.98] transition-transform"
             >
               Open
             </a>
             <button
               onClick={regenerate}
               disabled={busy}
-              className="flex-1 bg-white border border-navy/10 text-navy font-ui text-xs tracking-wider uppercase py-3 rounded-xl disabled:opacity-60"
+              className="flex-1 bg-white border border-navy/20 text-navy font-ui text-xs tracking-wider uppercase py-3 rounded-md disabled:opacity-60"
             >
               Regenerate
             </button>
             <button
               onClick={turnOff}
               disabled={busy}
-              className="flex-1 bg-white border border-red-200 text-red-600 font-ui text-xs tracking-wider uppercase py-3 rounded-xl disabled:opacity-60"
+              className="flex-1 bg-white border border-red-700/30 text-red-700 font-ui text-xs tracking-wider uppercase py-3 rounded-md disabled:opacity-60"
             >
               Turn off
             </button>

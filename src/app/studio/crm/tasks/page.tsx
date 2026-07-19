@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { StudioShell } from "@/components/studio/StudioShell";
 import { CrmTabs } from "@/components/studio/crm/CrmTabs";
+import { CardTitle } from "@/components/studio/crm/CardTitle";
 import { ContactRow } from "@/components/studio/crm/ContactListItem";
 
 interface TaskRow {
@@ -157,9 +158,9 @@ function TasksInner() {
 
       {loaded && (
         <>
-          <TaskSection title="Overdue" tasks={overdue} accent onToggle={toggleTask} />
-          <TaskSection title="Today" tasks={dueToday} onToggle={toggleTask} />
-          <TaskSection title="Upcoming" tasks={upcoming} onToggle={toggleTask} />
+          <TaskSection title="Overdue" tasks={overdue} accent="overdue" onToggle={toggleTask} />
+          <TaskSection title="Today" tasks={dueToday} accent="today" onToggle={toggleTask} />
+          <TaskSection title="Upcoming" tasks={upcoming} accent="upcoming" onToggle={toggleTask} />
           <TaskSection title="No date" tasks={noDate} onToggle={toggleTask} />
 
           {(doneTasks ?? []).length > 0 && (
@@ -172,9 +173,9 @@ function TasksInner() {
                 <span className={`transition-transform ${showDone ? "rotate-180" : ""}`}>▾</span>
               </button>
               {showDone && (
-                <div className="bg-white rounded-2xl border border-navy/5 divide-y divide-navy/5">
+                <div className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] divide-y divide-navy/5">
                   {(doneTasks ?? []).map((t) => (
-                    <TaskItem key={t.id} task={t} onToggle={toggleTask} />
+                    <TaskItem key={t.id} task={t} accent="done" onToggle={toggleTask} />
                   ))}
                 </div>
               )}
@@ -186,6 +187,15 @@ function TasksInner() {
   );
 }
 
+type TaskAccent = "overdue" | "today" | "upcoming" | "done";
+
+const TASK_ACCENT_COLOR: Record<TaskAccent, string> = {
+  overdue: "#f87171", // red-400 — unchanged, already works
+  today: "#C8A55B", // gold
+  upcoming: "#0F1D35", // navy
+  done: "#9A9A9A", // muted gray
+};
+
 function TaskSection({
   title,
   tasks,
@@ -194,16 +204,16 @@ function TaskSection({
 }: {
   title: string;
   tasks: TaskRow[];
-  accent?: boolean;
+  accent?: TaskAccent;
   onToggle: (t: TaskRow) => void;
 }) {
   if (tasks.length === 0) return null;
   return (
     <section>
-      <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light mb-2">
+      <CardTitle>
         {title} ({tasks.length})
-      </h2>
-      <div className="bg-white rounded-2xl border border-navy/5 divide-y divide-navy/5">
+      </CardTitle>
+      <div className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] divide-y divide-navy/5">
         {tasks.map((t) => (
           <TaskItem key={t.id} task={t} accent={accent} onToggle={onToggle} />
         ))}
@@ -218,17 +228,21 @@ function TaskItem({
   onToggle,
 }: {
   task: TaskRow;
-  accent?: boolean;
+  accent?: TaskAccent;
   onToggle: (t: TaskRow) => void;
 }) {
   const done = !!task.done_at;
+  const showAccent = accent && (accent === "done" || !done);
   return (
-    <div className={`flex items-center gap-3 p-4 ${accent && !done ? "border-l-4 border-red-400" : ""}`}>
+    <div
+      className="flex items-center gap-3 p-4 border-l-4"
+      style={{ borderLeftColor: showAccent ? TASK_ACCENT_COLOR[accent] : "transparent" }}
+    >
       <input
         type="checkbox"
         checked={done}
         onChange={() => onToggle(task)}
-        className="w-4 h-4 shrink-0 accent-teal"
+        className="w-4 h-4 shrink-0 accent-gold"
       />
       <span
         className={`font-body text-sm flex-1 min-w-0 truncate ${done ? "line-through text-charcoal-light" : "text-navy"}`}
@@ -309,7 +323,7 @@ function QuickAdd({ contacts, onAdded }: { contacts: ContactRow[]; onAdded: () =
         <button
           onClick={add}
           disabled={busy || !title.trim()}
-          className="shrink-0 bg-teal text-white font-ui text-xs tracking-wider uppercase px-4 py-3 rounded-xl active:scale-[0.98] transition-transform disabled:opacity-60"
+          className="shrink-0 bg-navy text-gold hover:bg-navy/90 font-ui text-xs tracking-wider uppercase px-4 py-3 rounded-md active:scale-[0.98] transition-transform disabled:opacity-60"
         >
           {busy ? "Adding…" : "+ Add"}
         </button>

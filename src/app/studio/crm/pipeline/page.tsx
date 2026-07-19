@@ -5,6 +5,7 @@ import Link from "next/link";
 import { StudioShell } from "@/components/studio/StudioShell";
 import { CrmTabs } from "@/components/studio/crm/CrmTabs";
 import { StagePill } from "@/components/studio/crm/StagePill";
+import { STAGE_COLORS } from "@/components/studio/crm/stageColors";
 import { ContactRow } from "@/components/studio/crm/ContactListItem";
 import { STAGES, STAGE_LABELS, Stage } from "@/lib/crm/normalize";
 
@@ -122,20 +123,29 @@ function PipelineInner() {
             <div className="grid grid-cols-6 gap-2">
               {PIPELINE_STAGES.map((stage) => {
                 const items = grouped[stage] ?? [];
+                const c = STAGE_COLORS[stage];
                 return (
-                  <div key={stage} className="min-w-0">
-                    <div className="flex items-center justify-between px-1 mb-2">
+                  <div
+                    key={stage}
+                    className="min-w-0 bg-white rounded-lg border border-navy/5 shadow-[0_1px_3px_rgba(15,29,53,0.06)] overflow-hidden"
+                    style={{ borderTop: `3px solid ${c.accent}` }}
+                  >
+                    <div className="flex items-center justify-between px-2 py-2">
                       <span className="font-ui text-xs tracking-wider uppercase text-navy truncate">
                         {STAGE_LABELS[stage]}
                       </span>
-                      <span className="font-ui text-[0.65rem] text-charcoal-light shrink-0">{items.length}</span>
+                      <span
+                        className={`font-ui text-[0.65rem] shrink-0 px-1.5 py-0.5 rounded-full ${c.bg} ${c.text}`}
+                      >
+                        {items.length}
+                      </span>
                     </div>
-                    <div className="max-h-[70vh] overflow-y-auto space-y-2 pr-1">
+                    <div className="max-h-[70vh] overflow-y-auto space-y-2 p-2 pt-0">
                       {items.length === 0 && (
                         <div className="font-body text-xs text-charcoal-light/60 px-1">Empty</div>
                       )}
-                      {items.map((c) => (
-                        <PipelineCard key={c.id} contact={c} onTap={() => setSheetContact(c)} />
+                      {items.map((item) => (
+                        <PipelineCard key={item.id} contact={item} onTap={() => setSheetContact(item)} />
                       ))}
                     </div>
                   </div>
@@ -168,9 +178,13 @@ function StageSection({
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const hasItems = contacts.length > 0;
+  const c = STAGE_COLORS[stage];
 
   return (
-    <section className="bg-white rounded-2xl border border-navy/5 overflow-hidden">
+    <section
+      className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] overflow-hidden"
+      style={{ borderTop: `3px solid ${c.accent}` }}
+    >
       <button
         onClick={() => hasItems && setCollapsed((v) => !v)}
         className="w-full flex items-center justify-between px-4 py-3"
@@ -178,7 +192,9 @@ function StageSection({
       >
         <span className="font-ui text-xs tracking-wider uppercase text-navy">{STAGE_LABELS[stage]}</span>
         <span className="flex items-center gap-2">
-          <span className="font-ui text-[0.65rem] text-charcoal-light">{contacts.length}</span>
+          <span className={`font-ui text-[0.65rem] px-1.5 py-0.5 rounded-full ${c.bg} ${c.text}`}>
+            {contacts.length}
+          </span>
           {hasItems && (
             <span
               className={`text-charcoal-light text-xs transition-transform ${collapsed ? "" : "rotate-180"}`}
@@ -190,8 +206,8 @@ function StageSection({
       </button>
       {hasItems && !collapsed && (
         <div className="px-3 pb-3 space-y-2 border-t border-navy/5 pt-3">
-          {contacts.map((c) => (
-            <PipelineCard key={c.id} contact={c} onTap={() => onTapCard(c)} />
+          {contacts.map((item) => (
+            <PipelineCard key={item.id} contact={item} onTap={() => onTapCard(item)} />
           ))}
         </div>
       )}
@@ -242,7 +258,7 @@ function StageSheet({
 
         <Link
           href={`/studio/crm/contact?id=${contact.id}`}
-          className="block w-full text-center bg-white border border-navy/10 text-navy font-ui text-xs tracking-wider uppercase py-3 rounded-xl"
+          className="block w-full text-center bg-white border border-navy/20 text-navy font-ui text-xs tracking-wider uppercase py-3 rounded-md"
         >
           Open contact
         </Link>
@@ -250,26 +266,29 @@ function StageSheet({
         <div>
           <div className="font-ui text-xs tracking-wider uppercase text-charcoal-light mb-2">Move to…</div>
           <div className="flex flex-wrap gap-2">
-            {STAGES.map((s) => (
-              <button
-                key={s}
-                onClick={() => onMove(s)}
-                disabled={s === contact.stage}
-                className={`font-ui text-xs tracking-wider uppercase px-4 py-2 rounded-full transition-colors ${
-                  s === contact.stage
-                    ? "bg-navy text-cream opacity-60 cursor-default"
-                    : "bg-white text-charcoal-light border border-navy/10 active:scale-[0.98]"
-                }`}
-              >
-                {STAGE_LABELS[s]}
-              </button>
-            ))}
+            {STAGES.map((s) => {
+              const c = STAGE_COLORS[s];
+              const isCurrent = s === contact.stage;
+              return (
+                <button
+                  key={s}
+                  onClick={() => onMove(s)}
+                  disabled={isCurrent}
+                  className={`font-ui text-xs tracking-wider uppercase px-4 py-2 rounded-full border transition-colors ${
+                    isCurrent ? "opacity-60 cursor-default" : `bg-white ${c.text} ${c.border} active:scale-[0.98]`
+                  }`}
+                  style={isCurrent ? { backgroundColor: c.solid.bg, borderColor: c.solid.bg, color: c.solid.text } : undefined}
+                >
+                  {STAGE_LABELS[s]}
+                </button>
+              );
+            })}
           </div>
         </div>
 
         <button
           onClick={onClose}
-          className="w-full bg-white border border-navy/10 text-charcoal-light font-ui text-xs tracking-wider uppercase py-3 rounded-xl"
+          className="w-full bg-white border border-navy/20 text-navy font-ui text-xs tracking-wider uppercase py-3 rounded-md"
         >
           Cancel
         </button>

@@ -34,15 +34,19 @@ export function StudioShell({
   return (
     <div className="min-h-screen bg-cream pb-16">
       <meta name="robots" content="noindex,nofollow" />
-      <header className="border-b border-navy/10 bg-white sticky top-0 z-40">
+      <header className="bg-navy sticky top-0 z-40">
         <div className="max-w-[640px] mx-auto px-5 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
             {backHref && (
-              <Link href={backHref} aria-label="Back" className="text-navy text-xl leading-none shrink-0">
+              <Link
+                href={backHref}
+                aria-label="Back"
+                className="text-gold-light hover:text-gold text-xl leading-none shrink-0 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy rounded"
+              >
                 &larr;
               </Link>
             )}
-            <div className="font-display font-light text-lg text-navy truncate">
+            <div className="font-display font-medium text-lg text-gold truncate">
               {title ?? "Studio"}
             </div>
           </div>
@@ -50,7 +54,7 @@ export function StudioShell({
             {headerActions}
             <button
               onClick={logout}
-              className="font-ui text-[0.65rem] tracking-wider uppercase text-charcoal-light hover:text-navy transition-colors shrink-0"
+              className="font-ui text-[0.65rem] tracking-wider uppercase text-cream/70 hover:text-gold-light transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy rounded"
             >
               Sign out
             </button>
