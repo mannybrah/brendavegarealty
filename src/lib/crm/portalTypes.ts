@@ -26,6 +26,16 @@ export interface MilestoneRow {
   updated_at: string;
 }
 
+export interface ChecklistRow {
+  id: string;
+  deal_id: string;
+  phase: number;
+  title: string;
+  done_at: string | null;
+  sort_order: number;
+  created_at: string;
+}
+
 export interface PortalData {
   deal: DealRow;
   contactFirstName: string;

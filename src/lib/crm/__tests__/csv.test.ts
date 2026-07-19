@@ -103,6 +103,12 @@ describe("autoMapColumns", () => {
     expect(autoMapColumns(["Notes"])).toEqual({ notes: 0 });
   });
 
+  test("recognizes FUB export 'Email 1' / 'Phone 1' headers", () => {
+    expect(autoMapColumns(["Email 1"])).toEqual({ email: 0 });
+    expect(autoMapColumns(["Phone 1"])).toEqual({ phone: 0 });
+    expect(autoMapColumns(["email 1", "phone 1"])).toEqual({ email: 0, phone: 1 });
+  });
+
   test("ignores unrecognized headers", () => {
     expect(autoMapColumns(["Zillow Agent ID", "Email"])).toEqual({ email: 1 });
   });
@@ -180,6 +186,28 @@ describe("rowsToImportContacts", () => {
       ["trash@x.com,Trash", "archived"],
       ["archived@x.com,Archived", "archived"],
       ["weird@x.com,SomeUnknownStage", "new"],
+    ];
+    for (const [csvLine, expected] of cases) {
+      const row = parseCsv(csvLine)[0];
+      const result = rowsToImportContacts([row], stageMap);
+      expect(result[0].stage).toBe(expected);
+    }
+  });
+
+  test("stage mapping covers Brenda's real brokerage export vocabulary", () => {
+    const stageMap = autoMapColumns(["Email", "Stage"]);
+    const cases: [string, string][] = [
+      ["a@x.com,Sphere A", "sphere"],
+      ["b@x.com,Sphere B", "sphere"],
+      ["c@x.com,Sphere C", "sphere"],
+      ["d@x.com,Sphere D", "sphere"],
+      ["e@x.com,Lead - Attempted to contact", "contacted"],
+      ["f@x.com,Lead- Contacted", "contacted"],
+      ["g@x.com,FARM Contacts", "sphere"],
+      ["h@x.com,Lead - Rental", "new"],
+      ["i@x.com,Active Client", "active"],
+      ["j@x.com,Pending", "under_contract"],
+      ["k@x.com,Lead", "new"],
     ];
     for (const [csvLine, expected] of cases) {
       const row = parseCsv(csvLine)[0];

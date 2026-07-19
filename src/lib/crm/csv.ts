@@ -43,9 +43,11 @@ const HEADER_MAP: Record<string, ImportField> = {
   "email": "email",
   "emails": "email",
   "email address": "email",
+  "email 1": "email",
   "phone": "phone",
   "phones": "phone",
   "phone number": "phone",
+  "phone 1": "phone",
   "mobile": "phone",
   "stage": "stage",
   "source": "source",
@@ -96,10 +98,21 @@ const STAGE_MAP: Record<string, Stage> = {
   "archived": "archived",
 };
 
-function mapStage(raw: string | undefined): Stage {
-  const key = (raw ?? "").trim().toLowerCase();
-  const stage = STAGE_MAP[key];
-  return stage && STAGES.includes(stage) ? stage : "new";
+function normalizeStageKey(raw: string | undefined): string {
+  return (raw ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+export function mapStage(raw: string | undefined): Stage {
+  const key = normalizeStageKey(raw);
+  const exact = STAGE_MAP[key];
+  if (exact && STAGES.includes(exact)) return exact;
+
+  if (key.startsWith("sphere")) return "sphere";
+  if (key.includes("attempted") || key.includes("contacted")) return "contacted";
+  if (key.startsWith("farm")) return "sphere";
+  if (key.startsWith("lead")) return "new";
+
+  return "new";
 }
 
 function firstValue(raw: string | undefined): string {

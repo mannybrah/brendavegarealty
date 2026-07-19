@@ -199,6 +199,8 @@ export async function handleContactDelete(id: string, env: Env): Promise<Respons
 
   await env.CRM_DB.batch([
     env.CRM_DB.prepare("DELETE FROM milestones WHERE deal_id IN (SELECT id FROM deals WHERE contact_id = ?1)").bind(id),
+    env.CRM_DB.prepare("DELETE FROM checklist_items WHERE deal_id IN (SELECT id FROM deals WHERE contact_id = ?1)").bind(id),
+    env.CRM_DB.prepare("DELETE FROM tasks WHERE deal_id IN (SELECT id FROM deals WHERE contact_id = ?1)").bind(id),
     env.CRM_DB.prepare("DELETE FROM deals WHERE contact_id = ?1").bind(id),
     env.CRM_DB.prepare("DELETE FROM tasks WHERE contact_id = ?1").bind(id),
     env.CRM_DB.prepare("DELETE FROM events WHERE contact_id = ?1").bind(id),

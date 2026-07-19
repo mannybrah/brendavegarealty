@@ -34,6 +34,9 @@ yarn-error.log*
 .env*
 .dev.vars
 
+# real CRM export data — never commit
+all-people-2026-07-16.csv
+
 # vercel
 .vercel
 

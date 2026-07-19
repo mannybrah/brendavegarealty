@@ -1,6 +1,8 @@
 import { Env } from "./env";
 import { jsonResponse } from "./http";
 import { dealTemplate } from "./dealTemplates";
+import { listingChecklist } from "./listingChecklist";
+import type { ChecklistRow } from "../lib/crm/portalTypes";
 import { STAGE_LABELS, Stage } from "../lib/crm/normalize";
 import type { DealRow, MilestoneRow, PortalData } from "../lib/crm/portalTypes";
 
@@ -83,6 +85,17 @@ export async function handleDealCreate(request: Request, env: Env): Promise<Resp
     );
   });
 
+  if (side === "seller") {
+    listingChecklist().forEach((item, index) => {
+      statements.push(
+        env.CRM_DB.prepare(
+          `INSERT INTO checklist_items (id, deal_id, phase, title, done_at, sort_order, created_at)
+           VALUES (?1, ?2, ?3, ?4, NULL, ?5, ?6)`
+        ).bind(crypto.randomUUID(), dealId, item.phase, item.title, index, now)
+      );
+    });
+  }
+
   const eventBody = `Started ${side} deal${propertyAddress ? ` — ${propertyAddress}` : ""}`;
   statements.push(
     env.CRM_DB.prepare(
@@ -119,12 +132,15 @@ export async function handleDealGet(id: string, env: Env): Promise<Response> {
   const deal = await env.CRM_DB.prepare("SELECT * FROM deals WHERE id = ?1").bind(id).first<DealRow>();
   if (!deal) return jsonResponse({ error: "not found" }, 404);
 
-  const [milestones, contact] = await Promise.all([
+  const [milestones, contact, checklist] = await Promise.all([
     env.CRM_DB.prepare("SELECT * FROM milestones WHERE deal_id = ?1 ORDER BY sort_order ASC").bind(id).all<MilestoneRow>(),
     env.CRM_DB.prepare("SELECT * FROM contacts WHERE id = ?1").bind(deal.contact_id).first<ContactRow>(),
+    env.CRM_DB.prepare("SELECT * FROM checklist_items WHERE deal_id = ?1 ORDER BY phase ASC, sort_order ASC")
+      .bind(id)
+      .all<ChecklistRow>(),
   ]);
 
-  return jsonResponse({ deal, milestones: milestones.results ?? [], contact });
+  return jsonResponse({ deal, milestones: milestones.results ?? [], contact, checklist: checklist.results ?? [] });
 }
 
 export async function handleDealPatch(id: string, request: Request, env: Env): Promise<Response> {
@@ -195,6 +211,7 @@ export async function handleDealDelete(id: string, env: Env): Promise<Response> 
   await env.CRM_DB.batch([
     env.CRM_DB.prepare("DELETE FROM tasks WHERE deal_id = ?1").bind(id),
     env.CRM_DB.prepare("DELETE FROM milestones WHERE deal_id = ?1").bind(id),
+    env.CRM_DB.prepare("DELETE FROM checklist_items WHERE deal_id = ?1").bind(id),
     env.CRM_DB.prepare("DELETE FROM deals WHERE id = ?1").bind(id),
   ]);
   return jsonResponse({ ok: true });
