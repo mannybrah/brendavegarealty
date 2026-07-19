@@ -56,6 +56,12 @@ import {
   handlePortalDisable,
   findDealByPortalToken,
 } from "./worker-lib/deals";
+import {
+  handleChecklistCreate,
+  handleChecklistPatch,
+  handleChecklistDelete,
+  handleChecklistDeleteAll,
+} from "./worker-lib/checklist";
 import { renderPortalPage, renderPortalExpiredPage } from "./worker-lib/portalPage";
 import {
   handlePushVapid,
@@ -272,6 +278,22 @@ export default {
     }
     if (crmMilestoneMatch && request.method === "DELETE") {
       return requireStudio(request, env, () => handleMilestoneDelete(crmMilestoneMatch[1], env));
+    }
+
+    // CRM listing checklist (seller escrow workflow)
+    const crmDealChecklistMatch = url.pathname.match(/^\/api\/studio\/crm\/deals\/([a-f0-9-]+)\/checklist$/);
+    if (crmDealChecklistMatch && request.method === "POST") {
+      return requireStudio(request, env, () => handleChecklistCreate(crmDealChecklistMatch[1], request, env));
+    }
+    if (crmDealChecklistMatch && request.method === "DELETE") {
+      return requireStudio(request, env, () => handleChecklistDeleteAll(crmDealChecklistMatch[1], env));
+    }
+    const crmChecklistMatch = url.pathname.match(/^\/api\/studio\/crm\/checklist\/([a-f0-9-]+)$/);
+    if (crmChecklistMatch && request.method === "PATCH") {
+      return requireStudio(request, env, () => handleChecklistPatch(crmChecklistMatch[1], request, env));
+    }
+    if (crmChecklistMatch && request.method === "DELETE") {
+      return requireStudio(request, env, () => handleChecklistDelete(crmChecklistMatch[1], env));
     }
 
     // Web push (VAPID) — subscribe/unsubscribe + manual test

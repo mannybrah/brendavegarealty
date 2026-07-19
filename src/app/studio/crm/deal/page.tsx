@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { StudioShell } from "@/components/studio/StudioShell";
-import type { DealRow, MilestoneRow } from "@/lib/crm/portalTypes";
+import type { DealRow, MilestoneRow, ChecklistRow } from "@/lib/crm/portalTypes";
 
 interface ContactSummary {
   id: string;
@@ -13,6 +13,14 @@ interface ContactSummary {
 }
 
 const DEAL_STATUSES = ["active", "pending", "closed", "cancelled"] as const;
+
+const CHECKLIST_PHASE_LABELS: Record<number, string> = {
+  1: "Listing kickoff",
+  2: "Week before market",
+  3: "Contract to close",
+  4: "Marketing menu",
+};
+const CHECKLIST_PHASE_ORDER = [1, 2, 3, 4];
 
 export default function DealPage() {
   return (
@@ -29,6 +37,7 @@ function DealDetail() {
 
   const [deal, setDeal] = useState<DealRow | null>(null);
   const [milestones, setMilestones] = useState<MilestoneRow[]>([]);
+  const [checklist, setChecklist] = useState<ChecklistRow[]>([]);
   const [contact, setContact] = useState<ContactSummary | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -43,11 +52,12 @@ function DealDetail() {
         }
         return r.ok ? r.json() : null;
       })
-      .then((j: { deal: DealRow; milestones: MilestoneRow[]; contact: ContactSummary } | null) => {
+      .then((j: { deal: DealRow; milestones: MilestoneRow[]; contact: ContactSummary; checklist: ChecklistRow[] } | null) => {
         if (j) {
           setDeal(j.deal);
           setMilestones(j.milestones ?? []);
           setContact(j.contact ?? null);
+          setChecklist(j.checklist ?? []);
         }
       })
       .catch((e) => {
@@ -109,6 +119,8 @@ function DealDetail() {
       )}
 
       <MilestonesCard dealId={deal.id} milestones={milestones} setMilestones={setMilestones} onError={setErr} onRefetch={load} />
+
+      <ChecklistCard deal={deal} checklist={checklist} setChecklist={setChecklist} onError={setErr} />
 
       <PortalCard deal={deal} onUpdated={setDeal} onError={setErr} />
     </div>
@@ -604,6 +616,255 @@ function MilestoneRowItem({
         )}
       </div>
     </div>
+  );
+}
+
+// ============================================================
+// Listing checklist
+// ============================================================
+
+function ChecklistCard({
+  deal,
+  checklist,
+  setChecklist,
+  onError,
+}: {
+  deal: DealRow;
+  checklist: ChecklistRow[];
+  setChecklist: React.Dispatch<React.SetStateAction<ChecklistRow[]>>;
+  onError: (msg: string | null) => void;
+}) {
+  const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+  const [newTitleByPhase, setNewTitleByPhase] = useState<Record<number, string>>({});
+  const [adding, setAdding] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [removing, setRemoving] = useState(false);
+
+  if (checklist.length === 0 && deal.side !== "seller") return null;
+
+  const done = checklist.filter((i) => i.done_at).length;
+
+  async function seed() {
+    onError(null);
+    setSeeding(true);
+    let r: Response | null;
+    try {
+      r = await fetch(`/api/studio/crm/deals/${deal.id}/checklist`, {
+        method: "POST",
+        credentials: "include",
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+    } catch {
+      r = null;
+    }
+    setSeeding(false);
+    if (!r || !r.ok) {
+      onError("Couldn't add the checklist — try again.");
+      return;
+    }
+    const j = (await r.json()) as { checklist: ChecklistRow[] };
+    setChecklist(j.checklist ?? []);
+  }
+
+  async function toggleDone(item: ChecklistRow) {
+    onError(null);
+    const nextDone = !item.done_at;
+    const prev = checklist;
+    setChecklist((cur) =>
+      cur.map((x) => (x.id === item.id ? { ...x, done_at: nextDone ? new Date().toISOString() : null } : x))
+    );
+    let r: Response | null;
+    try {
+      r = await fetch(`/api/studio/crm/checklist/${item.id}`, {
+        method: "PATCH",
+        credentials: "include",
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ done: nextDone }),
+      });
+    } catch {
+      r = null;
+    }
+    if (!r || !r.ok) {
+      setChecklist(prev);
+      onError("Couldn't update — try again.");
+      return;
+    }
+    const j = (await r.json()) as { item: ChecklistRow };
+    setChecklist((cur) => cur.map((x) => (x.id === item.id ? j.item : x)));
+  }
+
+  async function remove(item: ChecklistRow) {
+    onError(null);
+    const prev = checklist;
+    setChecklist((cur) => cur.filter((x) => x.id !== item.id));
+    let r: Response | null;
+    try {
+      r = await fetch(`/api/studio/crm/checklist/${item.id}`, { method: "DELETE", credentials: "include", cache: "no-store" });
+    } catch {
+      r = null;
+    }
+    if (!r || !r.ok) {
+      setChecklist(prev);
+      onError("Couldn't delete — try again.");
+    }
+  }
+
+  async function addItem(phase: number) {
+    const title = (newTitleByPhase[phase] ?? "").trim();
+    if (!title) return;
+    onError(null);
+    setAdding(true);
+    let r: Response | null;
+    try {
+      r = await fetch(`/api/studio/crm/deals/${deal.id}/checklist`, {
+        method: "POST",
+        credentials: "include",
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, phase }),
+      });
+    } catch {
+      r = null;
+    }
+    setAdding(false);
+    if (!r || !r.ok) {
+      onError("Couldn't add that item — try again.");
+      return;
+    }
+    const j = (await r.json()) as { item: ChecklistRow };
+    setChecklist((cur) => [...cur, j.item]);
+    setNewTitleByPhase((cur) => ({ ...cur, [phase]: "" }));
+  }
+
+  async function removeAll() {
+    if (!confirm("Remove the entire checklist? This can't be undone.")) return;
+    onError(null);
+    setRemoving(true);
+    const prev = checklist;
+    setChecklist([]);
+    let r: Response | null;
+    try {
+      r = await fetch(`/api/studio/crm/deals/${deal.id}/checklist`, {
+        method: "DELETE",
+        credentials: "include",
+        cache: "no-store",
+      });
+    } catch {
+      r = null;
+    }
+    setRemoving(false);
+    if (!r || !r.ok) {
+      setChecklist(prev);
+      onError("Couldn't remove the checklist — try again.");
+    }
+  }
+
+  if (checklist.length === 0) {
+    return (
+      <section className="bg-white rounded-2xl border border-navy/5 p-4 space-y-3">
+        <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light">Listing checklist</h2>
+        <button
+          onClick={seed}
+          disabled={seeding}
+          className="w-full bg-teal text-white font-ui font-medium text-sm tracking-wider uppercase py-3.5 rounded-xl active:scale-[0.98] transition-transform disabled:opacity-60"
+        >
+          {seeding ? "Adding…" : "Add listing checklist"}
+        </button>
+      </section>
+    );
+  }
+
+  return (
+    <section className="bg-white rounded-2xl border border-navy/5 divide-y divide-navy/5">
+      <div className="p-4 pb-2 flex items-center justify-between">
+        <h2 className="font-ui text-xs tracking-wider uppercase text-charcoal-light">Listing checklist</h2>
+        <span className="font-ui text-xs tracking-wider text-charcoal-light">
+          {done}/{checklist.length}
+        </span>
+      </div>
+
+      {CHECKLIST_PHASE_ORDER.map((phase) => {
+        const items = checklist.filter((i) => i.phase === phase);
+        const phaseDone = items.filter((i) => i.done_at).length;
+        const isOpen = !!expanded[phase];
+        return (
+          <div key={phase}>
+            <button
+              onClick={() => setExpanded((cur) => ({ ...cur, [phase]: !cur[phase] }))}
+              className="w-full flex items-center justify-between px-4 py-3 text-left"
+            >
+              <span className="font-ui text-sm text-navy">
+                {isOpen ? "▾" : "▸"} {CHECKLIST_PHASE_LABELS[phase] ?? `Phase ${phase}`}
+              </span>
+              <span className="font-ui text-xs tracking-wider text-charcoal-light">
+                {phaseDone}/{items.length}
+              </span>
+            </button>
+
+            {isOpen && (
+              <div className="divide-y divide-navy/5 border-t border-navy/5">
+                {items.map((item) => (
+                  <div key={item.id} className="flex items-center gap-2 px-4 py-2.5">
+                    <button
+                      onClick={() => toggleDone(item)}
+                      aria-label={item.done_at ? "Mark not done" : "Mark done"}
+                      className={`shrink-0 w-6 h-6 rounded-full border flex items-center justify-center text-xs ${
+                        item.done_at ? "bg-teal border-teal text-white" : "border-navy/20 text-transparent"
+                      }`}
+                    >
+                      ✓
+                    </button>
+                    <span
+                      className={`flex-1 min-w-0 font-body text-sm ${
+                        item.done_at ? "line-through text-charcoal-light" : "text-navy"
+                      }`}
+                    >
+                      {item.title}
+                    </span>
+                    <button
+                      onClick={() => remove(item)}
+                      aria-label="Delete item"
+                      className="shrink-0 w-6 h-6 flex items-center justify-center text-charcoal-light text-xs"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                <div className="flex gap-2 px-4 py-2.5">
+                  <input
+                    value={newTitleByPhase[phase] ?? ""}
+                    onChange={(e) => setNewTitleByPhase((cur) => ({ ...cur, [phase]: e.target.value }))}
+                    onKeyDown={(e) => e.key === "Enter" && addItem(phase)}
+                    placeholder="+ item"
+                    className="flex-1 min-w-0 bg-cream border border-navy/10 rounded-xl px-3 py-2 font-body text-sm focus:outline-none focus:border-teal"
+                  />
+                  <button
+                    onClick={() => addItem(phase)}
+                    disabled={adding || !(newTitleByPhase[phase] ?? "").trim()}
+                    className="shrink-0 bg-navy text-cream font-ui text-xs tracking-wider uppercase px-4 py-2 rounded-xl disabled:opacity-50"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      <div className="p-4">
+        <button
+          onClick={removeAll}
+          disabled={removing}
+          className="w-full text-center font-ui text-xs tracking-wider uppercase text-red-600 py-2 disabled:opacity-60"
+        >
+          Remove checklist
+        </button>
+      </div>
+    </section>
   );
 }
 
