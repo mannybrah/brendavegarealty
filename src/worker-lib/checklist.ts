@@ -32,12 +32,19 @@ export async function handleChecklistCreate(dealId: string, request: Request, en
 
     const now = new Date().toISOString();
     const items = listingChecklist();
-    const statements = items.map((item, index) =>
-      env.CRM_DB.prepare(
-        `INSERT INTO checklist_items (id, deal_id, phase, title, done_at, sort_order, created_at)
-         VALUES (?1, ?2, ?3, ?4, NULL, ?5, ?6)`
-      ).bind(crypto.randomUUID(), dealId, item.phase, item.title, index, now)
-    );
+    // Racing seed requests can both pass the COUNT guard above; clearing any
+    // rows a concurrent seed already inserted (as the first statement in
+    // this same batch) makes the batch idempotent so it converges to
+    // exactly `items.length` rows no matter how many calls race.
+    const statements = [
+      env.CRM_DB.prepare("DELETE FROM checklist_items WHERE deal_id = ?1").bind(dealId),
+      ...items.map((item, index) =>
+        env.CRM_DB.prepare(
+          `INSERT INTO checklist_items (id, deal_id, phase, title, done_at, sort_order, created_at)
+           VALUES (?1, ?2, ?3, ?4, NULL, ?5, ?6)`
+        ).bind(crypto.randomUUID(), dealId, item.phase, item.title, index, now)
+      ),
+    ];
     await env.CRM_DB.batch(statements);
 
     const checklist = await env.CRM_DB.prepare(
@@ -50,6 +57,9 @@ export async function handleChecklistCreate(dealId: string, request: Request, en
 
   const title = (body.title as string).trim();
   const phase = typeof body.phase === "number" ? body.phase : 0;
+  if (!Number.isInteger(phase) || phase < 1 || phase > 4) {
+    return jsonResponse({ error: "invalid phase" }, 400);
+  }
 
   const maxRow = await env.CRM_DB.prepare("SELECT MAX(sort_order) AS m FROM checklist_items WHERE deal_id = ?1 AND phase = ?2")
     .bind(dealId, phase)

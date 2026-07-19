@@ -671,7 +671,6 @@ function ChecklistCard({
   async function toggleDone(item: ChecklistRow) {
     onError(null);
     const nextDone = !item.done_at;
-    const prev = checklist;
     setChecklist((cur) =>
       cur.map((x) => (x.id === item.id ? { ...x, done_at: nextDone ? new Date().toISOString() : null } : x))
     );
@@ -688,7 +687,10 @@ function ChecklistCard({
       r = null;
     }
     if (!r || !r.ok) {
-      setChecklist(prev);
+      // Revert only this item — a full-snapshot revert would clobber any
+      // other checklist item that changed optimistically while this
+      // request was in flight.
+      setChecklist((cur) => cur.map((x) => (x.id === item.id ? item : x)));
       onError("Couldn't update — try again.");
       return;
     }
@@ -698,7 +700,7 @@ function ChecklistCard({
 
   async function remove(item: ChecklistRow) {
     onError(null);
-    const prev = checklist;
+    const prevIndex = checklist.findIndex((x) => x.id === item.id);
     setChecklist((cur) => cur.filter((x) => x.id !== item.id));
     let r: Response | null;
     try {
@@ -707,7 +709,13 @@ function ChecklistCard({
       r = null;
     }
     if (!r || !r.ok) {
-      setChecklist(prev);
+      // Re-insert only the removed item at its previous index — a
+      // full-snapshot revert would clobber any other checklist item that
+      // changed optimistically while this request was in flight.
+      setChecklist((cur) => {
+        const idx = prevIndex >= 0 && prevIndex <= cur.length ? prevIndex : cur.length;
+        return [...cur.slice(0, idx), item, ...cur.slice(idx)];
+      });
       onError("Couldn't delete — try again.");
     }
   }
