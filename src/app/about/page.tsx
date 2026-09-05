@@ -7,7 +7,7 @@ import { FinalCTA } from "@/components/home/FinalCTA";
 export const metadata: Metadata = {
   title: "About Brenda Vega",
   description:
-    "Meet Brenda Vega — a dedicated Bay Area real estate professional with Century 21, serving Campbell and beyond with integrity and heart.",
+    "Meet Brenda Vega — a dedicated Bay Area real estate professional with Real Broker, serving Campbell and beyond with integrity and heart.",
 };
 
 export default function AboutPage() {

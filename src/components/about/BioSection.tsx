@@ -4,7 +4,7 @@ import { AnimateOnScroll } from "@/components/ui/AnimateOnScroll";
 const bioParas = [
   "Brenda Vega brings a fresh perspective to Bay Area real estate. In just four years, she has earned the trust of buyers and sellers across Campbell and the surrounding communities through her relentless work ethic, sharp attention to detail, and a genuine commitment to putting her clients first.",
   "Before entering real estate, Brenda developed a deep appreciation for what makes a house a home \u2014 not just the structure, but the neighborhood, the community, and the life it supports. That understanding drives every client relationship she builds today.",
-  "As a Century 21 agent rooted in the heart of the Bay Area, Brenda combines modern marketing strategies with old-school dedication. She answers every call, shows up early, stays late, and treats every transaction \u2014 whether it\u2019s a first-time buyer or a seasoned investor \u2014 with the same level of care and professionalism.",
+  "As a Real Broker agent rooted in the heart of the Bay Area, Brenda combines modern marketing strategies with old-school dedication. She answers every call, shows up early, stays late, and treats every transaction \u2014 whether it\u2019s a first-time buyer or a seasoned investor \u2014 with the same level of care and professionalism.",
   "When she\u2019s not helping clients find their perfect home, you\u2019ll find Brenda exploring the neighborhoods she loves, staying ahead of market trends, and looking for new ways to deliver an exceptional experience.",
 ];
 

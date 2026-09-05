@@ -152,7 +152,7 @@ export function renderListingPage(listing: Listing): string {
 
   const metaDescriptionSource =
     listing.description.replace(/\s+/g, " ").trim().slice(0, 155) ||
-    `${listing.address}${listing.city ? `, ${listing.city}` : ""} — listed by Brenda Vega, Century 21.`;
+    `${listing.address}${listing.city ? `, ${listing.city}` : ""} — listed by Brenda Vega, Real Broker.`;
   const metaDescription = escapeHtml(metaDescriptionSource);
 
   const descriptionHtml = listing.description

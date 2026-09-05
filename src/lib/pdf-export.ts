@@ -186,7 +186,7 @@ export function generateCalculatorPDF(data: PdfExportData): void {
     doc.setPage(i);
     doc.setFontSize(7);
     doc.setTextColor(90, 90, 90);
-    doc.text("Prepared by Brenda Vega | Century 21", 14, 285);
+    doc.text("Prepared by Brenda Vega | Real Broker", 14, 285);
     doc.text("Estimates only. Consult a licensed mortgage professional for exact figures.", 14, 289);
     doc.text(`Generated ${new Date().toLocaleDateString()}`, 170, 285);
     doc.text(`Page ${i} of ${pageCount}`, 180, 289);

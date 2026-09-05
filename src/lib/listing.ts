@@ -120,7 +120,7 @@ export function stripHtmlToText(html: string, maxChars = 40000): string {
 // AI extraction (structured outputs)
 // ============================================================
 
-export const EXTRACT_SYSTEM = `You extract real-estate listing facts from the on-page text of a single-property marketing website (built on the Rela platform) for Brenda Vega, a Century 21 REALTOR serving Campbell, San Jose, and the South Bay / Northern California.
+export const EXTRACT_SYSTEM = `You extract real-estate listing facts from the on-page text of a single-property marketing website (built on the Rela platform) for Brenda Vega, a Real Broker REALTOR serving Campbell, San Jose, and the South Bay / Northern California.
 
 Read the page text and pull out only what is actually stated: address, city, price, beds, baths, sqft, lot size, description, and features. Never invent numbers, amenities, or upgrades that aren't in the text. If a field isn't present, use an empty string ("") for text fields, an empty array for features, or null for numbers.
 

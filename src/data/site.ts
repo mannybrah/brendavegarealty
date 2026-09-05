@@ -5,7 +5,7 @@ export const siteConfig = {
   agent: {
     name: "Brenda Vega",
     title: "REALTOR\u00AE",
-    brokerage: "Century 21",
+    brokerage: "Real Broker",
     dre: "02196981",
     phone: "(501) 827-9619",
     phoneRaw: "+15018279619",

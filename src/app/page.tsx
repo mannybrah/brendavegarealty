@@ -25,7 +25,7 @@ function SignatureStrip() {
         Brenda Vega
       </p>
       <p className="mt-1 font-body font-medium text-[0.6rem] tracking-[0.35em] uppercase text-charcoal-light/70">
-        Century 21 &middot; DRE #02196981
+        Real Broker &middot; DRE #02196981
       </p>
     </section>
   );
