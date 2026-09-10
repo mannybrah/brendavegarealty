@@ -79,7 +79,7 @@ export async function sendAgentNotification(data: {
     },
     body: JSON.stringify({
       from: "Brenda Vega Realty <noreply@brendavegarealty.com>",
-      to: ["brenda.vega@c21anew.com"],
+      to: ["brenda@brendavegarealty.com"],
       subject: `New Consultation Booked \u2014 ${data.clientName}`,
       html: `
         <div style="font-family: sans-serif;">

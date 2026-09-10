@@ -9,7 +9,7 @@ export const siteConfig = {
     dre: "02196981",
     phone: "(501) 827-9619",
     phoneRaw: "+15018279619",
-    email: "brenda.vega@c21anew.com",
+    email: "brenda@brendavegarealty.com",
     experience: "4+",
   },
   stats: {

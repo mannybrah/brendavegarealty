@@ -75,8 +75,13 @@ export async function handleContactList(request: Request, env: Env): Promise<Res
   const stmt = env.CRM_DB.prepare(
     `SELECT * FROM contacts ${where} ORDER BY last_activity_at DESC LIMIT 500`
   ).bind(...binds);
-  const { results } = await stmt.all<ContactRow>();
-  return jsonResponse({ contacts: results ?? [] });
+  const [{ results }, countRows] = await Promise.all([
+    stmt.all<ContactRow>(),
+    env.CRM_DB.prepare("SELECT stage, COUNT(*) AS n FROM contacts GROUP BY stage").all<{ stage: string; n: number }>(),
+  ]);
+  const counts: Record<string, number> = {};
+  for (const row of countRows.results ?? []) counts[row.stage] = row.n;
+  return jsonResponse({ contacts: results ?? [], counts });
 }
 
 export async function handleContactCreate(request: Request, env: Env): Promise<Response> {

@@ -20,10 +20,10 @@ export default function PrivacyPage() {
           <p>We use Google Analytics to understand how visitors interact with our website. This service collects anonymous usage data including pages visited and time spent on site.</p>
 
           <h2 className="font-display font-normal text-xl text-navy mt-8">Your Rights</h2>
-          <p>You may request to view, update, or delete your personal information at any time by contacting us at brenda.vega@c21anew.com or (501) 827-9619.</p>
+          <p>You may request to view, update, or delete your personal information at any time by contacting us at brenda@brendavegarealty.com or (501) 827-9619.</p>
 
           <h2 className="font-display font-normal text-xl text-navy mt-8">Contact</h2>
-          <p>For questions about this privacy policy, contact Brenda Vega at brenda.vega@c21anew.com.</p>
+          <p>For questions about this privacy policy, contact Brenda Vega at brenda@brendavegarealty.com.</p>
         </div>
       </div>
     </section>

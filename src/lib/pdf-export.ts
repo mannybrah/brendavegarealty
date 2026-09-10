@@ -55,7 +55,7 @@ export function generateCalculatorPDF(data: PdfExportData): void {
   y += 7;
   doc.setFontSize(9);
   doc.setTextColor(90, 90, 90);
-  doc.text("(501) 827-9619  |  brenda.vega@c21anew.com  |  brendavegarealty.com", 14, y);
+  doc.text("(501) 827-9619  |  brenda@brendavegarealty.com  |  brendavegarealty.com", 14, y);
   y += 3;
   doc.setDrawColor(...gold);
   doc.setLineWidth(0.5);

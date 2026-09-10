@@ -108,7 +108,7 @@ describe("renderPortalPage", () => {
     expect(html).toContain("Taylor&#39;s home sale");
     expect(html).toContain("tel:+15018279619");
     expect(html).toContain("sms:+15018279619");
-    expect(html).toContain("mailto:brenda.vega@c21anew.com");
+    expect(html).toContain("mailto:brenda@brendavegarealty.com");
   });
 
   test("formats YYYY-MM-DD milestone dates without timezone off-by-one", () => {
@@ -128,6 +128,6 @@ describe("renderPortalExpiredPage", () => {
     expect(html).toContain("no longer active");
     expect(html).toContain("tel:+15018279619");
     expect(html).toContain("sms:+15018279619");
-    expect(html).toContain("mailto:brenda.vega@c21anew.com");
+    expect(html).toContain("mailto:brenda@brendavegarealty.com");
   });
 });

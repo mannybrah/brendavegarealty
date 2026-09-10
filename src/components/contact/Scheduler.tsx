@@ -68,7 +68,7 @@ export function Scheduler() {
       // Send booking details via mailto
       const subject = encodeURIComponent(`Consultation Request from ${formData.name}`);
       const body = encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\nPhone: ${formData.phone}\nType: ${formData.consultationType}\nPreferred Date: ${dateDisplay}\nPreferred Time: ${timeDisplay} PT\n\nReason:\n${formData.reason}`);
-      window.open(`mailto:brenda.vega@c21anew.com?subject=${subject}&body=${body}`, "_self");
+      window.open(`mailto:brenda@brendavegarealty.com?subject=${subject}&body=${body}`, "_self");
       setStatus("booked");
     } catch {
       setStatus("error");

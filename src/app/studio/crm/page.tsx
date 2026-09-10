@@ -36,6 +36,7 @@ function ClientsInner() {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [stage, setStage] = useState<Stage | null>(null);
   const [contacts, setContacts] = useState<ContactRow[] | null>(null);
+  const [counts, setCounts] = useState<Record<string, number>>({});
   const [showAdd, setShowAdd] = useState(false);
 
   useEffect(() => {
@@ -50,7 +51,10 @@ function ClientsInner() {
     const qs = params.toString();
     fetch(`/api/studio/crm/contacts${qs ? `?${qs}` : ""}`, { credentials: "include", cache: "no-store", signal })
       .then((r) => (r.ok ? r.json() : { contacts: [] }))
-      .then((j: { contacts: ContactRow[] }) => setContacts(j.contacts ?? []))
+      .then((j: { contacts: ContactRow[]; counts?: Record<string, number> }) => {
+        setContacts(j.contacts ?? []);
+        if (j.counts) setCounts(j.counts);
+      })
       .catch((e) => {
         if (e instanceof DOMException && e.name === "AbortError") return;
         setContacts([]);
@@ -65,8 +69,12 @@ function ClientsInner() {
 
   const unfiltered = !debouncedQuery && !stage;
   const list = contacts ?? [];
-  const newContacts = unfiltered ? list.filter((c) => c.stage === "new") : [];
-  const restContacts = unfiltered ? list.filter((c) => c.stage !== "new") : list;
+  // "All" view is an address book: alphabetical by displayed name. Filtered
+  // views keep the server's most-recent-activity order.
+  const alphabetical = unfiltered ? [...list].sort(byDisplayName) : list;
+  const newContacts = unfiltered ? alphabetical.filter((c) => c.stage === "new") : [];
+  const restContacts = unfiltered ? alphabetical.filter((c) => c.stage !== "new") : list;
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
   return (
     <div className="space-y-4">
@@ -87,7 +95,8 @@ function ClientsInner() {
           </button>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto">
+        {/* pb-3 keeps the overlay scrollbar (iOS/PWA) below the pills instead of on top of them */}
+        <div className="flex gap-2 overflow-x-auto pb-3 -mb-2">
           <button
             onClick={() => setStage(null)}
             className={`shrink-0 font-ui text-xs tracking-wider uppercase px-4 py-2 rounded-full border transition-colors ${
@@ -95,6 +104,7 @@ function ClientsInner() {
             }`}
           >
             All
+            <CountBadge n={total} />
           </button>
           {STAGES.map((s) => {
             const c = STAGE_COLORS[s];
@@ -113,6 +123,7 @@ function ClientsInner() {
                 }
               >
                 {STAGE_LABELS[s]}
+                <CountBadge n={counts[s] ?? 0} />
               </button>
             );
           })}
@@ -177,6 +188,20 @@ function ClientsInner() {
         />
       )}
     </div>
+  );
+}
+
+function byDisplayName(a: ContactRow, b: ContactRow): number {
+  const an = `${a.first_name} ${a.last_name}`.trim();
+  const bn = `${b.first_name} ${b.last_name}`.trim();
+  return an.localeCompare(bn, "en", { sensitivity: "base" });
+}
+
+function CountBadge({ n }: { n: number }) {
+  return (
+    <span className="ml-1.5 inline-block min-w-[1.25rem] text-center font-ui text-[0.65rem] tabular-nums opacity-70">
+      {n}
+    </span>
   );
 }
 

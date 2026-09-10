@@ -1001,7 +1001,7 @@ The break-even point? About 4 to 5 years. So if you're planning to stay in San J
 <p><a href="https://forms.gle/PXYpSu47XWyq5Jy7A" target="_blank" rel="noopener noreferrer" style="display: inline-block; background: #c8a55b; color: #0f1d35; padding: 14px 32px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 1.1rem;">RSVP Now — It's Free</a></p>
 
 <h2>About the Host</h2>
-<p>This event is hosted by <strong>Brenda Vega</strong>, Realtor with Real Broker serving the Bay Area. Brenda is passionate about giving back to the communities she serves — from Campbell and San Jose to Dixon and beyond. If you have questions about the event or about buying or selling a home in the Bay Area, reach out anytime at <strong>(501) 827-9619</strong> or <a href="mailto:brenda.vega@c21anew.com">brenda.vega@c21anew.com</a>.</p>
+<p>This event is hosted by <strong>Brenda Vega</strong>, Realtor with Real Broker serving the Bay Area. Brenda is passionate about giving back to the communities she serves — from Campbell and San Jose to Dixon and beyond. If you have questions about the event or about buying or selling a home in the Bay Area, reach out anytime at <strong>(501) 827-9619</strong> or <a href="mailto:brenda@brendavegarealty.com">brenda@brendavegarealty.com</a>.</p>
 
 <p>See you there!</p>`,
     videoScript: "",
