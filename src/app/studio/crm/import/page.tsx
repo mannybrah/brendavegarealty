@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { StudioShell } from "@/components/studio/StudioShell";
-import { CardTitle } from "@/components/studio/crm/CardTitle";
+import { CrmShell } from "@/components/studio/crm/CrmShell";
+import { SectionTitle } from "@/components/studio/crm/ui";
 import { parseCsv, autoMapColumns, rowsToImportContacts, type ImportField, type ImportContact } from "@/lib/crm/csv";
 
 const CHUNK_SIZE = 200;
@@ -49,9 +49,9 @@ interface Totals {
 
 export default function CrmImportPage() {
   return (
-    <StudioShell title="Import contacts" backHref="/studio/crm">
+    <CrmShell title="Import contacts" backHref="/studio/crm/settings" wide={false}>
       <ImportInner />
-    </StudioShell>
+    </CrmShell>
   );
 }
 
@@ -193,7 +193,7 @@ function ImportInner() {
       {err && <div className="font-body text-sm text-red-600">{err}</div>}
 
       <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4 space-y-3">
-        <CardTitle>1. Choose a file</CardTitle>
+        <SectionTitle>1. Choose a file</SectionTitle>
         <input
           type="file"
           accept=".csv"
@@ -209,7 +209,7 @@ function ImportInner() {
 
       {hasFile && (
         <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4 space-y-3">
-          <CardTitle>2. Map columns</CardTitle>
+          <SectionTitle>2. Map columns</SectionTitle>
           <div className="space-y-2">
             {FIELD_ORDER.map((f) => (
               <div key={f} className="flex items-center justify-between gap-3">
@@ -230,9 +230,9 @@ function ImportInner() {
 
       {hasFile && (
         <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4 space-y-3">
-          <CardTitle>
+          <SectionTitle>
             3. Preview ({mappedContacts.length} contact{mappedContacts.length === 1 ? "" : "s"} will import)
-          </CardTitle>
+          </SectionTitle>
           {mappedContacts.length === 0 ? (
             <div className="font-body text-sm text-charcoal-light">
               No rows matched — map at least a name, email, or phone column above.

@@ -2,48 +2,41 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { StudioShell } from "@/components/studio/StudioShell";
-import { CrmTabs } from "@/components/studio/crm/CrmTabs";
+import { CrmShell } from "@/components/studio/crm/CrmShell";
+import { useStages } from "@/components/studio/crm/StagesContext";
 import { StagePill } from "@/components/studio/crm/StagePill";
-import { STAGE_COLORS } from "@/components/studio/crm/stageColors";
-import { ContactRow } from "@/components/studio/crm/ContactListItem";
-import { STAGES, STAGE_LABELS, Stage } from "@/lib/crm/normalize";
+import { paletteFor } from "@/components/studio/crm/stageColors";
+import { Btn, EmptyState, ErrorText, Sheet, TagBubble, crmFetch } from "@/components/studio/crm/ui";
+import { relativeShort } from "@/lib/crm/format";
+import type { ContactListRow, StageRow } from "@/lib/crm/types";
 
 // The pipeline shows every working stage except "archived" — archived
 // contacts are parked, not part of the active pipeline.
-const PIPELINE_STAGES = STAGES.filter((s) => s !== "archived");
-
-function relativeShort(iso: string, now: Date = new Date()): string {
-  const then = new Date(iso);
-  const sec = Math.max(0, (now.getTime() - then.getTime()) / 1000);
-  if (sec < 60) return "now";
-  if (sec < 3600) return `${Math.floor(sec / 60)}m`;
-  if (sec < 86400) return `${Math.floor(sec / 3600)}h`;
-  if (sec < 7 * 86400) return `${Math.floor(sec / 86400)}d`;
-  return then.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+function pipelineStages(stages: StageRow[]): StageRow[] {
+  return stages.filter((s) => s.id !== "archived");
 }
 
-function groupByStage(contacts: ContactRow[]): Partial<Record<Stage, ContactRow[]>> {
-  const grouped: Partial<Record<Stage, ContactRow[]>> = {};
+function groupByStage(contacts: ContactListRow[]): Record<string, ContactListRow[]> {
+  const grouped: Record<string, ContactListRow[]> = {};
   for (const c of contacts) {
     if (c.stage === "archived") continue;
-    const key = c.stage as Stage;
-    (grouped[key] ??= []).push(c);
+    (grouped[c.stage] ??= []).push(c);
   }
   return grouped;
 }
 
 export default function CrmPipelinePage() {
   return (
-    <StudioShell title="Pipeline" backHref="/studio/crm">
+    <CrmShell title="Pipeline">
       <PipelineInner />
-    </StudioShell>
+    </CrmShell>
   );
 }
 
 function PipelineInner() {
-  const [contacts, setContacts] = useState<ContactRow[] | null>(null);
-  const [sheetContact, setSheetContact] = useState<ContactRow | null>(null);
+  const { stages, loading: stagesLoading } = useStages();
+  const [contacts, setContacts] = useState<ContactListRow[] | null>(null);
+  const [sheetContact, setSheetContact] = useState<ContactListRow | null>(null);
   const [err, setErr] = useState<string | null>(null);
   // Single-flight guard: every call aborts the prior in-flight request so an
   // older response can never overwrite state from a newer one (mount effect
@@ -54,9 +47,9 @@ function PipelineInner() {
     fetchControllerRef.current?.abort();
     const controller = new AbortController();
     fetchControllerRef.current = controller;
-    fetch(`/api/studio/crm/contacts`, { credentials: "include", cache: "no-store", signal: controller.signal })
+    crmFetch(`/api/studio/crm/contacts?limit=1000`, { signal: controller.signal })
       .then((r) => (r.ok ? r.json() : { contacts: [] }))
-      .then((j: { contacts: ContactRow[] }) => setContacts(j.contacts ?? []))
+      .then((j: { contacts: ContactListRow[] }) => setContacts(j.contacts ?? []))
       .catch((e) => {
         if (e instanceof DOMException && e.name === "AbortError") return;
         setContacts([]);
@@ -68,9 +61,10 @@ function PipelineInner() {
     return () => fetchControllerRef.current?.abort();
   }, []);
 
+  const board = pipelineStages(stages);
   const grouped = groupByStage(contacts ?? []);
 
-  async function moveStage(contact: ContactRow, stage: Stage) {
+  async function moveStage(contact: ContactListRow, stage: string) {
     if (stage === contact.stage) return;
     setErr(null);
     const prev = contacts;
@@ -78,10 +72,8 @@ function PipelineInner() {
     setSheetContact(null);
     let r: Response | null;
     try {
-      r = await fetch(`/api/studio/crm/contacts/${contact.id}`, {
+      r = await crmFetch(`/api/studio/crm/contacts/${contact.id}`, {
         method: "PATCH",
-        credentials: "include",
-        cache: "no-store",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ stage }),
       });
@@ -96,43 +88,44 @@ function PipelineInner() {
     fetchContacts();
   }
 
+  const loading = contacts === null || stagesLoading;
+
   return (
     <div className="space-y-4">
-      <CrmTabs active="pipeline" />
+      {err && <ErrorText>{err}</ErrorText>}
 
-      {err && <div className="font-body text-sm text-red-600">{err}</div>}
+      {loading && <div className="font-body text-sm text-charcoal-light">Loading…</div>}
 
-      {contacts === null && <div className="font-body text-sm text-charcoal-light">Loading…</div>}
-
-      {contacts !== null && (
+      {!loading && (
         <>
           {/* Mobile: stacked collapsible stage sections */}
           <div className="md:hidden space-y-3">
-            {PIPELINE_STAGES.map((stage) => (
+            {board.map((stage) => (
               <StageSection
-                key={stage}
+                key={stage.id}
                 stage={stage}
-                contacts={grouped[stage] ?? []}
+                contacts={grouped[stage.id] ?? []}
                 onTapCard={setSheetContact}
               />
             ))}
           </div>
 
-          {/* Desktop: full-bleed 6-column board */}
+          {/* Desktop: full-bleed board — the stage count is dynamic, so the
+              columns auto-fit rather than living on a fixed 6-up grid. */}
           <div className="hidden md:block w-screen relative left-1/2 -translate-x-1/2 px-4">
-            <div className="grid grid-cols-6 gap-2">
-              {PIPELINE_STAGES.map((stage) => {
-                const items = grouped[stage] ?? [];
-                const c = STAGE_COLORS[stage];
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2">
+              {board.map((stage) => {
+                const items = grouped[stage.id] ?? [];
+                const c = paletteFor(stage.color);
                 return (
                   <div
-                    key={stage}
+                    key={stage.id}
                     className="min-w-0 bg-white rounded-lg border border-navy/5 shadow-[0_1px_3px_rgba(15,29,53,0.06)] overflow-hidden"
                     style={{ borderTop: `3px solid ${c.accent}` }}
                   >
                     <div className="flex items-center justify-between px-2 py-2">
                       <span className="font-ui text-xs tracking-wider uppercase text-navy truncate">
-                        {STAGE_LABELS[stage]}
+                        {stage.name}
                       </span>
                       <span
                         className={`font-ui text-[0.65rem] shrink-0 px-1.5 py-0.5 rounded-full ${c.bg} ${c.text}`}
@@ -153,16 +146,17 @@ function PipelineInner() {
               })}
             </div>
           </div>
+
+          {board.length === 0 && <EmptyState>No stages yet — add one in Settings.</EmptyState>}
         </>
       )}
 
-      {sheetContact && (
-        <StageSheet
-          contact={sheetContact}
-          onClose={() => setSheetContact(null)}
-          onMove={(stage) => moveStage(sheetContact, stage)}
-        />
-      )}
+      <StageSheet
+        contact={sheetContact}
+        stages={stages}
+        onClose={() => setSheetContact(null)}
+        onMove={(stage) => sheetContact && moveStage(sheetContact, stage)}
+      />
     </div>
   );
 }
@@ -172,13 +166,13 @@ function StageSection({
   contacts,
   onTapCard,
 }: {
-  stage: Stage;
-  contacts: ContactRow[];
-  onTapCard: (c: ContactRow) => void;
+  stage: StageRow;
+  contacts: ContactListRow[];
+  onTapCard: (c: ContactListRow) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const hasItems = contacts.length > 0;
-  const c = STAGE_COLORS[stage];
+  const c = paletteFor(stage.color);
 
   return (
     <section
@@ -190,7 +184,7 @@ function StageSection({
         className="w-full flex items-center justify-between px-4 py-3"
         disabled={!hasItems}
       >
-        <span className="font-ui text-xs tracking-wider uppercase text-navy">{STAGE_LABELS[stage]}</span>
+        <span className="font-ui text-xs tracking-wider uppercase text-navy">{stage.name}</span>
         <span className="flex items-center gap-2">
           <span className={`font-ui text-[0.65rem] px-1.5 py-0.5 rounded-full ${c.bg} ${c.text}`}>
             {contacts.length}
@@ -215,14 +209,22 @@ function StageSection({
   );
 }
 
-function PipelineCard({ contact, onTap }: { contact: ContactRow; onTap: () => void }) {
+function PipelineCard({ contact, onTap }: { contact: ContactListRow; onTap: () => void }) {
   const name = `${contact.first_name} ${contact.last_name}`.trim() || "No name";
+  const tags = (contact.tags ?? []).slice(0, 2);
   return (
     <button
       onClick={onTap}
       className="w-full text-left bg-cream md:bg-white border border-navy/5 rounded-xl p-3 active:scale-[0.98] transition-transform"
     >
       <div className="font-body text-sm text-navy truncate">{name}</div>
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-1.5">
+          {tags.map((t) => (
+            <TagBubble key={t.id} name={t.name} />
+          ))}
+        </div>
+      )}
       <div className="flex items-center justify-between mt-1.5 gap-2">
         <span className="font-ui text-[0.6rem] tracking-wider uppercase text-charcoal-light truncate">
           {contact.source || "—"}
@@ -237,62 +239,66 @@ function PipelineCard({ contact, onTap }: { contact: ContactRow; onTap: () => vo
 
 function StageSheet({
   contact,
+  stages,
   onClose,
   onMove,
 }: {
-  contact: ContactRow;
+  contact: ContactListRow | null;
+  stages: StageRow[];
   onClose: () => void;
-  onMove: (stage: Stage) => void;
+  onMove: (stage: string) => void;
 }) {
-  const name = `${contact.first_name} ${contact.last_name}`.trim() || "No name";
+  const name = contact ? `${contact.first_name} ${contact.last_name}`.trim() || "No name" : "";
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-navy/40" onClick={onClose}>
-      <div
-        className="w-full sm:max-w-sm bg-cream rounded-t-3xl sm:rounded-3xl p-6 space-y-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="font-display font-normal text-lg text-navy truncate">{name}</div>
-          <StagePill stage={contact.stage} />
-        </div>
+    <Sheet
+      open={contact !== null}
+      onClose={onClose}
+      title={name}
+      footer={
+        <Btn variant="secondary" className="w-full" onClick={onClose}>
+          Cancel
+        </Btn>
+      }
+    >
+      {contact && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 min-w-0">
+            <StagePill stageId={contact.stage} />
+          </div>
 
-        <Link
-          href={`/studio/crm/contact?id=${contact.id}`}
-          className="block w-full text-center bg-white border border-navy/20 text-navy font-ui text-xs tracking-wider uppercase py-3 rounded-md"
-        >
-          Open contact
-        </Link>
+          <Link
+            href={`/studio/crm/contact?id=${contact.id}`}
+            className="block w-full text-center bg-white border border-navy/20 text-navy font-ui text-xs tracking-wider uppercase py-3 rounded-md"
+          >
+            Open contact
+          </Link>
 
-        <div>
-          <div className="font-ui text-xs tracking-wider uppercase text-charcoal-light mb-2">Move to…</div>
-          <div className="flex flex-wrap gap-2">
-            {STAGES.map((s) => {
-              const c = STAGE_COLORS[s];
-              const isCurrent = s === contact.stage;
-              return (
-                <button
-                  key={s}
-                  onClick={() => onMove(s)}
-                  disabled={isCurrent}
-                  className={`font-ui text-xs tracking-wider uppercase px-4 py-2 rounded-full border transition-colors ${
-                    isCurrent ? "opacity-60 cursor-default" : `bg-white ${c.text} ${c.border} active:scale-[0.98]`
-                  }`}
-                  style={isCurrent ? { backgroundColor: c.solid.bg, borderColor: c.solid.bg, color: c.solid.text } : undefined}
-                >
-                  {STAGE_LABELS[s]}
-                </button>
-              );
-            })}
+          <div>
+            <div className="font-ui text-xs tracking-wider uppercase text-charcoal-light mb-2">Move to…</div>
+            <div className="flex flex-wrap gap-2">
+              {stages.map((s) => {
+                const c = paletteFor(s.color);
+                const isCurrent = s.id === contact.stage;
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => onMove(s.id)}
+                    disabled={isCurrent}
+                    className={`font-ui text-xs tracking-wider uppercase px-4 py-2 rounded-full border transition-colors ${
+                      isCurrent ? "opacity-60 cursor-default" : `bg-white ${c.text} ${c.border} active:scale-[0.98]`
+                    }`}
+                    style={
+                      isCurrent ? { backgroundColor: c.solid.bg, borderColor: c.solid.bg, color: c.solid.text } : undefined
+                    }
+                  >
+                    {s.name}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-
-        <button
-          onClick={onClose}
-          className="w-full bg-white border border-navy/20 text-navy font-ui text-xs tracking-wider uppercase py-3 rounded-md"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
+      )}
+    </Sheet>
   );
 }

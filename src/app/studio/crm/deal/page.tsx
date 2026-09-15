@@ -3,8 +3,8 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { StudioShell } from "@/components/studio/StudioShell";
-import { CardTitle } from "@/components/studio/crm/CardTitle";
+import { CrmShell } from "@/components/studio/crm/CrmShell";
+import { SectionTitle } from "@/components/studio/crm/ui";
 import type { DealRow, MilestoneRow, ChecklistRow } from "@/lib/crm/portalTypes";
 
 interface ContactSummary {
@@ -24,16 +24,23 @@ const CHECKLIST_PHASE_LABELS: Record<number, string> = {
 const CHECKLIST_PHASE_ORDER = [1, 2, 3, 4];
 
 export default function DealPage() {
+  // The deal's contact only arrives with the GET, so the shell's mobile back
+  // arrow starts at People and retargets the contact once it is known.
+  const [contactId, setContactId] = useState<string | null>(null);
   return (
-    <StudioShell title="Deal" backHref="/studio/crm">
+    <CrmShell
+      title="Deal"
+      backHref={contactId ? `/studio/crm/contact?id=${contactId}` : "/studio/crm/people"}
+      wide={false}
+    >
       <Suspense fallback={<div className="font-body text-sm text-charcoal-light">Loading…</div>}>
-        <DealDetail />
+        <DealDetail onContact={setContactId} />
       </Suspense>
-    </StudioShell>
+    </CrmShell>
   );
 }
 
-function DealDetail() {
+function DealDetail({ onContact }: { onContact: (id: string | null) => void }) {
   const id = useSearchParams().get("id");
 
   const [deal, setDeal] = useState<DealRow | null>(null);
@@ -58,6 +65,7 @@ function DealDetail() {
           setDeal(j.deal);
           setMilestones(j.milestones ?? []);
           setContact(j.contact ?? null);
+          onContact(j.contact?.id ?? null);
           setChecklist(j.checklist ?? []);
         }
       })
@@ -97,7 +105,7 @@ function DealDetail() {
       {contact && (
         <Link
           href={`/studio/crm/contact?id=${contact.id}`}
-          className="font-ui text-[0.65rem] tracking-wider uppercase text-teal"
+          className="hidden lg:inline-block font-ui text-[0.65rem] tracking-wider uppercase text-teal"
         >
           &larr; {`${contact.first_name} ${contact.last_name}`.trim() || "Contact"}
         </Link>
@@ -434,8 +442,8 @@ function MilestonesCard({
 
   return (
     <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] divide-y divide-navy/5">
-      <div className="p-4 pb-2">
-        <CardTitle>Milestones</CardTitle>
+      <div className="p-4 pb-3">
+        <SectionTitle>Milestones</SectionTitle>
       </div>
       {milestones.map((m, i) => (
         <MilestoneRowItem
@@ -774,7 +782,7 @@ function ChecklistCard({
   if (checklist.length === 0) {
     return (
       <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4 space-y-3">
-        <CardTitle>Listing checklist</CardTitle>
+        <SectionTitle>Listing checklist</SectionTitle>
         <button
           onClick={seed}
           disabled={seeding}
@@ -967,7 +975,7 @@ function PortalCard({
 
   return (
     <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4 space-y-3">
-      <CardTitle>Client portal</CardTitle>
+      <SectionTitle>Client portal</SectionTitle>
 
       {!token && (
         <button
