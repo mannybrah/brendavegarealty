@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CrmShell } from "@/components/studio/crm/CrmShell";
 import { useStages } from "@/components/studio/crm/StagesContext";
 import { STAGE_PALETTE, paletteFor } from "@/components/studio/crm/stageColors";
@@ -190,6 +190,9 @@ function InlineText({
 // ------------------------------------------------------------
 function StagesInner() {
   const { stages, loading, refresh } = useStages();
+  // Per-stage contact counts, so the delete sheet can say how many contacts
+  // are about to move. One row is enough: the counts come with every list.
+  const [stageCounts, setStageCounts] = useState<Record<string, number>>({});
   // Optimistic order is tagged with the server list it was derived from, so a
   // fresh list from the context automatically supersedes it (no sync effect).
   const [order, setOrder] = useState<{ base: StageRow[]; rows: StageRow[] } | null>(null);
@@ -199,6 +202,18 @@ function StagesInner() {
   const [deleting, setDeleting] = useState<StageRow | null>(null);
 
   const rows = order && order.base === stages ? order.rows : stages;
+
+  const loadCounts = useCallback(() => {
+    crmJson<{ counts: Record<string, number> }>("/api/studio/crm/contacts?limit=1")
+      .then((j) => setStageCounts(j.counts ?? {}))
+      .catch(() => {
+        /* the sheet just omits the number */
+      });
+  }, []);
+
+  useEffect(() => {
+    loadCounts();
+  }, [loadCounts]);
 
   useEffect(() => {
     if (!notice) return;
@@ -212,7 +227,7 @@ function StagesInner() {
       await crmJson(`/api/studio/crm/stages/${id}`, { method: "PATCH", body: JSON.stringify(body) });
       await refresh();
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Couldn't save that stage — try again.");
+      setErr(e instanceof Error ? e.message : "Couldn't save that stage. Try again.");
     }
   }
 
@@ -233,7 +248,7 @@ function StagesInner() {
       await refresh();
     } catch (e) {
       setOrder({ base: stages, rows: previous });
-      setErr(e instanceof Error ? e.message : "Couldn't reorder the stages — try again.");
+      setErr(e instanceof Error ? e.message : "Couldn't reorder the stages. Try again.");
     }
     setBusy(false);
   }
@@ -328,11 +343,13 @@ function StagesInner() {
 
       <DeleteStageSheet
         stage={deleting}
+        count={deleting ? stageCounts[deleting.id] : undefined}
         others={rows.filter((s) => s.id !== deleting?.id)}
         onClose={() => setDeleting(null)}
         onDeleted={async (moved) => {
           setDeleting(null);
           setNotice(`Moved ${moved} contact${moved === 1 ? "" : "s"}.`);
+          loadCounts();
           await refresh();
         }}
         onError={setErr}
@@ -371,7 +388,7 @@ function AddStageForm({
       setColor("steel");
       await onAdded(trimmed);
     } catch (e) {
-      onError(e instanceof Error ? e.message : "Couldn't add that stage — try again.");
+      onError(e instanceof Error ? e.message : "Couldn't add that stage. Try again.");
     }
     setBusy(false);
   }
@@ -421,12 +438,14 @@ function AddStageForm({
 // ------------------------------------------------------------
 function DeleteStageSheet({
   stage,
+  count,
   others,
   onClose,
   onDeleted,
   onError,
 }: {
   stage: StageRow | null;
+  count?: number;
   others: StageRow[];
   onClose: () => void;
   onDeleted: (moved: number) => Promise<void>;
@@ -453,7 +472,7 @@ function DeleteStageSheet({
       setPick("");
       await onDeleted(j.moved ?? 0);
     } catch (e) {
-      onError(e instanceof Error ? e.message : "Couldn't delete that stage — try again.");
+      onError(e instanceof Error ? e.message : "Couldn't delete that stage. Try again.");
     }
     setBusy(false);
   }
@@ -479,7 +498,11 @@ function DeleteStageSheet({
         </div>
       }
     >
-      <p className="font-body text-sm text-navy">Move its contacts to…</p>
+      <p className="font-body text-sm text-navy">
+        {count === undefined
+          ? "Move its contacts to…"
+          : `Move its ${count} contact${count === 1 ? "" : "s"} to…`}
+      </p>
       <select
         value={reassign}
         onChange={(e) => setPick(e.target.value)}

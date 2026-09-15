@@ -7,13 +7,18 @@ import { useStudioAuth } from "@/lib/useStudioAuth";
 import { LoginForm } from "../LoginForm";
 import { StagesProvider } from "./StagesContext";
 
+// Spec §6.1: the desktop bar carries the four working sections in the centre
+// and Settings as a gear on the right. The phone tab bar keeps all five.
 const NAV = [
   { href: "/studio/crm", label: "Dashboard", icon: "▦" },
   { href: "/studio/crm/people", label: "People", icon: "👥" },
   { href: "/studio/crm/pipeline", label: "Pipeline", icon: "▤" },
   { href: "/studio/crm/tasks", label: "Tasks", icon: "☑" },
-  { href: "/studio/crm/settings", label: "Settings", icon: "⚙" },
 ] as const;
+
+const SETTINGS_NAV = { href: "/studio/crm/settings", label: "Settings", icon: "⚙" } as const;
+
+const TAB_NAV = [...NAV, SETTINGS_NAV];
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/studio/crm") return pathname === "/studio/crm" || pathname === "/studio/crm/";
@@ -23,6 +28,10 @@ function isActive(pathname: string, href: string): boolean {
       pathname.startsWith("/studio/crm/contact") ||
       pathname.startsWith("/studio/crm/deal")
     );
+  }
+  // Import lives under Settings in the hub, so it lights the same tab.
+  if (href === "/studio/crm/settings") {
+    return pathname.startsWith(href) || pathname.startsWith("/studio/crm/import");
   }
   return pathname.startsWith(href);
 }
@@ -109,6 +118,19 @@ export function CrmShell({
                 className="w-64 bg-white/10 border border-white/10 rounded-full px-4 py-1.5 font-body text-sm text-cream placeholder:text-cream/50 focus:outline-none focus:bg-white/15 focus:border-gold/50"
               />
             </form>
+            <Link
+              href={SETTINGS_NAV.href}
+              aria-label="Settings"
+              title="Settings"
+              aria-current={isActive(pathname, SETTINGS_NAV.href) ? "page" : undefined}
+              className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-base transition-colors ${focusRing} ${
+                isActive(pathname, SETTINGS_NAV.href)
+                  ? "text-gold bg-white/10"
+                  : "text-cream/70 hover:text-gold-light hover:bg-white/10"
+              }`}
+            >
+              <span aria-hidden="true">{SETTINGS_NAV.icon}</span>
+            </Link>
             <button
               onClick={logout}
               className={`font-ui text-[0.65rem] tracking-wider uppercase text-cream/70 hover:text-gold-light transition-colors shrink-0 ${focusRing}`}
@@ -144,7 +166,7 @@ export function CrmShell({
         {/* Mobile bottom tab bar */}
         <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-navy border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
           <div className="grid grid-cols-5">
-            {NAV.map((n) => {
+            {TAB_NAV.map((n) => {
               const active = isActive(pathname, n.href);
               return (
                 <Link

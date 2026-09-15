@@ -172,11 +172,11 @@ function DealHeaderCard({
         body: JSON.stringify(body),
       });
     } catch {
-      onError("Network error — check your connection and try again.");
+      onError("Network error. Check your connection and try again.");
       return null;
     }
     if (!r.ok) {
-      onError("Something went wrong — try again.");
+      onError("Something went wrong. Try again.");
       return null;
     }
     const j = (await r.json()) as { deal: DealRow };
@@ -311,7 +311,7 @@ function MilestonesCard({
     const updated = await patchMilestone(m.id, { status: nextStatus });
     if (!updated) {
       setMilestones(prev);
-      onError("Couldn't update — try again.");
+      onError("Couldn't update. Try again.");
       return;
     }
     setMilestones((cur) => cur.map((x) => (x.id === m.id ? updated : x)));
@@ -324,7 +324,7 @@ function MilestonesCard({
     const updated = await patchMilestone(m.id, { status: "skipped" });
     if (!updated) {
       setMilestones(prev);
-      onError("Couldn't update — try again.");
+      onError("Couldn't update. Try again.");
       return;
     }
     setMilestones((cur) => cur.map((x) => (x.id === m.id ? updated : x)));
@@ -339,7 +339,7 @@ function MilestonesCard({
     const updated = await patchMilestone(m.id, { title: trimmed });
     if (!updated) {
       setMilestones(prev);
-      onError("Couldn't rename — try again.");
+      onError("Couldn't rename. Try again.");
       return;
     }
     setMilestones((cur) => cur.map((x) => (x.id === m.id ? updated : x)));
@@ -353,7 +353,7 @@ function MilestonesCard({
     const updated = await patchMilestone(m.id, { date: next });
     if (!updated) {
       setMilestones(prev);
-      onError("Couldn't update — try again.");
+      onError("Couldn't update. Try again.");
       return;
     }
     setMilestones((cur) => cur.map((x) => (x.id === m.id ? updated : x)));
@@ -367,7 +367,7 @@ function MilestonesCard({
     const updated = await patchMilestone(m.id, { clientVisible: !!nextVisible });
     if (!updated) {
       setMilestones(prev);
-      onError("Couldn't update — try again.");
+      onError("Couldn't update. Try again.");
       return;
     }
     setMilestones((cur) => cur.map((x) => (x.id === m.id ? updated : x)));
@@ -386,7 +386,7 @@ function MilestonesCard({
     }
     if (!r || !r.ok) {
       setMilestones(prev);
-      onError("Couldn't delete — try again.");
+      onError("Couldn't delete. Try again.");
     }
   }
 
@@ -401,7 +401,7 @@ function MilestonesCard({
       patchMilestone(other.id, { sortOrder: m.sort_order }),
     ]);
     if (!a || !b) {
-      onError("Couldn't reorder — try again.");
+      onError("Couldn't reorder. Try again.");
       if (a && !b) {
         // m's swap succeeded, other's failed — restore m's original sort_order
         await patchMilestone(m.id, { sortOrder: m.sort_order });
@@ -432,7 +432,7 @@ function MilestonesCard({
     }
     setAdding(false);
     if (!r || !r.ok) {
-      onError("Couldn't add that step — try again.");
+      onError("Couldn't add that step. Try again.");
       return;
     }
     const j = (await r.json()) as { milestone: MilestoneRow };
@@ -670,7 +670,7 @@ function ChecklistCard({
     }
     setSeeding(false);
     if (!r || !r.ok) {
-      onError("Couldn't add the checklist — try again.");
+      onError("Couldn't add the checklist. Try again.");
       return;
     }
     const j = (await r.json()) as { checklist: ChecklistRow[] };
@@ -700,7 +700,7 @@ function ChecklistCard({
       // other checklist item that changed optimistically while this
       // request was in flight.
       setChecklist((cur) => cur.map((x) => (x.id === item.id ? item : x)));
-      onError("Couldn't update — try again.");
+      onError("Couldn't update. Try again.");
       return;
     }
     const j = (await r.json()) as { item: ChecklistRow };
@@ -725,7 +725,7 @@ function ChecklistCard({
         const idx = prevIndex >= 0 && prevIndex <= cur.length ? prevIndex : cur.length;
         return [...cur.slice(0, idx), item, ...cur.slice(idx)];
       });
-      onError("Couldn't delete — try again.");
+      onError("Couldn't delete. Try again.");
     }
   }
 
@@ -748,7 +748,7 @@ function ChecklistCard({
     }
     setAdding(false);
     if (!r || !r.ok) {
-      onError("Couldn't add that item — try again.");
+      onError("Couldn't add that item. Try again.");
       return;
     }
     const j = (await r.json()) as { item: ChecklistRow };
@@ -775,7 +775,7 @@ function ChecklistCard({
     setRemoving(false);
     if (!r || !r.ok) {
       setChecklist(prev);
-      onError("Couldn't remove the checklist — try again.");
+      onError("Couldn't remove the checklist. Try again.");
     }
   }
 
@@ -928,7 +928,7 @@ function PortalCard({
     }
     setBusy(false);
     if (!r || !r.ok) {
-      onError("Couldn't create the portal link — try again.");
+      onError("Couldn't create the portal link. Try again.");
       return;
     }
     const j = (await r.json()) as { portalToken: string };
@@ -956,7 +956,7 @@ function PortalCard({
     }
     setBusy(false);
     if (!r || !r.ok) {
-      onError("Couldn't turn off the portal — try again.");
+      onError("Couldn't turn off the portal. Try again.");
       return;
     }
     onUpdated({ ...deal, portal_token: null });
@@ -969,7 +969,7 @@ function PortalCard({
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      onError("Couldn't copy — select and copy the link manually.");
+      onError("Couldn't copy. Select and copy the link manually.");
     }
   }
 

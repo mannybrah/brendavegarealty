@@ -15,6 +15,7 @@ import {
 } from "@/components/studio/crm/ui";
 import { EVENT_ICON, type EventRow } from "@/lib/crm/types";
 import { displayName, relativeTime } from "@/lib/crm/format";
+import { clearListNav } from "@/lib/crm/nav";
 
 interface SmartListCount {
   id: string;
@@ -150,6 +151,10 @@ function DashboardInner() {
               <Link
                 key={e.id}
                 href={`/studio/crm/contact?id=${e.contact_id}`}
+                // People is the only writer of the list-nav snapshot. Opening a
+                // profile from here must drop it, or back/prev/next would walk
+                // the last People list instead of returning to the dashboard.
+                onClick={() => clearListNav()}
                 className="flex items-start gap-3 px-4 py-3 hover:bg-navy/[0.03] transition-colors"
               >
                 <Avatar first={e.contact_first} last={e.contact_last} size="sm" />

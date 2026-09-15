@@ -3,7 +3,7 @@
 // Filters panel for the People list. Edits a local draft; Apply hands the
 // whole filter object back to the page, which writes it to the URL.
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ContactFilters, DayRule } from "@/lib/crm/filters";
 import { CONTACT_TYPES, CONTACT_TYPE_LABELS } from "@/lib/crm/types";
 import { useStages } from "../StagesContext";
@@ -93,8 +93,83 @@ interface FiltersSheetProps {
   onApply: (next: ContactFilters) => void;
 }
 
+// Spec §6.3: bottom sheet on phones, popover anchored to the Filters button on
+// desktop. The page wraps the button and this component in a relatively
+// positioned [data-filters-anchor] element.
+function useIsDesktop(): boolean {
+  // Seeded synchronously: this component only ever mounts on a click, never
+  // during the static prerender, so there is no hydration mismatch to worry
+  // about and no one-frame flash of the mobile sheet on desktop.
+  const [match, setMatch] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const update = () => setMatch(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return match;
+}
+
+function Popover({
+  onClose,
+  children,
+  footer,
+}: {
+  onClose: () => void;
+  children: React.ReactNode;
+  footer: React.ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function onDown(e: MouseEvent) {
+      const el = ref.current;
+      if (!el) return;
+      // The anchor wraps the trigger button too, so clicking the button
+      // toggles the popover instead of closing and reopening it.
+      const bounds = el.closest("[data-filters-anchor]") ?? el;
+      if (!bounds.contains(e.target as Node)) onClose();
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("mousedown", onDown);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      ref={ref}
+      role="dialog"
+      aria-label="Filters"
+      className="absolute z-50 top-full right-0 mt-2 w-[26rem] max-w-[calc(100vw-3rem)] flex flex-col max-h-[70vh] bg-cream border border-navy/10 rounded-2xl shadow-[0_12px_32px_rgba(15,29,53,0.18)]"
+    >
+      <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-navy/10 shrink-0">
+        <div className="font-display font-medium text-lg text-navy">Filters</div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-charcoal-light hover:bg-navy/5 text-xl leading-none"
+        >
+          ×
+        </button>
+      </div>
+      <div className="px-5 py-4 space-y-4 overflow-y-auto flex-1 min-h-0">{children}</div>
+      <div className="px-5 py-3 border-t border-navy/10 shrink-0">{footer}</div>
+    </div>
+  );
+}
+
 // Mounting only while open gives the draft a fresh copy of the live filters
-// every time the sheet is opened, with no reset effect.
+// every time the panel is opened, with no reset effect.
 export function FiltersSheet(props: FiltersSheetProps) {
   if (!props.open) return null;
   return <OpenFiltersSheet {...props} />;
@@ -102,6 +177,7 @@ export function FiltersSheet(props: FiltersSheetProps) {
 
 function OpenFiltersSheet({ onClose, filters, allTags, sources, onApply }: FiltersSheetProps) {
   const { stages } = useStages();
+  const isDesktop = useIsDesktop();
   const [draft, setDraft] = useState<ContactFilters>(filters);
 
   function toggleStage(id: string) {
@@ -124,28 +200,25 @@ function OpenFiltersSheet({ onClose, filters, allTags, sources, onApply }: Filte
     }));
   }
 
-  return (
-    <Sheet
-      open
-      onClose={onClose}
-      title="Filters"
-      footer={
-        <div className="flex items-center justify-between gap-3">
-          <Btn variant="ghost" onClick={clearAll}>
-            Clear all
-          </Btn>
-          <Btn
-            variant="primary"
-            onClick={() => {
-              onApply(draft);
-              onClose();
-            }}
-          >
-            Apply
-          </Btn>
-        </div>
-      }
-    >
+  const footer = (
+    <div className="flex items-center justify-between gap-3">
+      <Btn variant="ghost" onClick={clearAll}>
+        Clear all
+      </Btn>
+      <Btn
+        variant="primary"
+        onClick={() => {
+          onApply(draft);
+          onClose();
+        }}
+      >
+        Apply
+      </Btn>
+    </div>
+  );
+
+  const body = (
+    <>
       <Group label="Stages">
         <div className="flex flex-wrap gap-1.5">
           {stages.map((s) => {
@@ -238,6 +311,20 @@ function OpenFiltersSheet({ onClose, filters, allTags, sources, onApply }: Filte
           onChange={(v) => setDraft((d) => ({ ...d, created: v }))}
         />
       </Group>
+    </>
+  );
+
+  if (isDesktop) {
+    return (
+      <Popover onClose={onClose} footer={footer}>
+        {body}
+      </Popover>
+    );
+  }
+
+  return (
+    <Sheet open onClose={onClose} title="Filters" footer={footer}>
+      {body}
     </Sheet>
   );
 }

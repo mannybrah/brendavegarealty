@@ -34,7 +34,10 @@ export async function handleSmartLists(env: Env): Promise<Response> {
 
 export async function handleDashboard(env: Env): Promise<Response> {
   const today = pacificToday();
-  const in30 = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+  // Both ends of the window come from the same Pacific day, or after 5pm
+  // Pacific the UTC date is already tomorrow and the window is 31 days.
+  const in30 = new Date(`${today}T00:00:00Z`).valueOf() + 30 * 86400000;
+  const in30Date = new Date(in30).toISOString().slice(0, 10);
   const [lists, newLeads, unactioned, tasksToday, tasksOverdue, dealsClosing, recent] = await Promise.all([
     smartListCounts(env),
     env.CRM_DB.prepare("SELECT COUNT(*) AS n FROM contacts WHERE stage = 'new'").first<{ n: number }>(),
@@ -50,7 +53,7 @@ export async function handleDashboard(env: Env): Promise<Response> {
     env.CRM_DB.prepare(
       "SELECT COUNT(*) AS n FROM deals WHERE status IN ('active','pending') AND target_close_date IS NOT NULL AND target_close_date BETWEEN ?1 AND ?2"
     )
-      .bind(today, in30)
+      .bind(today, in30Date)
       .first<{ n: number }>(),
     env.CRM_DB.prepare(
       `SELECT e.*, c.first_name AS contact_first, c.last_name AS contact_last

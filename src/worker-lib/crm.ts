@@ -49,7 +49,7 @@ export async function ingestLead(env: Env, input: IngestLeadInput): Promise<Inge
   if (existing) {
     contactId = existing.id;
     const stageClause = existing.stage === "archived" ? ", stage = 'new'" : "";
-    await env.CRM_DB.batch([
+    const statements = [
       env.CRM_DB.prepare(
         "INSERT INTO events (id, contact_id, kind, body, meta, created_at) VALUES (?1, ?2, 'lead_submission', ?3, ?4, ?5)"
       ).bind(crypto.randomUUID(), contactId, eventBody, meta, now),
@@ -57,7 +57,29 @@ export async function ingestLead(env: Env, input: IngestLeadInput): Promise<Inge
         now,
         contactId
       ),
-    ]);
+    ];
+    // A returning lead who typed a number/address we do not have yet: keep it
+    // as a secondary row instead of burying it in the event meta. Same
+    // INSERT ... WHERE NOT EXISTS shape the CSV import uses.
+    if (phone) {
+      statements.push(
+        env.CRM_DB.prepare(
+          `INSERT INTO phones (id, contact_id, relationship_id, number, label, is_primary, is_bad, sort_order, created_at)
+           SELECT ?1, ?2, NULL, ?3, 'mobile', CASE WHEN EXISTS (SELECT 1 FROM phones WHERE contact_id = ?2 AND relationship_id IS NULL) THEN 0 ELSE 1 END, 0, 99, ?4
+           WHERE NOT EXISTS (SELECT 1 FROM phones WHERE contact_id = ?2 AND number = ?3)`
+        ).bind(crypto.randomUUID(), contactId, phone, now)
+      );
+    }
+    if (email) {
+      statements.push(
+        env.CRM_DB.prepare(
+          `INSERT INTO emails (id, contact_id, relationship_id, address, label, is_primary, is_bad, sort_order, created_at)
+           SELECT ?1, ?2, NULL, ?3, 'personal', CASE WHEN EXISTS (SELECT 1 FROM emails WHERE contact_id = ?2 AND relationship_id IS NULL) THEN 0 ELSE 1 END, 0, 99, ?4
+           WHERE NOT EXISTS (SELECT 1 FROM emails WHERE contact_id = ?2 AND address = ?3)`
+        ).bind(crypto.randomUUID(), contactId, email, now)
+      );
+    }
+    await env.CRM_DB.batch(statements);
     const row = await env.CRM_DB.prepare("SELECT first_name, last_name FROM contacts WHERE id = ?1")
       .bind(contactId)
       .first<{ first_name: string; last_name: string }>();

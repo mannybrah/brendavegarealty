@@ -68,6 +68,8 @@ test("existing-email match produces an update with fill-only-blank, notes append
       last_name: "Rivera",
       email: "alex@example.com",
       phone: null,
+      phones: [],
+      emails: ["alex@example.com"],
       tags: ["buyer"],
       notes: "Original note",
     },
@@ -153,7 +155,7 @@ test("invalid row (no name, no email, no phone) is skipped and does not affect o
 
 test("row matching an existing contact by phone only (different email) still merges into that existing row", () => {
   const existing: ExistingContact[] = [
-    { id: "existing-9", first_name: "Pat", last_name: "Kim", email: null, phone: "5550001111", tags: [], notes: "" },
+    { id: "existing-9", first_name: "Pat", last_name: "Kim", email: null, phone: "5550001111", phones: ["5550001111"], emails: [], tags: [], notes: "" },
   ];
   const rows = [contact({ firstName: "Pat", lastName: "Kim", phone: "5550001111", email: "pat@example.com" })];
   const plan = planImport(rows, existing, NOW, makeIdSeq());
@@ -165,7 +167,17 @@ test("row matching an existing contact by phone only (different email) still mer
 
 test("two rows that each independently match the same existing contact (once by email, once by phone) accumulate into a single update, not two", () => {
   const existing: ExistingContact[] = [
-    { id: "existing-5", first_name: "", last_name: "", email: "morgan@example.com", phone: "5553334444", tags: [], notes: "" },
+    {
+      id: "existing-5",
+      first_name: "",
+      last_name: "",
+      email: "morgan@example.com",
+      phone: "5553334444",
+      phones: ["5553334444"],
+      emails: ["morgan@example.com"],
+      tags: [],
+      notes: "",
+    },
   ];
   const rows = [
     contact({ firstName: "Morgan", email: "morgan@example.com", notes: "note A" }),
@@ -186,7 +198,17 @@ test("two rows that each independently match the same existing contact (once by 
 
 test("counters are exact across a mixed batch", () => {
   const existing: ExistingContact[] = [
-    { id: "existing-1", first_name: "Known", last_name: "Person", email: "known@example.com", phone: null, tags: [], notes: "" },
+    {
+      id: "existing-1",
+      first_name: "Known",
+      last_name: "Person",
+      email: "known@example.com",
+      phone: null,
+      phones: [],
+      emails: ["known@example.com"],
+      tags: [],
+      notes: "",
+    },
   ];
   const rows = [
     contact({}), // skipped
@@ -199,4 +221,56 @@ test("counters are exact across a mixed batch", () => {
   expect(plan).toMatchObject({ created: 1, merged: 2, skipped: 1 });
   expect(plan.inserts).toHaveLength(1);
   expect(plan.updates).toHaveLength(1);
+});
+
+test("row matching only a SECONDARY phone of an existing contact merges into it, never inserts a twin", () => {
+  const existing: ExistingContact[] = [
+    {
+      id: "existing-maria",
+      first_name: "Maria",
+      last_name: "Vega",
+      email: "maria@example.com",
+      phone: "4081111111",
+      // Second phone added later via Edit contact; the candidate SELECT
+      // matches on it, so the planner has to know about it too.
+      phones: ["4081111111", "4082222222"],
+      emails: ["maria@example.com"],
+      tags: [],
+      notes: "",
+    },
+  ];
+  const rows = [contact({ firstName: "Maria", lastName: "Vega", phone: "4082222222" })];
+  const plan = planImport(rows, existing, NOW, makeIdSeq());
+
+  expect(plan.created).toBe(0);
+  expect(plan.merged).toBe(1);
+  expect(plan.inserts).toHaveLength(0);
+  expect(plan.updates).toHaveLength(1);
+  expect(plan.updates[0].id).toBe("existing-maria");
+  // The denormalized primary is left alone; the worker adds the row-level
+  // phone with an INSERT ... WHERE NOT EXISTS, which is already on file.
+  expect(plan.updates[0].phone).toBe("4081111111");
+});
+
+test("row matching only a SECONDARY email of an existing contact merges into it", () => {
+  const existing: ExistingContact[] = [
+    {
+      id: "existing-jo",
+      first_name: "Jo",
+      last_name: "Park",
+      email: "jo@work.example.com",
+      phone: null,
+      phones: [],
+      emails: ["jo@work.example.com", "jo@home.example.com"],
+      tags: [],
+      notes: "",
+    },
+  ];
+  const rows = [contact({ firstName: "Jo", lastName: "Park", email: "jo@home.example.com" })];
+  const plan = planImport(rows, existing, NOW, makeIdSeq());
+
+  expect(plan.created).toBe(0);
+  expect(plan.merged).toBe(1);
+  expect(plan.inserts).toHaveLength(0);
+  expect(plan.updates[0].id).toBe("existing-jo");
 });

@@ -100,7 +100,7 @@ function TagsInner() {
         setLoading(false);
       })
       .catch((e: unknown) => {
-        setErr(e instanceof Error ? e.message : "Couldn't load the tags — try again.");
+        setErr(e instanceof Error ? e.message : "Couldn't load the tags. Try again.");
         setLoading(false);
       });
   }, []);
@@ -128,6 +128,16 @@ function TagsInner() {
 
   async function rename(tag: TagWithCount, next: string) {
     setErr(null);
+    // A rename onto an existing name merges the two tags on the server and
+    // cannot be undone, so confirm before sending it.
+    const collision = tags.find((t) => t.id !== tag.id && t.name.toLowerCase() === next.trim().toLowerCase());
+    if (collision) {
+      const moving = tag.count;
+      const ok = window.confirm(
+        `A tag named "${collision.name}" already exists. Merge ${moving} contact${moving === 1 ? "" : "s"} into it? This can't be undone.`
+      );
+      if (!ok) return;
+    }
     try {
       const j = await crmJson<{ tag: { id: string; name: string }; merged: boolean }>(
         `/api/studio/crm/tags/${tag.id}`,
@@ -140,7 +150,7 @@ function TagsInner() {
       }
       setTags((prev) => prev.map((t) => (t.id === tag.id ? { ...t, name: j.tag.name } : t)));
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Couldn't rename that tag — try again.");
+      setErr(e instanceof Error ? e.message : "Couldn't rename that tag. Try again.");
     }
   }
 
@@ -152,7 +162,7 @@ function TagsInner() {
     const r = await crmFetch(`/api/studio/crm/tags/${tag.id}`, { method: "DELETE" });
     if (!r.ok) {
       setTags(previous);
-      setErr("Couldn't remove that tag — try again.");
+      setErr("Couldn't remove that tag. Try again.");
       return;
     }
     setNotice(`Removed ${tag.name}.`);

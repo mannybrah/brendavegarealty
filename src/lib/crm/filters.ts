@@ -119,13 +119,21 @@ export function buildContactQuery(
 
   if (f.q) {
     const p = `%${escapeLike(f.q)}%`;
+    // Phone numbers are stored digits-only, so "(408) 555" or "408-555" can
+    // never match the raw query. Strip the query to digits and compare that
+    // instead whenever there are enough of them to be a phone fragment.
+    const digits = f.q.replace(/\D/g, "");
+    const phonePattern = digits.length >= 3 ? `%${digits}%` : p;
     cond.push(
-      "(c.first_name LIKE ? ESCAPE '\\' OR c.last_name LIKE ? ESCAPE '\\' OR c.email LIKE ? ESCAPE '\\' OR c.phone LIKE ? ESCAPE '\\'" +
+      "(c.first_name LIKE ? ESCAPE '\\' OR c.last_name LIKE ? ESCAPE '\\'" +
+        // "maria vega" is the natural header query and matches neither column alone.
+        " OR (c.first_name || ' ' || c.last_name) LIKE ? ESCAPE '\\'" +
+        " OR c.email LIKE ? ESCAPE '\\' OR c.phone LIKE ? ESCAPE '\\'" +
         " OR EXISTS (SELECT 1 FROM phones p WHERE p.contact_id = c.id AND p.number LIKE ? ESCAPE '\\')" +
         " OR EXISTS (SELECT 1 FROM emails e WHERE e.contact_id = c.id AND e.address LIKE ? ESCAPE '\\')" +
         " OR EXISTS (SELECT 1 FROM relationships r WHERE r.contact_id = c.id AND (r.first_name LIKE ? ESCAPE '\\' OR r.last_name LIKE ? ESCAPE '\\')))"
     );
-    binds.push(p, p, p, p, p, p, p, p);
+    binds.push(p, p, p, p, phonePattern, phonePattern, p, p, p);
   }
   if (f.stages.length) {
     cond.push(`c.stage IN (${marks(f.stages.length)})`);

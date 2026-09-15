@@ -217,7 +217,7 @@ export function Sheet({
       aria-label={title}
     >
       <div
-        className={`w-full ${wide ? "sm:max-w-2xl" : "sm:max-w-md"} bg-cream rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[92vh] sm:max-h-[85vh] flex flex-col`}
+        className={`w-full ${wide ? "sm:max-w-2xl" : "sm:max-w-md"} bg-cream rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[92vh] sm:max-h-[85vh] supports-[height:1dvh]:max-h-[92dvh] sm:supports-[height:1dvh]:max-h-[85dvh] flex flex-col`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-navy/10 shrink-0">

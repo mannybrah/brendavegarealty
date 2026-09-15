@@ -49,12 +49,15 @@ function Loading() {
 }
 
 export default function ContactPage() {
+  // The fallback deliberately does NOT mount a CrmShell: the resolved child
+  // mounts its own, and two shells per load means /api/studio/auth and
+  // /api/studio/crm/stages are fetched twice on every profile visit.
   return (
     <Suspense
       fallback={
-        <CrmShell backHref="/studio/crm/people">
-          <Loading />
-        </CrmShell>
+        <div className="min-h-screen bg-cream flex items-center justify-center">
+          <Spinner />
+        </div>
       }
     >
       <ContactProfile />
@@ -231,7 +234,7 @@ function ContactProfile() {
   const composer = <Composer contactId={id} setEvents={setEvents} onLogged={load} />;
   const timeline = (
     <Card className="p-4">
-      <Timeline events={events} setEvents={setEvents} />
+      <Timeline events={events} setEvents={setEvents} onChanged={load} />
     </Card>
   );
   const tasksCard = <TasksCard contactId={id} tasks={tasks} setTasks={setTasks} onTaskDone={load} />;

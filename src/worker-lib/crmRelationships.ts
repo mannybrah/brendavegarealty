@@ -96,12 +96,26 @@ export async function handleRelationshipPatch(id: string, request: Request, env:
 }
 
 export async function handleRelationshipDelete(id: string, env: Env): Promise<Response> {
-  const existing = await env.CRM_DB.prepare("SELECT id FROM relationships WHERE id = ?1").bind(id).first();
+  const existing = await env.CRM_DB.prepare("SELECT * FROM relationships WHERE id = ?1")
+    .bind(id)
+    .first<RelationshipRow>();
   if (!existing) return jsonResponse({ error: "not found" }, 404);
+  const now = new Date().toISOString();
+  const label = `${existing.first_name} ${existing.last_name}`.trim() || "relationship";
   await env.CRM_DB.batch([
     env.CRM_DB.prepare("DELETE FROM phones WHERE relationship_id = ?1").bind(id),
     env.CRM_DB.prepare("DELETE FROM emails WHERE relationship_id = ?1").bind(id),
     env.CRM_DB.prepare("DELETE FROM relationships WHERE id = ?1").bind(id),
+    // Symmetric with create: the timeline records both sides of the change.
+    env.CRM_DB.prepare(
+      "INSERT INTO events (id, contact_id, kind, body, meta, created_at) VALUES (?1, ?2, 'system', ?3, NULL, ?4)"
+    ).bind(
+      crypto.randomUUID(),
+      existing.contact_id,
+      `Removed relationship: ${label}${existing.type ? ` (${existing.type})` : ""}`,
+      now
+    ),
+    env.CRM_DB.prepare("UPDATE contacts SET updated_at = ?1 WHERE id = ?2").bind(now, existing.contact_id),
   ]);
   return jsonResponse({ ok: true });
 }

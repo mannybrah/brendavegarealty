@@ -31,10 +31,12 @@ function outcomeLabel(o: string | null): string | null {
 function TimelineItem({
   event,
   setEvents,
+  onChanged,
   pinned = false,
 }: {
   event: EventRow;
   setEvents: SetEvents;
+  onChanged?: () => void;
   pinned?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
@@ -86,6 +88,7 @@ function TimelineItem({
       });
       setEvents((prev) => prev.map((e) => (e.id === event.id ? j.event : e)));
       setEditing(false);
+      onChanged?.();
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Couldn't save. Try again.");
     } finally {
@@ -99,6 +102,9 @@ function TimelineItem({
     setEvents((prev) => prev.filter((e) => e.id !== event.id));
     try {
       await crmJson(`/api/studio/crm/events/${event.id}`, { method: "DELETE" });
+      // The worker recomputes last_communication_at on delete, so the profile
+      // header has to be refetched or it keeps showing the deleted call.
+      onChanged?.();
     } catch {
       setEvents((prev) => [snapshot, ...prev].sort((a, b) => (a.created_at < b.created_at ? 1 : -1)));
     }
@@ -197,7 +203,15 @@ function TimelineItem({
 // ------------------------------------------------------------
 // Timeline
 // ------------------------------------------------------------
-export function Timeline({ events, setEvents }: { events: EventRow[]; setEvents: SetEvents }) {
+export function Timeline({
+  events,
+  setEvents,
+  onChanged,
+}: {
+  events: EventRow[];
+  setEvents: SetEvents;
+  onChanged?: () => void;
+}) {
   const [tab, setTab] = useState<Tab>("all");
 
   const counts = useMemo(() => {
@@ -231,7 +245,7 @@ export function Timeline({ events, setEvents }: { events: EventRow[]; setEvents:
         <div className="border-l-2 border-gold pl-3 space-y-4">
           <div className="font-ui text-[0.65rem] tracking-wider uppercase text-[#7a5f30]">★ Starred</div>
           {starred.map((e) => (
-            <TimelineItem key={`pin-${e.id}`} event={e} setEvents={setEvents} pinned />
+            <TimelineItem key={`pin-${e.id}`} event={e} setEvents={setEvents} onChanged={onChanged} pinned />
           ))}
         </div>
       )}
@@ -240,7 +254,7 @@ export function Timeline({ events, setEvents }: { events: EventRow[]; setEvents:
         {visible.length === 0 && <EmptyState>{tab === "all" ? "No activity yet." : "Nothing here yet."}</EmptyState>}
         {visible.length > 1 && <div className="absolute left-[15px] top-4 bottom-4 w-px bg-gold/30" aria-hidden="true" />}
         {visible.map((e) => (
-          <TimelineItem key={e.id} event={e} setEvents={setEvents} />
+          <TimelineItem key={e.id} event={e} setEvents={setEvents} onChanged={onChanged} />
         ))}
       </div>
     </div>

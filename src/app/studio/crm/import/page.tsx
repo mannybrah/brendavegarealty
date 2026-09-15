@@ -96,7 +96,7 @@ function ImportInner() {
       setTotals({ created: 0, merged: 0, skipped: 0 });
       setProgressDone(0);
     };
-    reader.onerror = () => setErr("Couldn't read that file — try again.");
+    reader.onerror = () => setErr("Couldn't read that file. Try again.");
     reader.readAsText(file);
     // Allow re-selecting the same file later.
     e.target.value = "";
@@ -215,7 +215,7 @@ function ImportInner() {
               <div key={f} className="flex items-center justify-between gap-3">
                 <span className="font-body text-sm text-navy shrink-0">{FIELD_LABELS[f]}</span>
                 <select value={map[f] ?? ""} onChange={(e) => setFieldColumn(f, e.target.value)} className={`${field} flex-1 min-w-0`}>
-                  <option value="">— not mapped —</option>
+                  <option value="">Not mapped</option>
                   {headers.map((h, i) => (
                     <option key={i} value={i}>
                       {h || `Column ${i + 1}`}
@@ -235,7 +235,7 @@ function ImportInner() {
           </SectionTitle>
           {mappedContacts.length === 0 ? (
             <div className="font-body text-sm text-charcoal-light">
-              No rows matched — map at least a name, email, or phone column above.
+              No rows matched. Map at least a name, email, or phone column above.
             </div>
           ) : (
             <div className="overflow-x-auto -mx-4 px-4">
@@ -251,9 +251,9 @@ function ImportInner() {
                 <tbody className="font-body text-xs text-navy">
                   {mappedContacts.slice(0, 5).map((c, i) => (
                     <tr key={i} className="border-t border-navy/5">
-                      <td className="py-2 pr-3 whitespace-nowrap">{`${c.firstName} ${c.lastName}`.trim() || "—"}</td>
-                      <td className="py-2 pr-3 whitespace-nowrap">{c.email ?? "—"}</td>
-                      <td className="py-2 pr-3 whitespace-nowrap">{c.phone ?? "—"}</td>
+                      <td className="py-2 pr-3 whitespace-nowrap">{`${c.firstName} ${c.lastName}`.trim() || "·"}</td>
+                      <td className="py-2 pr-3 whitespace-nowrap">{c.email ?? "·"}</td>
+                      <td className="py-2 pr-3 whitespace-nowrap">{c.phone ?? "·"}</td>
                       <td className="py-2 whitespace-nowrap">{c.stage}</td>
                     </tr>
                   ))}
@@ -289,7 +289,7 @@ function ImportInner() {
               {failedCount > 0 && (
                 <>
                   <div className="font-body text-sm text-red-600">
-                    {failedCount} batch{failedCount === 1 ? "" : "es"} failed — nothing in {failedCount === 1 ? "it" : "them"} was
+                    {failedCount} batch{failedCount === 1 ? "" : "es"} failed. Nothing in {failedCount === 1 ? "it" : "them"} was
                     imported yet.
                   </div>
                   <button

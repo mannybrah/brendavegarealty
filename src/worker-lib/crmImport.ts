@@ -37,6 +37,37 @@ interface ExistingRow {
   notes: string;
 }
 
+/**
+ * Every value of one column (`phones.number` / `emails.address`) for the given
+ * contact ids, grouped by contact. The candidate SELECT matches a row against
+ * ANY phone/email on file, so the planner has to index all of them or a row
+ * that matched a secondary number would be planned as a brand new contact.
+ */
+async function valuesByContact(
+  env: Env,
+  ids: string[],
+  table: "phones" | "emails",
+  column: "number" | "address"
+): Promise<Map<string, string[]>> {
+  const out = new Map<string, string[]>();
+  for (const idChunk of chunk(ids, CHUNK_SIZE)) {
+    if (idChunk.length === 0) continue;
+    const placeholders = idChunk.map(() => "?").join(", ");
+    const { results } = await env.CRM_DB.prepare(
+      `SELECT contact_id, ${column} AS value FROM ${table} WHERE contact_id IN (${placeholders})`
+    )
+      .bind(...idChunk)
+      .all<{ contact_id: string; value: string | null }>();
+    for (const row of results ?? []) {
+      if (!row.value) continue;
+      const list = out.get(row.contact_id);
+      if (list) list.push(row.value);
+      else out.set(row.contact_id, [row.value]);
+    }
+  }
+  return out;
+}
+
 async function fetchExistingCandidates(env: Env, emails: string[], phones: string[]): Promise<ExistingContact[]> {
   const byId = new Map<string, ExistingRow>();
 
@@ -65,10 +96,19 @@ async function fetchExistingCandidates(env: Env, emails: string[], phones: strin
   }
 
   const ids = [...byId.keys()];
-  const tagMap = await tagsForContacts(env, ids);
+  const [tagMap, phoneMap, emailMap] = await Promise.all([
+    tagsForContacts(env, ids),
+    valuesByContact(env, ids, "phones", "number"),
+    valuesByContact(env, ids, "emails", "address"),
+  ]);
   return ids.map((id) => {
     const row = byId.get(id)!;
-    return { ...row, tags: (tagMap.get(id) ?? []).map((t) => t.name) };
+    return {
+      ...row,
+      phones: phoneMap.get(id) ?? [],
+      emails: emailMap.get(id) ?? [],
+      tags: (tagMap.get(id) ?? []).map((t) => t.name),
+    };
   });
 }
 

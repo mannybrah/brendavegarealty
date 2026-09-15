@@ -59,7 +59,26 @@ describe("filters", () => {
       "EXISTS (SELECT 1 FROM relationships r WHERE r.contact_id = c.id AND (r.first_name LIKE ? ESCAPE '\\' OR r.last_name LIKE ? ESCAPE '\\'))"
     );
     expect(binds[0]).toBe("%50\\%%");
-    expect(binds).toHaveLength(8);
+    expect(binds).toHaveLength(9);
+  });
+
+  it("matches a full name by joining first and last", () => {
+    const { where, binds } = buildContactQuery(q("q=maria vega"), today);
+    expect(where).toContain("(c.first_name || ' ' || c.last_name) LIKE ? ESCAPE '\\'");
+    expect(binds[2]).toBe("%maria vega%");
+    // Fewer than 3 digits in the query, so the phone clauses keep the raw pattern.
+    expect(binds[4]).toBe("%maria vega%");
+    expect(binds[5]).toBe("%maria vega%");
+  });
+
+  it("compares a formatted phone query digits-only against both phone columns", () => {
+    const { binds } = buildContactQuery(q("q=(408) 555"), today);
+    expect(binds).toHaveLength(9);
+    expect(binds[4]).toBe("%408555%"); // c.phone
+    expect(binds[5]).toBe("%408555%"); // phones.number
+    // Name and email clauses still use the literal query.
+    expect(binds[0]).toBe("%(408) 555%");
+    expect(binds[3]).toBe("%(408) 555%");
   });
 
   it("builds lastComm never/over/within", () => {

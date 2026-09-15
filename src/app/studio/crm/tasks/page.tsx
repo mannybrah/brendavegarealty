@@ -29,6 +29,7 @@ import {
   type TaskType,
 } from "@/lib/crm/types";
 import { displayName, formatDue, relativeTime } from "@/lib/crm/format";
+import { clearListNav } from "@/lib/crm/nav";
 
 type TaskView = "today" | "overdue" | "upcoming" | "done";
 
@@ -36,6 +37,7 @@ interface TaskCounts {
   today: number;
   overdue: number;
   upcoming: number;
+  done: number;
 }
 
 interface TaskListResponse {
@@ -49,7 +51,7 @@ interface PickedContact {
   name: string;
 }
 
-const EMPTY_COUNTS: TaskCounts = { today: 0, overdue: 0, upcoming: 0 };
+const EMPTY_COUNTS: TaskCounts = { today: 0, overdue: 0, upcoming: 0, done: 0 };
 
 const EMPTY_COPY: Record<TaskView, string> = {
   today: "Nothing due today. Add a task above or get ahead of tomorrow.",
@@ -166,7 +168,7 @@ function TasksInner() {
           { key: "today", label: "Today", count: counts.today },
           { key: "overdue", label: "Overdue", count: counts.overdue },
           { key: "upcoming", label: "Upcoming", count: counts.upcoming },
-          { key: "done", label: "Done" },
+          { key: "done", label: "Done", count: counts.done },
         ]}
         value={view}
         onChange={setView}
@@ -232,7 +234,13 @@ function TaskItem({
         </p>
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-body font-light text-xs">
           {task.contact_id && task.contact_name && (
-            <Link href={`/studio/crm/contact?id=${task.contact_id}`} className="text-teal hover:text-navy">
+            <Link
+              href={`/studio/crm/contact?id=${task.contact_id}`}
+              // People owns the list-nav snapshot; drop it so the profile
+              // does not offer prev/next through a stale People list.
+              onClick={() => clearListNav()}
+              className="text-teal hover:text-navy"
+            >
               {task.contact_name}
             </Link>
           )}

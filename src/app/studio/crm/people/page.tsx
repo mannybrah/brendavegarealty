@@ -27,7 +27,7 @@ import {
   type SortKey,
 } from "@/lib/crm/filters";
 import { SMART_LISTS } from "@/lib/crm/smartLists";
-import { saveListNav, readListNav } from "@/lib/crm/nav";
+import { saveListNav, readListNav, clearListNav } from "@/lib/crm/nav";
 import type { ContactListRow, TagWithCount } from "@/lib/crm/types";
 
 const SORT_PREF_KEY = "crm.sort";
@@ -306,18 +306,31 @@ function PeopleInner() {
             aria-label="Search people"
             className={`${inputCls} w-full lg:w-auto lg:flex-1 min-w-0`}
           />
-          <button
-            type="button"
-            onClick={() => setShowFilters(true)}
-            className="shrink-0 flex items-center gap-1.5 bg-white border border-navy/20 text-navy hover:border-navy/40 font-ui text-xs tracking-wider uppercase rounded-md px-3 py-2.5 transition-colors"
-          >
-            Filters
-            {filterCount > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] rounded-full bg-navy text-gold text-[0.6rem] tabular-nums px-1">
-                {filterCount}
-              </span>
-            )}
-          </button>
+          {/* The panel is a bottom sheet on phones and a popover anchored here
+              on desktop, so it has to render inside this relative wrapper. */}
+          <div className="relative shrink-0" data-filters-anchor>
+            <button
+              type="button"
+              onClick={() => setShowFilters((v) => !v)}
+              aria-expanded={showFilters}
+              className="flex items-center gap-1.5 bg-white border border-navy/20 text-navy hover:border-navy/40 font-ui text-xs tracking-wider uppercase rounded-md px-3 py-2.5 transition-colors"
+            >
+              Filters
+              {filterCount > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] rounded-full bg-navy text-gold text-[0.6rem] tabular-nums px-1">
+                  {filterCount}
+                </span>
+              )}
+            </button>
+            <FiltersSheet
+              open={showFilters}
+              onClose={() => setShowFilters(false)}
+              filters={filters}
+              allTags={allTags}
+              sources={sources}
+              onApply={applyFilters}
+            />
+          </div>
           <SortMenu sort={sort} dir={dir} onChange={applySort} />
           <Btn variant="primary" className="shrink-0 ml-auto lg:ml-0" onClick={() => setShowAdd(true)}>
             + Add
@@ -403,20 +416,15 @@ function PeopleInner() {
         )}
       </div>
 
-      <FiltersSheet
-        open={showFilters}
-        onClose={() => setShowFilters(false)}
-        filters={filters}
-        allTags={allTags}
-        sources={sources}
-        onApply={applyFilters}
-      />
       <AddContactSheet
         open={showAdd}
         onClose={() => setShowAdd(false)}
         allTags={allTags}
         onCreated={(id) => {
           setShowAdd(false);
+          // The new contact is not in the saved list, so prev/next and the
+          // back target would both be wrong. Drop the snapshot.
+          clearListNav();
           router.push(`/studio/crm/contact?id=${id}`);
         }}
       />

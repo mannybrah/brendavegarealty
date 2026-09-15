@@ -81,7 +81,7 @@ export async function handleDealCreate(request: Request, env: Env): Promise<Resp
     });
   }
 
-  const eventBody = `Started ${side} deal${propertyAddress ? ` — ${propertyAddress}` : ""}`;
+  const eventBody = `Started ${side} deal${propertyAddress ? ` · ${propertyAddress}` : ""}`;
   statements.push(
     env.CRM_DB.prepare(
       "INSERT INTO events (id, contact_id, kind, body, meta, created_at) VALUES (?1, ?2, 'deal', ?3, NULL, ?4)"

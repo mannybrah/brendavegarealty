@@ -8,6 +8,7 @@ import { StagePill } from "@/components/studio/crm/StagePill";
 import { paletteFor } from "@/components/studio/crm/stageColors";
 import { Btn, EmptyState, ErrorText, Sheet, TagBubble, crmFetch } from "@/components/studio/crm/ui";
 import { relativeShort } from "@/lib/crm/format";
+import { clearListNav } from "@/lib/crm/nav";
 import type { ContactListRow, StageRow } from "@/lib/crm/types";
 
 // The pipeline shows every working stage except "archived" — archived
@@ -82,7 +83,7 @@ function PipelineInner() {
     }
     if (!r || !r.ok) {
       setContacts(prev);
-      setErr("Couldn't move that contact — try again.");
+      setErr("Couldn't move that contact. Try again.");
       return;
     }
     fetchContacts();
@@ -110,9 +111,11 @@ function PipelineInner() {
             ))}
           </div>
 
-          {/* Desktop: full-bleed board — the stage count is dynamic, so the
-              columns scroll horizontally (FUB-style board) instead of wrapping. */}
-          <div className="hidden md:block w-screen relative left-1/2 -translate-x-1/2 px-4">
+          {/* Desktop: the stage count is dynamic, so the columns scroll
+              horizontally (FUB-style board) instead of wrapping. The negative
+              margin bleeds into the main's padding without using 100vw, which
+              on Windows/Linux includes the scrollbar and scrolls the page. */}
+          <div className="hidden md:block -mx-4 lg:-mx-6 px-4 lg:px-6">
             <div className="flex gap-2 overflow-x-auto pb-3">
               {board.map((stage) => {
                 const items = grouped[stage.id] ?? [];
@@ -147,7 +150,7 @@ function PipelineInner() {
             </div>
           </div>
 
-          {board.length === 0 && <EmptyState>No stages yet — add one in Settings.</EmptyState>}
+          {board.length === 0 && <EmptyState>No stages yet. Add one in Settings.</EmptyState>}
         </>
       )}
 
@@ -227,7 +230,7 @@ function PipelineCard({ contact, onTap }: { contact: ContactListRow; onTap: () =
       )}
       <div className="flex items-center justify-between mt-1.5 gap-2">
         <span className="font-ui text-[0.6rem] tracking-wider uppercase text-charcoal-light truncate">
-          {contact.source || "—"}
+          {contact.source || "·"}
         </span>
         <span className="font-ui text-[0.6rem] text-charcoal-light shrink-0">
           {relativeShort(contact.last_activity_at)}
@@ -268,6 +271,8 @@ function StageSheet({
 
           <Link
             href={`/studio/crm/contact?id=${contact.id}`}
+            // People owns the list-nav snapshot; the board is not a list.
+            onClick={() => clearListNav()}
             className="block w-full text-center bg-white border border-navy/20 text-navy font-ui text-xs tracking-wider uppercase py-3 rounded-md"
           >
             Open contact

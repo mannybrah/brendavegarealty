@@ -107,11 +107,11 @@ export function PeopleTable({
                   <StagePill stageId={c.stage} />
                 </td>
                 <td className="px-3 h-12 font-body text-sm text-charcoal tabular-nums whitespace-nowrap">
-                  {c.phone ? formatPhone(c.phone) : <span className="text-charcoal-light/50">—</span>}
+                  {c.phone ? formatPhone(c.phone) : <span className="text-charcoal-light/50">·</span>}
                 </td>
                 <td className="px-3 h-12 font-body text-sm text-charcoal">
                   <span className="block truncate" title={c.email ?? undefined}>
-                    {c.email || <span className="text-charcoal-light/50">—</span>}
+                    {c.email || <span className="text-charcoal-light/50">·</span>}
                   </span>
                 </td>
                 <td className="px-3 h-12">

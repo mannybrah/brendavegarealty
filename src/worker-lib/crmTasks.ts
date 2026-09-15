@@ -49,16 +49,23 @@ export async function handleTaskList(request: Request, env: Env): Promise<Respon
       ? `${BASE} WHERE tasks.done_at IS NULL ORDER BY (tasks.due_at IS NULL) ASC, tasks.due_at ASC`
       : `${BASE} WHERE ${VIEW_WHERE[view]} ${VIEW_ORDER[view]}`;
 
-  const [list, cToday, cOverdue, cUpcoming] = await Promise.all([
+  const [list, cToday, cOverdue, cUpcoming, cDone] = await Promise.all([
     env.CRM_DB.prepare(listSql).bind(today).all<TaskListRow>(),
     env.CRM_DB.prepare(`SELECT COUNT(*) AS n FROM tasks WHERE ${VIEW_WHERE.today}`).bind(today).first<{ n: number }>(),
     env.CRM_DB.prepare(`SELECT COUNT(*) AS n FROM tasks WHERE ${VIEW_WHERE.overdue}`).bind(today).first<{ n: number }>(),
     env.CRM_DB.prepare(`SELECT COUNT(*) AS n FROM tasks WHERE ${VIEW_WHERE.upcoming}`).bind(today).first<{ n: number }>(),
+    // No bind: the done view's WHERE has no ?1 placeholder.
+    env.CRM_DB.prepare("SELECT COUNT(*) AS n FROM tasks WHERE tasks.done_at IS NOT NULL").first<{ n: number }>(),
   ]);
   return jsonResponse({
     tasks: list.results ?? [],
     today,
-    counts: { today: cToday?.n ?? 0, overdue: cOverdue?.n ?? 0, upcoming: cUpcoming?.n ?? 0 },
+    counts: {
+      today: cToday?.n ?? 0,
+      overdue: cOverdue?.n ?? 0,
+      upcoming: cUpcoming?.n ?? 0,
+      done: cDone?.n ?? 0,
+    },
   });
 }
 
@@ -103,6 +110,11 @@ export async function handleTaskPatch(id: string, request: Request, env: Env): P
 
   const title = typeof body.title === "string" && body.title.trim() ? body.title.trim() : existing.title;
   const type = parseType(body.type, existing.type);
+  // "" / null clears the due date on purpose; an unparseable string is a
+  // client bug and must not silently wipe it.
+  if (typeof body.dueAt === "string" && body.dueAt.trim() && parseDue(body.dueAt) === null) {
+    return jsonResponse({ error: "invalid dueAt" }, 400);
+  }
   const dueAt = body.dueAt !== undefined ? parseDue(body.dueAt) : existing.due_at;
 
   const now = new Date().toISOString();

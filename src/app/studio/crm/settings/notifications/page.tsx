@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { CrmShell } from "@/components/studio/crm/CrmShell";
 import { Card, SectionTitle } from "@/components/studio/crm/ui";
 
-const IOS_HELP = "On iPhone, add the studio to your Home Screen first — notifications require it.";
+const IOS_HELP = "On iPhone, add the studio to your Home Screen first. Notifications require it.";
 
 // Standard VAPID applicationServerKey conversion — base64url string -> Uint8Array.
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
@@ -79,7 +79,7 @@ function NotificationsInner() {
       const permissionResult = await Notification.requestPermission();
       setPermission(permissionResult);
       if (permissionResult !== "granted") {
-        setErr("Notifications weren't allowed — check your browser's site settings.");
+        setErr("Notifications weren't allowed. Check your browser's site settings.");
         setBusy(false);
         return;
       }
@@ -108,7 +108,7 @@ function NotificationsInner() {
 
       await refreshStatus();
     } catch {
-      setErr("Couldn't enable notifications on this device — try again.");
+      setErr("Couldn't enable notifications on this device. Try again.");
     }
     setBusy(false);
   }
@@ -133,7 +133,7 @@ function NotificationsInner() {
           r = null;
         }
         if (!r || !r.ok) {
-          setErr("Couldn't disable on the server — try again.");
+          setErr("Couldn't disable on the server. Try again.");
           setBusy(false);
           return;
         }
@@ -141,7 +141,7 @@ function NotificationsInner() {
       }
       await refreshStatus();
     } catch {
-      setErr("Couldn't disable notifications — try again.");
+      setErr("Couldn't disable notifications. Try again.");
     }
     setBusy(false);
   }
@@ -158,14 +158,14 @@ function NotificationsInner() {
     }
     setBusy(false);
     if (!r || !r.ok) {
-      setErr("Couldn't send a test notification — try again.");
+      setErr("Couldn't send a test notification. Try again.");
       return;
     }
     const j = (await r.json()) as { delivered: number; attempted: number };
     setTestMsg(
       j.delivered > 0
         ? `Delivered to ${j.delivered} device${j.delivered === 1 ? "" : "s"}.`
-        : "No devices received it — check that notifications are enabled."
+        : "No devices received it. Check that notifications are enabled."
     );
   }
 
@@ -175,7 +175,7 @@ function NotificationsInner() {
       : !supported
         ? "Not supported in this browser."
         : permission === "denied"
-          ? "Blocked — allow notifications in your browser's site settings."
+          ? "Blocked. Allow notifications in your browser's site settings."
           : subscribed
             ? "Enabled on this device."
             : permission === "granted"
