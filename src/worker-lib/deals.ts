@@ -3,26 +3,11 @@ import { jsonResponse } from "./http";
 import { dealTemplate } from "./dealTemplates";
 import { listingChecklist } from "./listingChecklist";
 import type { ChecklistRow } from "../lib/crm/portalTypes";
-import { STAGE_LABELS, Stage } from "../lib/crm/normalize";
+import { getStages, stageName } from "./crmStages";
+import type { ContactRow } from "../lib/crm/types";
 import type { DealRow, MilestoneRow, PortalData } from "../lib/crm/portalTypes";
 
 export type { DealRow, MilestoneRow, PortalData };
-
-interface ContactRow {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string | null;
-  phone: string | null;
-  type: string | null;
-  stage: string;
-  source: string | null;
-  tags: string;
-  notes: string;
-  created_at: string;
-  updated_at: string;
-  last_activity_at: string;
-}
 
 const SIDES = new Set(["buyer", "seller"]);
 const DEAL_STATUSES = new Set(["active", "pending", "closed", "cancelled"]);
@@ -96,21 +81,23 @@ export async function handleDealCreate(request: Request, env: Env): Promise<Resp
     });
   }
 
-  const eventBody = `Started ${side} deal${propertyAddress ? ` — ${propertyAddress}` : ""}`;
+  const eventBody = `Started ${side} deal${propertyAddress ? ` · ${propertyAddress}` : ""}`;
   statements.push(
     env.CRM_DB.prepare(
       "INSERT INTO events (id, contact_id, kind, body, meta, created_at) VALUES (?1, ?2, 'deal', ?3, NULL, ?4)"
     ).bind(crypto.randomUUID(), contactId, eventBody, now)
   );
 
-  if (contact.stage === "new" || contact.stage === "contacted") {
+  const PRE_ACTIVE = new Set(["new", "attempted_contact", "contacted", "appointment_set", "nurture"]);
+  if (PRE_ACTIVE.has(contact.stage)) {
     statements.push(
       env.CRM_DB.prepare("UPDATE contacts SET stage = 'active', updated_at = ?1, last_activity_at = ?1 WHERE id = ?2").bind(
         now,
         contactId
       )
     );
-    const stageBody = `${STAGE_LABELS[contact.stage as Stage]} → ${STAGE_LABELS.active}`;
+    const stages = await getStages(env);
+    const stageBody = `${stageName(stages, contact.stage)} → ${stageName(stages, "active")}`;
     statements.push(
       env.CRM_DB.prepare(
         "INSERT INTO events (id, contact_id, kind, body, meta, created_at) VALUES (?1, ?2, 'stage_change', ?3, NULL, ?4)"
@@ -189,7 +176,8 @@ export async function handleDealPatch(id: string, request: Request, env: Env): P
           existing.contact_id
         )
       );
-      const stageBody = `${STAGE_LABELS[contact.stage as Stage]} → ${STAGE_LABELS.closed}`;
+      const stages = await getStages(env);
+      const stageBody = `${stageName(stages, contact.stage)} → ${stageName(stages, "closed")}`;
       statements.push(
         env.CRM_DB.prepare(
           "INSERT INTO events (id, contact_id, kind, body, meta, created_at) VALUES (?1, ?2, 'stage_change', ?3, NULL, ?4)"

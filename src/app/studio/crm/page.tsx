@@ -1,325 +1,213 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { StudioShell } from "@/components/studio/StudioShell";
-import { CrmTabs } from "@/components/studio/crm/CrmTabs";
-import { ContactListItem, ContactRow } from "@/components/studio/crm/ContactListItem";
-import { STAGE_COLORS } from "@/components/studio/crm/stageColors";
-import { CardTitle } from "@/components/studio/crm/CardTitle";
-import { STAGES, STAGE_LABELS, Stage } from "@/lib/crm/normalize";
+import { CrmShell } from "@/components/studio/crm/CrmShell";
+import {
+  Avatar,
+  Btn,
+  Card,
+  ErrorText,
+  SectionTitle,
+  cardCls,
+  crmJson,
+  labelCls,
+} from "@/components/studio/crm/ui";
+import { EVENT_ICON, type EventRow } from "@/lib/crm/types";
+import { displayName, relativeTime } from "@/lib/crm/format";
+import { clearListNav } from "@/lib/crm/nav";
 
-export default function CrmClientsPage() {
+interface SmartListCount {
+  id: string;
+  name: string;
+  description: string;
+  count: number;
+}
+
+type RecentRow = EventRow & { contact_first: string; contact_last: string };
+
+interface DashboardData {
+  newLeads: number;
+  unactioned: number;
+  tasksToday: number;
+  tasksOverdue: number;
+  dealsClosing30: number;
+  smartLists: SmartListCount[];
+  recent: RecentRow[];
+  today: string;
+}
+
+export default function CrmDashboardPage() {
   return (
-    <StudioShell
-      title="Clients"
-      backHref="/studio"
-      headerActions={
-        <Link
-          href="/studio/crm/settings"
-          aria-label="Settings"
-          className="text-gold-light hover:text-gold text-lg leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy rounded"
-        >
-          ⚙️
-        </Link>
-      }
-    >
-      <ClientsInner />
-    </StudioShell>
+    <CrmShell title="Dashboard">
+      <DashboardInner />
+    </CrmShell>
   );
 }
 
-function ClientsInner() {
-  const router = useRouter();
-  const [query, setQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [stage, setStage] = useState<Stage | null>(null);
-  const [contacts, setContacts] = useState<ContactRow[] | null>(null);
-  const [counts, setCounts] = useState<Record<string, number>>({});
-  const [showAdd, setShowAdd] = useState(false);
+function DashboardInner() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedQuery(query.trim()), 300);
-    return () => clearTimeout(t);
-  }, [query]);
-
-  function fetchContacts(signal?: AbortSignal) {
-    const params = new URLSearchParams();
-    if (debouncedQuery) params.set("q", debouncedQuery);
-    if (stage) params.set("stage", stage);
-    const qs = params.toString();
-    fetch(`/api/studio/crm/contacts${qs ? `?${qs}` : ""}`, { credentials: "include", cache: "no-store", signal })
-      .then((r) => (r.ok ? r.json() : { contacts: [] }))
-      .then((j: { contacts: ContactRow[]; counts?: Record<string, number> }) => {
-        setContacts(j.contacts ?? []);
-        if (j.counts) setCounts(j.counts);
+    let cancelled = false;
+    crmJson<DashboardData>("/api/studio/crm/dashboard")
+      .then((d) => {
+        if (cancelled) return;
+        setData(d);
+        setFailed(false);
       })
-      .catch((e) => {
-        if (e instanceof DOMException && e.name === "AbortError") return;
-        setContacts([]);
+      .catch(() => {
+        if (!cancelled) setFailed(true);
       });
+    return () => {
+      cancelled = true;
+    };
+  }, [attempt]);
+
+  const retry = useCallback(() => {
+    setFailed(false);
+    setAttempt((n) => n + 1);
+  }, []);
+
+  if (failed) {
+    return (
+      <div className="space-y-3">
+        <ErrorText>{"Couldn't load the dashboard."}</ErrorText>
+        <Btn variant="ghost" onClick={retry} className="px-0">
+          Retry
+        </Btn>
+      </div>
+    );
   }
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchContacts(controller.signal);
-    return () => controller.abort();
-  }, [debouncedQuery, stage]);
+  if (!data) return <div className="font-body text-sm text-charcoal-light">Loading…</div>;
 
-  const unfiltered = !debouncedQuery && !stage;
-  const list = contacts ?? [];
-  // "All" view is an address book: alphabetical by displayed name. Filtered
-  // views keep the server's most-recent-activity order.
-  const alphabetical = unfiltered ? [...list].sort(byDisplayName) : list;
-  const newContacts = unfiltered ? alphabetical.filter((c) => c.stage === "new") : [];
-  const restContacts = unfiltered ? alphabetical.filter((c) => c.stage !== "new") : list;
-  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  const needsContact = data.smartLists.find((l) => l.id === "needs_contact");
 
   return (
-    <div className="space-y-4">
-      <CrmTabs active="inbox" />
-      <div className="sticky top-16 z-30 bg-cream -mx-5 px-5 pt-1 pb-3 space-y-3">
-        <div className="flex items-center gap-3">
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search name, email, phone…"
-            className="flex-1 min-w-0 bg-white border border-navy/10 rounded-xl px-4 py-3 font-body text-sm focus:outline-none focus:border-teal"
-          />
-          <button
-            onClick={() => setShowAdd(true)}
-            className="shrink-0 bg-navy text-gold hover:bg-navy/90 font-ui text-xs tracking-wider uppercase px-4 py-3 rounded-md active:scale-[0.98] transition-transform"
-          >
-            + Add
-          </button>
-        </div>
-
-        {/* pb-3 keeps the overlay scrollbar (iOS/PWA) below the pills instead of on top of them */}
-        <div className="flex gap-2 overflow-x-auto pb-3 -mb-2">
-          <button
-            onClick={() => setStage(null)}
-            className={`shrink-0 font-ui text-xs tracking-wider uppercase px-4 py-2 rounded-full border transition-colors ${
-              stage === null ? "bg-navy text-cream border-navy" : "bg-white text-navy border-navy/20"
-            }`}
-          >
-            All
-            <CountBadge n={total} />
-          </button>
-          {STAGES.map((s) => {
-            const c = STAGE_COLORS[s];
-            const selected = stage === s;
-            return (
-              <button
-                key={s}
-                onClick={() => setStage(s)}
-                className={`shrink-0 font-ui text-xs tracking-wider uppercase px-4 py-2 rounded-full border transition-colors ${
-                  selected ? "" : `bg-white ${c.text} ${c.border}`
-                }`}
-                style={
-                  selected
-                    ? { backgroundColor: c.solid.bg, borderColor: c.solid.bg, color: c.solid.text }
-                    : undefined
-                }
-              >
-                {STAGE_LABELS[s]}
-                <CountBadge n={counts[s] ?? 0} />
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {contacts === null && <div className="font-body text-sm text-charcoal-light">Loading…</div>}
-
-      {contacts !== null && list.length === 0 && (
-        <div className="font-body text-sm text-charcoal-light space-y-2">
-          <p>No leads yet — they&apos;ll land here automatically from the website.</p>
-          <p>
-            Have a list already?{" "}
-            <Link href="/studio/crm/import" className="text-teal">
-              Import contacts from CSV
-            </Link>
-          </p>
-        </div>
-      )}
-
-      {contacts !== null && list.length > 0 && unfiltered && (
-        <>
-          {newContacts.length > 0 && (
-            <section>
-              <CardTitle>New</CardTitle>
-              <div className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] divide-y divide-navy/5">
-                {newContacts.map((c) => (
-                  <ContactListItem key={c.id} contact={c} />
-                ))}
-              </div>
-            </section>
-          )}
-          {restContacts.length > 0 && (
-            <section>
-              <CardTitle>Everyone</CardTitle>
-              <div className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] divide-y divide-navy/5">
-                {restContacts.map((c) => (
-                  <ContactListItem key={c.id} contact={c} />
-                ))}
-              </div>
-            </section>
-          )}
-        </>
-      )}
-
-      {contacts !== null && list.length > 0 && !unfiltered && (
-        <div className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] divide-y divide-navy/5">
-          {list.map((c) => (
-            <ContactListItem key={c.id} contact={c} />
-          ))}
-        </div>
-      )}
-
-      {showAdd && (
-        <AddContactSheet
-          onClose={() => setShowAdd(false)}
-          onCreated={(id) => {
-            setShowAdd(false);
-            fetchContacts();
-            router.push(`/studio/crm/contact?id=${id}`);
-          }}
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <Tile
+          href="/studio/crm/people?stages=new"
+          caption="New leads"
+          value={data.newLeads}
+          sub={data.unactioned > 0 ? `${data.unactioned} unactioned` : "All actioned"}
+          tone={data.unactioned > 0 ? "gold" : "muted"}
         />
-      )}
-    </div>
-  );
-}
+        <Tile
+          href="/studio/crm/tasks"
+          caption="Tasks today"
+          value={data.tasksToday}
+          sub={data.tasksOverdue > 0 ? `${data.tasksOverdue} overdue` : "Nothing overdue"}
+          tone={data.tasksOverdue > 0 ? "red" : "muted"}
+        />
+        <Tile
+          href="/studio/crm/pipeline"
+          caption="Deals closing"
+          value={data.dealsClosing30}
+          sub="Next 30 days"
+          tone="muted"
+        />
+        <Tile
+          href="/studio/crm/people?list=needs_contact"
+          caption="Needs contact"
+          value={needsContact?.count ?? 0}
+          sub="Reach out today"
+          tone="muted"
+        />
+      </div>
 
-function byDisplayName(a: ContactRow, b: ContactRow): number {
-  const an = `${a.first_name} ${a.last_name}`.trim();
-  const bn = `${b.first_name} ${b.last_name}`.trim();
-  return an.localeCompare(bn, "en", { sensitivity: "base" });
-}
+      <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-[1fr_1.4fr] lg:gap-6 lg:items-start">
+        <section className="space-y-3">
+          <SectionTitle>Smart lists</SectionTitle>
+          <Card className="divide-y divide-navy/5 overflow-hidden">
+            {data.smartLists.map((l) => (
+              <Link
+                key={l.id}
+                href={`/studio/crm/people?list=${l.id}`}
+                className="flex items-center gap-3 px-4 py-3 hover:bg-navy/[0.03] transition-colors"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block font-body text-sm text-navy">{l.name}</span>
+                  <span className="block font-body font-light text-xs text-charcoal-light">{l.description}</span>
+                </span>
+                <span className="shrink-0 font-ui text-xs tabular-nums text-navy bg-navy/5 rounded-full px-2.5 py-1">
+                  {l.count}
+                </span>
+              </Link>
+            ))}
+          </Card>
+        </section>
 
-function CountBadge({ n }: { n: number }) {
-  return (
-    <span className="ml-1.5 inline-block min-w-[1.25rem] text-center font-ui text-[0.65rem] tabular-nums opacity-70">
-      {n}
-    </span>
-  );
-}
-
-function AddContactSheet({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [type, setType] = useState<"buyer" | "seller" | "other">("buyer");
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-
-  async function submit() {
-    setErr(null);
-    if (!name.trim()) {
-      setErr("Name is required.");
-      return;
-    }
-    setBusy(true);
-    try {
-      const r = await fetch("/api/studio/crm/contacts", {
-        method: "POST",
-        credentials: "include",
-        cache: "no-store",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          phone: phone.trim() || undefined,
-          email: email.trim() || undefined,
-          type,
-        }),
-      });
-      if (!r.ok) {
-        const message = await r
-          .json()
-          .then((j: { error?: string }) => j.error ?? "Something went wrong — try again.")
-          .catch(() => "Something went wrong — try again.");
-        throw new Error(message);
-      }
-      const j = (await r.json()) as { contact: { id: string } };
-      onCreated(j.contact.id);
-    } catch (e) {
-      setErr(String(e instanceof Error ? e.message : e));
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-navy/40"
-      onClick={onClose}
-    >
-      <div
-        className="w-full sm:max-w-sm bg-cream rounded-t-3xl sm:rounded-3xl p-6 space-y-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="font-display font-normal text-lg text-navy">Add a lead</div>
-
-        <label className="block">
-          <span className="font-ui text-xs tracking-wider uppercase text-charcoal-light">Name</span>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            autoFocus
-            className="mt-2 w-full bg-white border border-navy/10 rounded-xl p-3 font-body text-sm focus:outline-none focus:border-teal"
-          />
-        </label>
-
-        <label className="block">
-          <span className="font-ui text-xs tracking-wider uppercase text-charcoal-light">Phone</span>
-          <input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            type="tel"
-            className="mt-2 w-full bg-white border border-navy/10 rounded-xl p-3 font-body text-sm focus:outline-none focus:border-teal"
-          />
-        </label>
-
-        <label className="block">
-          <span className="font-ui text-xs tracking-wider uppercase text-charcoal-light">Email</span>
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            type="email"
-            className="mt-2 w-full bg-white border border-navy/10 rounded-xl p-3 font-body text-sm focus:outline-none focus:border-teal"
-          />
-        </label>
-
-        <label className="block">
-          <span className="font-ui text-xs tracking-wider uppercase text-charcoal-light">Type</span>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value as "buyer" | "seller" | "other")}
-            className="mt-2 w-full bg-white border border-navy/10 rounded-xl p-3 font-body text-sm focus:outline-none focus:border-teal"
-          >
-            <option value="buyer">Buyer</option>
-            <option value="seller">Seller</option>
-            <option value="other">Other</option>
-          </select>
-        </label>
-
-        {err && <div className="text-sm text-red-600 font-body">{err}</div>}
-
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 bg-white border border-navy/20 text-navy font-ui text-xs tracking-wider uppercase py-3.5 rounded-md"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={submit}
-            disabled={busy || !name.trim()}
-            className="flex-1 bg-navy text-gold hover:bg-navy/90 font-ui font-medium text-xs tracking-wider uppercase py-3.5 rounded-md active:scale-[0.98] transition-transform disabled:opacity-60"
-          >
-            {busy ? "Saving…" : "Save"}
-          </button>
-        </div>
+        <section className="space-y-3">
+          <SectionTitle>Recent activity</SectionTitle>
+          <Card className="divide-y divide-navy/5 overflow-hidden">
+            {data.recent.length === 0 && (
+              <div className="px-4 py-3 font-body font-light text-sm text-charcoal-light">No activity yet.</div>
+            )}
+            {data.recent.slice(0, 15).map((e) => (
+              <Link
+                key={e.id}
+                href={`/studio/crm/contact?id=${e.contact_id}`}
+                // People is the only writer of the list-nav snapshot. Opening a
+                // profile from here must drop it, or back/prev/next would walk
+                // the last People list instead of returning to the dashboard.
+                onClick={() => clearListNav()}
+                className="flex items-start gap-3 px-4 py-3 hover:bg-navy/[0.03] transition-colors"
+              >
+                <Avatar first={e.contact_first} last={e.contact_last} size="sm" />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-baseline justify-between gap-3">
+                    <span className="font-display font-medium text-sm text-navy truncate">
+                      {displayName(e.contact_first, e.contact_last)}
+                    </span>
+                    <span className="shrink-0 font-ui text-[0.65rem] text-charcoal-light">
+                      {relativeTime(e.created_at)}
+                    </span>
+                  </span>
+                  <span className="block font-body font-light text-xs text-charcoal-light truncate">
+                    <span aria-hidden="true">{EVENT_ICON[e.kind] ?? "•"}</span> {preview(e.body)}
+                  </span>
+                </span>
+              </Link>
+            ))}
+          </Card>
+        </section>
       </div>
     </div>
+  );
+}
+
+function preview(body: string | null): string {
+  const b = (body ?? "").trim();
+  return b.length > 80 ? `${b.slice(0, 80)}…` : b;
+}
+
+function Tile({
+  href,
+  caption,
+  value,
+  sub,
+  tone,
+}: {
+  href: string;
+  caption: string;
+  value: number;
+  sub: string;
+  tone: "gold" | "red" | "muted";
+}) {
+  const subCls =
+    tone === "gold" ? "text-gold" : tone === "red" ? "text-red-700" : "text-charcoal-light";
+  return (
+    <Link
+      href={href}
+      className={`${cardCls} block px-4 py-3 hover:border-navy/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold`}
+    >
+      <span className={`block ${labelCls}`}>{caption}</span>
+      <span className="block font-display text-3xl text-navy leading-none mt-1.5 tabular-nums">{value}</span>
+      <span className={`block font-body font-light text-xs mt-1.5 ${subCls}`}>{sub}</span>
+    </Link>
   );
 }

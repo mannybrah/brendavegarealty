@@ -46,3 +46,6 @@ all-people-2026-07-16.csv
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# D1 backups (real client data)
+/backups/

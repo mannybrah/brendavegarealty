@@ -1,15 +1,16 @@
-import { STAGE_LABELS, Stage } from "@/lib/crm/normalize";
-import { STAGE_COLORS } from "./stageColors";
+"use client";
 
-export function StagePill({ stage }: { stage: string }) {
-  const known = (stage as Stage) in STAGE_COLORS;
-  const style = known
-    ? `${STAGE_COLORS[stage as Stage].bg} ${STAGE_COLORS[stage as Stage].text} border ${STAGE_COLORS[stage as Stage].border}`
-    : "bg-navy/10 text-charcoal-light border border-navy/10";
-  const label = known ? STAGE_LABELS[stage as Stage] : stage;
+import { useStages } from "./StagesContext";
+import { paletteFor } from "./stageColors";
+
+export function StagePill({ stageId, size = "sm" }: { stageId: string; size?: "sm" | "md" }) {
+  const { byId } = useStages();
+  const s = byId[stageId];
+  const c = paletteFor(s?.color ?? "gray");
+  const pad = size === "md" ? "px-3 py-1.5 text-[0.7rem]" : "px-2.5 py-1 text-[0.6rem]";
   return (
-    <span className={`font-ui text-[0.6rem] tracking-wider uppercase px-2.5 py-1 rounded-full shrink-0 ${style}`}>
-      {label}
+    <span className={`font-ui tracking-wider uppercase rounded-full shrink-0 border whitespace-nowrap ${pad} ${c.bg} ${c.text} ${c.border}`}>
+      {s?.name ?? "Unknown"}
     </span>
   );
 }

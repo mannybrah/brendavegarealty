@@ -1,4 +1,4 @@
-import { splitName, normalizeEmail, normalizePhone, STAGES, type Stage } from "./normalize";
+import { splitName, normalizeEmail, normalizePhone } from "./normalize";
 
 export function parseCsv(text: string): string[][] {
   const rows: string[][] = [];
@@ -76,39 +76,55 @@ export interface ImportContact {
   lastName: string;
   email: string | null;
   phone: string | null;
-  stage: Stage;
+  stage: string;
   source: string;
   tags: string[];
   notes: string;
   createdAt: string | null;
 }
 
-const STAGE_MAP: Record<string, Stage> = {
+// Maps stage vocab from Follow Up Boss / brokerage exports to v2 stage ids.
+const STAGE_MAP: Record<string, string> = {
   "lead": "new",
+  "new": "new",
   "hot prospect": "contacted",
-  "nurture": "contacted",
+  "spoke with customer": "contacted",
   "contacted": "contacted",
+  "attempted contact": "attempted_contact",
+  "appointment set": "appointment_set",
+  "met with customer": "appointment_set",
+  "nurture": "nurture",
   "active client": "active",
   "active": "active",
+  "showing homes": "active",
+  "listing agreement": "active",
+  "active listing": "active",
+  "submitting offers": "active",
   "pending": "under_contract",
+  "under contract": "under_contract",
   "closed": "closed",
   "past client": "sphere",
   "sphere": "sphere",
   "trash": "archived",
   "archived": "archived",
+  "rejected": "archived",
 };
 
 function normalizeStageKey(raw: string | undefined): string {
   return (raw ?? "").trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-export function mapStage(raw: string | undefined): Stage {
+export function mapStage(raw: string | undefined): string {
   const key = normalizeStageKey(raw);
   const exact = STAGE_MAP[key];
-  if (exact && STAGES.includes(exact)) return exact;
+  if (exact) return exact;
 
   if (key.startsWith("sphere")) return "sphere";
-  if (key.includes("attempted") || key.includes("contacted")) return "contacted";
+  if (key.includes("attempted")) return "attempted_contact";
+  if (key.includes("appointment") || key.includes("appt")) return "appointment_set";
+  if (key.includes("nurture")) return "nurture";
+  if (key.includes("contacted")) return "contacted";
+  if (key.includes("under contract") || key.includes("pending")) return "under_contract";
   if (key.startsWith("farm")) return "sphere";
   if (key.startsWith("lead")) return "new";
 

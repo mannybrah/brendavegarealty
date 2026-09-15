@@ -1,13 +1,18 @@
-import { Stage } from "./normalize";
 import { ImportContact } from "./csv";
 
 export interface ExistingContact {
   id: string;
   first_name: string;
   last_name: string;
+  /** Denormalized primary email on `contacts`. */
   email: string | null;
+  /** Denormalized primary phone on `contacts`. */
   phone: string | null;
-  tags: string;
+  /** Every `phones.number` row on file for this contact (primary included). */
+  phones: string[];
+  /** Every `emails.address` row on file for this contact (primary included). */
+  emails: string[];
+  tags: string[];
   notes: string;
 }
 
@@ -17,9 +22,9 @@ export interface NewContactRow {
   last_name: string;
   email: string | null;
   phone: string | null;
-  stage: Stage;
+  stage: string;
   source: string;
-  tags: string;
+  tags: string[];
   notes: string;
   created_at: string;
   updated_at: string;
@@ -32,7 +37,7 @@ export interface ContactUpdate {
   last_name: string;
   email: string | null;
   phone: string | null;
-  tags: string;
+  tags: string[];
   notes: string;
   updated_at: string;
   last_activity_at: string;
@@ -48,16 +53,20 @@ export interface ImportPlan {
 
 type Target = { kind: "existing"; id: string } | { kind: "pending"; idx: number };
 
-function mergeTagsJson(existingTagsJson: string, incoming: string[]): string {
-  let existing: string[] = [];
-  try {
-    const parsed = JSON.parse(existingTagsJson);
-    if (Array.isArray(parsed)) existing = parsed.filter((t) => typeof t === "string");
-  } catch {
-    existing = [];
+// Order-preserving union, case-insensitive dedupe, first-seen casing wins.
+export function mergeTags(existing: string[], incoming: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const t of [...existing, ...incoming]) {
+    if (typeof t !== "string") continue;
+    const v = t.trim();
+    if (!v) continue;
+    const key = v.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(v);
   }
-  const union = new Set([...existing, ...incoming]);
-  return JSON.stringify([...union]);
+  return out;
 }
 
 function mergeNotes(current: string, incoming: string): string {
@@ -89,8 +98,14 @@ export function planImport(
   const existingById = new Map(existing.map((e) => [e.id, e]));
 
   for (const e of existing) {
-    if (e.email) emailIndex.set(e.email, { kind: "existing", id: e.id });
-    if (e.phone) phoneIndex.set(e.phone, { kind: "existing", id: e.id });
+    const target: Target = { kind: "existing", id: e.id };
+    // Secondary rows first, then the denormalized primary, so the primary
+    // wins if the same value appears twice. A CSV row that matches any phone
+    // or email on file merges into that contact instead of inserting a twin.
+    for (const address of e.emails ?? []) if (address) emailIndex.set(address, target);
+    for (const number of e.phones ?? []) if (number) phoneIndex.set(number, target);
+    if (e.email) emailIndex.set(e.email, target);
+    if (e.phone) phoneIndex.set(e.phone, target);
   }
 
   const inserts: NewContactRow[] = [];
@@ -133,7 +148,7 @@ export function planImport(
         phone,
         stage: row.stage,
         source: "import",
-        tags: mergeTagsJson("[]", tags),
+        tags: mergeTags([], tags),
         notes,
         created_at: createdAt,
         updated_at: nowIso,
@@ -154,7 +169,7 @@ export function planImport(
       ins.email = ins.email ?? email;
       ins.phone = ins.phone ?? phone;
       ins.notes = mergeNotes(ins.notes, notes);
-      ins.tags = mergeTagsJson(ins.tags, tags);
+      ins.tags = mergeTags(ins.tags, tags);
       if (email && !emailIndex.has(email)) emailIndex.set(email, target);
       if (phone && !phoneIndex.has(phone)) phoneIndex.set(phone, target);
       merged++;
@@ -187,7 +202,7 @@ export function planImport(
     upd.email = upd.email ?? email;
     upd.phone = upd.phone ?? phone;
     upd.notes = mergeNotes(upd.notes, notes);
-    upd.tags = mergeTagsJson(upd.tags, tags);
+    upd.tags = mergeTags(upd.tags, tags);
     updatesById.set(target.id, upd);
     if (email && !emailIndex.has(email)) emailIndex.set(email, target);
     if (phone && !phoneIndex.has(phone)) phoneIndex.set(phone, target);

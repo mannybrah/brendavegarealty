@@ -3,8 +3,8 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { StudioShell } from "@/components/studio/StudioShell";
-import { CardTitle } from "@/components/studio/crm/CardTitle";
+import { CrmShell } from "@/components/studio/crm/CrmShell";
+import { SectionTitle } from "@/components/studio/crm/ui";
 import type { DealRow, MilestoneRow, ChecklistRow } from "@/lib/crm/portalTypes";
 
 interface ContactSummary {
@@ -24,16 +24,23 @@ const CHECKLIST_PHASE_LABELS: Record<number, string> = {
 const CHECKLIST_PHASE_ORDER = [1, 2, 3, 4];
 
 export default function DealPage() {
+  // The deal's contact only arrives with the GET, so the shell's mobile back
+  // arrow starts at People and retargets the contact once it is known.
+  const [contactId, setContactId] = useState<string | null>(null);
   return (
-    <StudioShell title="Deal" backHref="/studio/crm">
+    <CrmShell
+      title="Deal"
+      backHref={contactId ? `/studio/crm/contact?id=${contactId}` : "/studio/crm/people"}
+      wide={false}
+    >
       <Suspense fallback={<div className="font-body text-sm text-charcoal-light">Loading…</div>}>
-        <DealDetail />
+        <DealDetail onContact={setContactId} />
       </Suspense>
-    </StudioShell>
+    </CrmShell>
   );
 }
 
-function DealDetail() {
+function DealDetail({ onContact }: { onContact: (id: string | null) => void }) {
   const id = useSearchParams().get("id");
 
   const [deal, setDeal] = useState<DealRow | null>(null);
@@ -58,6 +65,7 @@ function DealDetail() {
           setDeal(j.deal);
           setMilestones(j.milestones ?? []);
           setContact(j.contact ?? null);
+          onContact(j.contact?.id ?? null);
           setChecklist(j.checklist ?? []);
         }
       })
@@ -97,7 +105,7 @@ function DealDetail() {
       {contact && (
         <Link
           href={`/studio/crm/contact?id=${contact.id}`}
-          className="font-ui text-[0.65rem] tracking-wider uppercase text-teal"
+          className="hidden lg:inline-block font-ui text-[0.65rem] tracking-wider uppercase text-teal"
         >
           &larr; {`${contact.first_name} ${contact.last_name}`.trim() || "Contact"}
         </Link>
@@ -164,11 +172,11 @@ function DealHeaderCard({
         body: JSON.stringify(body),
       });
     } catch {
-      onError("Network error — check your connection and try again.");
+      onError("Network error. Check your connection and try again.");
       return null;
     }
     if (!r.ok) {
-      onError("Something went wrong — try again.");
+      onError("Something went wrong. Try again.");
       return null;
     }
     const j = (await r.json()) as { deal: DealRow };
@@ -303,7 +311,7 @@ function MilestonesCard({
     const updated = await patchMilestone(m.id, { status: nextStatus });
     if (!updated) {
       setMilestones(prev);
-      onError("Couldn't update — try again.");
+      onError("Couldn't update. Try again.");
       return;
     }
     setMilestones((cur) => cur.map((x) => (x.id === m.id ? updated : x)));
@@ -316,7 +324,7 @@ function MilestonesCard({
     const updated = await patchMilestone(m.id, { status: "skipped" });
     if (!updated) {
       setMilestones(prev);
-      onError("Couldn't update — try again.");
+      onError("Couldn't update. Try again.");
       return;
     }
     setMilestones((cur) => cur.map((x) => (x.id === m.id ? updated : x)));
@@ -331,7 +339,7 @@ function MilestonesCard({
     const updated = await patchMilestone(m.id, { title: trimmed });
     if (!updated) {
       setMilestones(prev);
-      onError("Couldn't rename — try again.");
+      onError("Couldn't rename. Try again.");
       return;
     }
     setMilestones((cur) => cur.map((x) => (x.id === m.id ? updated : x)));
@@ -345,7 +353,7 @@ function MilestonesCard({
     const updated = await patchMilestone(m.id, { date: next });
     if (!updated) {
       setMilestones(prev);
-      onError("Couldn't update — try again.");
+      onError("Couldn't update. Try again.");
       return;
     }
     setMilestones((cur) => cur.map((x) => (x.id === m.id ? updated : x)));
@@ -359,7 +367,7 @@ function MilestonesCard({
     const updated = await patchMilestone(m.id, { clientVisible: !!nextVisible });
     if (!updated) {
       setMilestones(prev);
-      onError("Couldn't update — try again.");
+      onError("Couldn't update. Try again.");
       return;
     }
     setMilestones((cur) => cur.map((x) => (x.id === m.id ? updated : x)));
@@ -378,7 +386,7 @@ function MilestonesCard({
     }
     if (!r || !r.ok) {
       setMilestones(prev);
-      onError("Couldn't delete — try again.");
+      onError("Couldn't delete. Try again.");
     }
   }
 
@@ -393,7 +401,7 @@ function MilestonesCard({
       patchMilestone(other.id, { sortOrder: m.sort_order }),
     ]);
     if (!a || !b) {
-      onError("Couldn't reorder — try again.");
+      onError("Couldn't reorder. Try again.");
       if (a && !b) {
         // m's swap succeeded, other's failed — restore m's original sort_order
         await patchMilestone(m.id, { sortOrder: m.sort_order });
@@ -424,7 +432,7 @@ function MilestonesCard({
     }
     setAdding(false);
     if (!r || !r.ok) {
-      onError("Couldn't add that step — try again.");
+      onError("Couldn't add that step. Try again.");
       return;
     }
     const j = (await r.json()) as { milestone: MilestoneRow };
@@ -434,8 +442,8 @@ function MilestonesCard({
 
   return (
     <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] divide-y divide-navy/5">
-      <div className="p-4 pb-2">
-        <CardTitle>Milestones</CardTitle>
+      <div className="p-4 pb-3">
+        <SectionTitle>Milestones</SectionTitle>
       </div>
       {milestones.map((m, i) => (
         <MilestoneRowItem
@@ -662,7 +670,7 @@ function ChecklistCard({
     }
     setSeeding(false);
     if (!r || !r.ok) {
-      onError("Couldn't add the checklist — try again.");
+      onError("Couldn't add the checklist. Try again.");
       return;
     }
     const j = (await r.json()) as { checklist: ChecklistRow[] };
@@ -692,7 +700,7 @@ function ChecklistCard({
       // other checklist item that changed optimistically while this
       // request was in flight.
       setChecklist((cur) => cur.map((x) => (x.id === item.id ? item : x)));
-      onError("Couldn't update — try again.");
+      onError("Couldn't update. Try again.");
       return;
     }
     const j = (await r.json()) as { item: ChecklistRow };
@@ -717,7 +725,7 @@ function ChecklistCard({
         const idx = prevIndex >= 0 && prevIndex <= cur.length ? prevIndex : cur.length;
         return [...cur.slice(0, idx), item, ...cur.slice(idx)];
       });
-      onError("Couldn't delete — try again.");
+      onError("Couldn't delete. Try again.");
     }
   }
 
@@ -740,7 +748,7 @@ function ChecklistCard({
     }
     setAdding(false);
     if (!r || !r.ok) {
-      onError("Couldn't add that item — try again.");
+      onError("Couldn't add that item. Try again.");
       return;
     }
     const j = (await r.json()) as { item: ChecklistRow };
@@ -767,14 +775,14 @@ function ChecklistCard({
     setRemoving(false);
     if (!r || !r.ok) {
       setChecklist(prev);
-      onError("Couldn't remove the checklist — try again.");
+      onError("Couldn't remove the checklist. Try again.");
     }
   }
 
   if (checklist.length === 0) {
     return (
       <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4 space-y-3">
-        <CardTitle>Listing checklist</CardTitle>
+        <SectionTitle>Listing checklist</SectionTitle>
         <button
           onClick={seed}
           disabled={seeding}
@@ -920,7 +928,7 @@ function PortalCard({
     }
     setBusy(false);
     if (!r || !r.ok) {
-      onError("Couldn't create the portal link — try again.");
+      onError("Couldn't create the portal link. Try again.");
       return;
     }
     const j = (await r.json()) as { portalToken: string };
@@ -948,7 +956,7 @@ function PortalCard({
     }
     setBusy(false);
     if (!r || !r.ok) {
-      onError("Couldn't turn off the portal — try again.");
+      onError("Couldn't turn off the portal. Try again.");
       return;
     }
     onUpdated({ ...deal, portal_token: null });
@@ -961,13 +969,13 @@ function PortalCard({
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      onError("Couldn't copy — select and copy the link manually.");
+      onError("Couldn't copy. Select and copy the link manually.");
     }
   }
 
   return (
     <section className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] p-4 space-y-3">
-      <CardTitle>Client portal</CardTitle>
+      <SectionTitle>Client portal</SectionTitle>
 
       {!token && (
         <button
