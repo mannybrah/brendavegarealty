@@ -29,20 +29,39 @@ import {
   findLiveListingBySlug,
 } from "./worker-lib/listing";
 import { renderListingPage } from "./worker-lib/listingPage";
+import { ingestLead } from "./worker-lib/crm";
 import {
-  handleCrmSummary,
   handleContactList,
   handleContactCreate,
   handleContactGet,
   handleContactPatch,
   handleContactDelete,
-  handleEventCreate,
+  handlePhonesPut,
+  handleEmailsPut,
+  handleSourceList,
+} from "./worker-lib/crmContacts";
+import {
+  handleRelationshipCreate,
+  handleRelationshipPatch,
+  handleRelationshipDelete,
+} from "./worker-lib/crmRelationships";
+import { handleEventCreate, handleEventPatch, handleEventDelete } from "./worker-lib/crmEvents";
+import {
   handleTaskList,
   handleTaskCreate,
   handleTaskPatch,
   handleTaskDelete,
-  ingestLead,
-} from "./worker-lib/crm";
+  handleTasksMoveOverdueToToday,
+} from "./worker-lib/crmTasks";
+import {
+  handleStageList,
+  handleStageCreate,
+  handleStagePatch,
+  handleStageReorder,
+  handleStageDelete,
+} from "./worker-lib/crmStages";
+import { handleTagList, handleTagPatch, handleTagDelete } from "./worker-lib/crmTags";
+import { handleDashboard, handleSmartLists, handleCrmSummary } from "./worker-lib/crmDashboard";
 import { handleImport } from "./worker-lib/crmImport";
 import {
   handleDealCreate,
@@ -206,10 +225,51 @@ export default {
       return requireStudio(request, env, () => handleListingDelete(listingMatch[1], env));
     }
 
-    // CRM (studio-gated contacts/events/summary)
+    // CRM v2 (studio-gated)
     if (url.pathname === "/api/studio/crm/summary" && request.method === "GET") {
       return requireStudio(request, env, () => handleCrmSummary(env));
     }
+    if (url.pathname === "/api/studio/crm/dashboard" && request.method === "GET") {
+      return requireStudio(request, env, () => handleDashboard(env));
+    }
+    if (url.pathname === "/api/studio/crm/smart-lists" && request.method === "GET") {
+      return requireStudio(request, env, () => handleSmartLists(env));
+    }
+    if (url.pathname === "/api/studio/crm/sources" && request.method === "GET") {
+      return requireStudio(request, env, () => handleSourceList(env));
+    }
+
+    // Stages
+    if (url.pathname === "/api/studio/crm/stages" && request.method === "GET") {
+      return requireStudio(request, env, () => handleStageList(env));
+    }
+    if (url.pathname === "/api/studio/crm/stages" && request.method === "POST") {
+      return requireStudio(request, env, () => handleStageCreate(request, env));
+    }
+    if (url.pathname === "/api/studio/crm/stages/reorder" && request.method === "POST") {
+      return requireStudio(request, env, () => handleStageReorder(request, env));
+    }
+    const crmStageMatch = url.pathname.match(/^\/api\/studio\/crm\/stages\/([a-z0-9_]+)$/);
+    if (crmStageMatch && request.method === "PATCH") {
+      return requireStudio(request, env, () => handleStagePatch(crmStageMatch[1], request, env));
+    }
+    if (crmStageMatch && request.method === "DELETE") {
+      return requireStudio(request, env, () => handleStageDelete(crmStageMatch[1], request, env));
+    }
+
+    // Tags
+    if (url.pathname === "/api/studio/crm/tags" && request.method === "GET") {
+      return requireStudio(request, env, () => handleTagList(env));
+    }
+    const crmTagMatch = url.pathname.match(/^\/api\/studio\/crm\/tags\/([a-f0-9-]+)$/);
+    if (crmTagMatch && request.method === "PATCH") {
+      return requireStudio(request, env, () => handleTagPatch(crmTagMatch[1], request, env));
+    }
+    if (crmTagMatch && request.method === "DELETE") {
+      return requireStudio(request, env, () => handleTagDelete(crmTagMatch[1], env));
+    }
+
+    // Contacts
     if (url.pathname === "/api/studio/crm/contacts" && request.method === "GET") {
       return requireStudio(request, env, () => handleContactList(request, env));
     }
@@ -219,6 +279,18 @@ export default {
     const crmEventMatch = url.pathname.match(/^\/api\/studio\/crm\/contacts\/([a-f0-9-]+)\/events$/);
     if (crmEventMatch && request.method === "POST") {
       return requireStudio(request, env, () => handleEventCreate(crmEventMatch[1], request, env));
+    }
+    const crmPhonesMatch = url.pathname.match(/^\/api\/studio\/crm\/contacts\/([a-f0-9-]+)\/phones$/);
+    if (crmPhonesMatch && request.method === "PUT") {
+      return requireStudio(request, env, () => handlePhonesPut(crmPhonesMatch[1], request, env));
+    }
+    const crmEmailsMatch = url.pathname.match(/^\/api\/studio\/crm\/contacts\/([a-f0-9-]+)\/emails$/);
+    if (crmEmailsMatch && request.method === "PUT") {
+      return requireStudio(request, env, () => handleEmailsPut(crmEmailsMatch[1], request, env));
+    }
+    const crmRelCreateMatch = url.pathname.match(/^\/api\/studio\/crm\/contacts\/([a-f0-9-]+)\/relationships$/);
+    if (crmRelCreateMatch && request.method === "POST") {
+      return requireStudio(request, env, () => handleRelationshipCreate(crmRelCreateMatch[1], request, env));
     }
     const crmContactMatch = url.pathname.match(/^\/api\/studio\/crm\/contacts\/([a-f0-9-]+)$/);
     if (crmContactMatch && request.method === "GET") {
@@ -230,14 +302,36 @@ export default {
     if (crmContactMatch && request.method === "DELETE") {
       return requireStudio(request, env, () => handleContactDelete(crmContactMatch[1], env));
     }
+
+    // Relationships / events
+    const crmRelMatch = url.pathname.match(/^\/api\/studio\/crm\/relationships\/([a-f0-9-]+)$/);
+    if (crmRelMatch && request.method === "PATCH") {
+      return requireStudio(request, env, () => handleRelationshipPatch(crmRelMatch[1], request, env));
+    }
+    if (crmRelMatch && request.method === "DELETE") {
+      return requireStudio(request, env, () => handleRelationshipDelete(crmRelMatch[1], env));
+    }
+    const crmEventIdMatch = url.pathname.match(/^\/api\/studio\/crm\/events\/([a-f0-9-]+)$/);
+    if (crmEventIdMatch && request.method === "PATCH") {
+      return requireStudio(request, env, () => handleEventPatch(crmEventIdMatch[1], request, env));
+    }
+    if (crmEventIdMatch && request.method === "DELETE") {
+      return requireStudio(request, env, () => handleEventDelete(crmEventIdMatch[1], env));
+    }
+
     if (url.pathname === "/api/studio/crm/import" && request.method === "POST") {
       return requireStudio(request, env, () => handleImport(request, env));
     }
+
+    // Tasks
     if (url.pathname === "/api/studio/crm/tasks" && request.method === "GET") {
       return requireStudio(request, env, () => handleTaskList(request, env));
     }
     if (url.pathname === "/api/studio/crm/tasks" && request.method === "POST") {
       return requireStudio(request, env, () => handleTaskCreate(request, env));
+    }
+    if (url.pathname === "/api/studio/crm/tasks/move-overdue" && request.method === "POST") {
+      return requireStudio(request, env, () => handleTasksMoveOverdueToToday(env));
     }
     const crmTaskMatch = url.pathname.match(/^\/api\/studio\/crm\/tasks\/([a-f0-9-]+)$/);
     if (crmTaskMatch && request.method === "PATCH") {
