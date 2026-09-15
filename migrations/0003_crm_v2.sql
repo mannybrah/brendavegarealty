@@ -16,7 +16,7 @@ INSERT INTO stages (id, name, description, color, sort_order, is_system, created
   ('contacted',         'Contacted',         'Spoken with, not met yet',                    'steel', 2, 0, '2026-09-14T00:00:00.000Z'),
   ('appointment_set',   'Appointment Set',   'Meeting scheduled',                           'plum',  3, 0, '2026-09-14T00:00:00.000Z'),
   ('active',            'Active',            'Touring, listing, or writing offers',         'teal',  4, 1, '2026-09-14T00:00:00.000Z'),
-  ('nurture',           'Nurture',           'Not ready yet — stay in touch',               'sage',  5, 0, '2026-09-14T00:00:00.000Z'),
+  ('nurture',           'Nurture',           'Not ready yet. Stay in touch',               'sage',  5, 0, '2026-09-14T00:00:00.000Z'),
   ('under_contract',    'Under Contract',    'Offer accepted',                              'amber', 6, 1, '2026-09-14T00:00:00.000Z'),
   ('closed',            'Closed',            'Deal closed',                                 'green', 7, 1, '2026-09-14T00:00:00.000Z'),
   ('sphere',            'Sphere / Past',     'Past clients, friends, and family',           'stone', 8, 0, '2026-09-14T00:00:00.000Z'),

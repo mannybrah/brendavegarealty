@@ -111,16 +111,16 @@ function PipelineInner() {
           </div>
 
           {/* Desktop: full-bleed board — the stage count is dynamic, so the
-              columns auto-fit rather than living on a fixed 6-up grid. */}
+              columns scroll horizontally (FUB-style board) instead of wrapping. */}
           <div className="hidden md:block w-screen relative left-1/2 -translate-x-1/2 px-4">
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-3">
               {board.map((stage) => {
                 const items = grouped[stage.id] ?? [];
                 const c = paletteFor(stage.color);
                 return (
                   <div
                     key={stage.id}
-                    className="min-w-0 bg-white rounded-lg border border-navy/5 shadow-[0_1px_3px_rgba(15,29,53,0.06)] overflow-hidden"
+                    className="w-[240px] shrink-0 bg-white rounded-lg border border-navy/5 shadow-[0_1px_3px_rgba(15,29,53,0.06)] overflow-hidden"
                     style={{ borderTop: `3px solid ${c.accent}` }}
                   >
                     <div className="flex items-center justify-between px-2 py-2">

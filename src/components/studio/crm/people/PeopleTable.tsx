@@ -77,7 +77,7 @@ export function PeopleTable({
             const name = displayName(c.first_name, c.last_name);
             const type = c.type ? CONTACT_TYPE_LABELS[c.type as ContactType] : null;
             const overdue = !c.last_communication_at && c.stage === "new";
-            const extra = c.tags.length - 3;
+            const extra = c.tags.length - 2;
             return (
               <tr
                 key={c.id}
@@ -116,7 +116,7 @@ export function PeopleTable({
                 </td>
                 <td className="px-3 h-12">
                   <div className="flex items-center gap-1 overflow-hidden">
-                    {c.tags.slice(0, 3).map((t) => (
+                    {c.tags.slice(0, 2).map((t) => (
                       <TagBubble key={t.id} name={t.name} />
                     ))}
                     {extra > 0 && (

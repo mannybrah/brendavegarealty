@@ -313,7 +313,7 @@ function QuickAdd({ onAdded }: { onAdded: () => void }) {
             value={type}
             onChange={(e) => setType(e.target.value as TaskType)}
             aria-label="Task type"
-            className={`${selectCls} flex-1 lg:w-36 lg:flex-none`}
+            className={`${selectCls} flex-1 min-w-[7.5rem] lg:w-36 lg:flex-none`}
           >
             {TASK_TYPES.map((k) => (
               <option key={k} value={k}>

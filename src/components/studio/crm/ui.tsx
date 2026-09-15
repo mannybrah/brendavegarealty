@@ -265,6 +265,8 @@ export function SegmentedTabs<T extends string>({
     <div className={`flex gap-1 bg-navy/5 rounded-xl p-1 overflow-x-auto ${className}`} role="tablist">
       {tabs.map((t) => {
         const active = t.key === value;
+        // Up to 4 tabs share the width evenly; more than that scrolls.
+        const sizing = tabs.length > 4 ? "shrink-0" : "flex-1 min-w-0";
         return (
           <button
             key={t.key}
@@ -272,7 +274,7 @@ export function SegmentedTabs<T extends string>({
             role="tab"
             aria-selected={active}
             onClick={() => onChange(t.key)}
-            className={`flex-1 min-w-0 shrink-0 font-ui text-[0.7rem] tracking-wider uppercase px-3 py-2 rounded-lg transition-all whitespace-nowrap ${
+            className={`${sizing} font-ui text-[0.7rem] tracking-wider uppercase px-3 py-2 rounded-lg transition-all whitespace-nowrap ${
               active ? "bg-white text-navy shadow-[0_1px_2px_rgba(15,29,53,0.12)]" : "text-charcoal-light hover:text-navy"
             }`}
           >
@@ -401,8 +403,8 @@ export async function crmJson<T>(input: string, init: RequestInit = {}): Promise
   if (!r.ok) {
     const msg = await r
       .json()
-      .then((j: { error?: string }) => j.error ?? "Something went wrong — try again.")
-      .catch(() => "Something went wrong — try again.");
+      .then((j: { error?: string }) => j.error ?? "Something went wrong. Try again.")
+      .catch(() => "Something went wrong. Try again.");
     throw new Error(msg);
   }
   return (await r.json()) as T;
