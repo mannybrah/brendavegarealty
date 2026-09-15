@@ -41,7 +41,7 @@ test("fresh row with no existing match produces an insert with correct fields", 
       phone: "5551234567",
       stage: "new",
       source: "import",
-      tags: JSON.stringify(["buyer"]),
+      tags: ["buyer"],
       notes: "Interested in condos",
       created_at: NOW,
       updated_at: NOW,
@@ -68,7 +68,7 @@ test("existing-email match produces an update with fill-only-blank, notes append
       last_name: "Rivera",
       email: "alex@example.com",
       phone: null,
-      tags: JSON.stringify(["buyer"]),
+      tags: ["buyer"],
       notes: "Original note",
     },
   ];
@@ -95,7 +95,7 @@ test("existing-email match produces an update with fill-only-blank, notes append
       last_name: "Rivera", // kept because existing had a value
       email: "alex@example.com",
       phone: "5559876543", // filled in because existing was null
-      tags: JSON.stringify(["buyer", "hot"]),
+      tags: ["buyer", "hot"],
       notes: "Original note\nNew note",
       updated_at: NOW,
       last_activity_at: NOW,
@@ -121,7 +121,7 @@ test("intra-payload duplicate email produces one insert, merged for the second r
     last_name: "Lee", // filled in from second row since first was blank
     email: "sam@example.com",
     notes: "First contact\nSecond contact",
-    tags: JSON.stringify(["referral"]),
+    tags: ["referral"],
   });
 });
 
@@ -153,7 +153,7 @@ test("invalid row (no name, no email, no phone) is skipped and does not affect o
 
 test("row matching an existing contact by phone only (different email) still merges into that existing row", () => {
   const existing: ExistingContact[] = [
-    { id: "existing-9", first_name: "Pat", last_name: "Kim", email: null, phone: "5550001111", tags: "[]", notes: "" },
+    { id: "existing-9", first_name: "Pat", last_name: "Kim", email: null, phone: "5550001111", tags: [], notes: "" },
   ];
   const rows = [contact({ firstName: "Pat", lastName: "Kim", phone: "5550001111", email: "pat@example.com" })];
   const plan = planImport(rows, existing, NOW, makeIdSeq());
@@ -165,7 +165,7 @@ test("row matching an existing contact by phone only (different email) still mer
 
 test("two rows that each independently match the same existing contact (once by email, once by phone) accumulate into a single update, not two", () => {
   const existing: ExistingContact[] = [
-    { id: "existing-5", first_name: "", last_name: "", email: "morgan@example.com", phone: "5553334444", tags: "[]", notes: "" },
+    { id: "existing-5", first_name: "", last_name: "", email: "morgan@example.com", phone: "5553334444", tags: [], notes: "" },
   ];
   const rows = [
     contact({ firstName: "Morgan", email: "morgan@example.com", notes: "note A" }),
@@ -186,7 +186,7 @@ test("two rows that each independently match the same existing contact (once by 
 
 test("counters are exact across a mixed batch", () => {
   const existing: ExistingContact[] = [
-    { id: "existing-1", first_name: "Known", last_name: "Person", email: "known@example.com", phone: null, tags: "[]", notes: "" },
+    { id: "existing-1", first_name: "Known", last_name: "Person", email: "known@example.com", phone: null, tags: [], notes: "" },
   ];
   const rows = [
     contact({}), // skipped

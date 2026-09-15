@@ -1,4 +1,3 @@
-import { Stage } from "./normalize";
 import { ImportContact } from "./csv";
 
 export interface ExistingContact {
@@ -7,7 +6,7 @@ export interface ExistingContact {
   last_name: string;
   email: string | null;
   phone: string | null;
-  tags: string;
+  tags: string[];
   notes: string;
 }
 
@@ -17,9 +16,9 @@ export interface NewContactRow {
   last_name: string;
   email: string | null;
   phone: string | null;
-  stage: Stage;
+  stage: string;
   source: string;
-  tags: string;
+  tags: string[];
   notes: string;
   created_at: string;
   updated_at: string;
@@ -32,7 +31,7 @@ export interface ContactUpdate {
   last_name: string;
   email: string | null;
   phone: string | null;
-  tags: string;
+  tags: string[];
   notes: string;
   updated_at: string;
   last_activity_at: string;
@@ -48,16 +47,20 @@ export interface ImportPlan {
 
 type Target = { kind: "existing"; id: string } | { kind: "pending"; idx: number };
 
-function mergeTagsJson(existingTagsJson: string, incoming: string[]): string {
-  let existing: string[] = [];
-  try {
-    const parsed = JSON.parse(existingTagsJson);
-    if (Array.isArray(parsed)) existing = parsed.filter((t) => typeof t === "string");
-  } catch {
-    existing = [];
+// Order-preserving union, case-insensitive dedupe, first-seen casing wins.
+export function mergeTags(existing: string[], incoming: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const t of [...existing, ...incoming]) {
+    if (typeof t !== "string") continue;
+    const v = t.trim();
+    if (!v) continue;
+    const key = v.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(v);
   }
-  const union = new Set([...existing, ...incoming]);
-  return JSON.stringify([...union]);
+  return out;
 }
 
 function mergeNotes(current: string, incoming: string): string {
@@ -133,7 +136,7 @@ export function planImport(
         phone,
         stage: row.stage,
         source: "import",
-        tags: mergeTagsJson("[]", tags),
+        tags: mergeTags([], tags),
         notes,
         created_at: createdAt,
         updated_at: nowIso,
@@ -154,7 +157,7 @@ export function planImport(
       ins.email = ins.email ?? email;
       ins.phone = ins.phone ?? phone;
       ins.notes = mergeNotes(ins.notes, notes);
-      ins.tags = mergeTagsJson(ins.tags, tags);
+      ins.tags = mergeTags(ins.tags, tags);
       if (email && !emailIndex.has(email)) emailIndex.set(email, target);
       if (phone && !phoneIndex.has(phone)) phoneIndex.set(phone, target);
       merged++;
@@ -187,7 +190,7 @@ export function planImport(
     upd.email = upd.email ?? email;
     upd.phone = upd.phone ?? phone;
     upd.notes = mergeNotes(upd.notes, notes);
-    upd.tags = mergeTagsJson(upd.tags, tags);
+    upd.tags = mergeTags(upd.tags, tags);
     updatesById.set(target.id, upd);
     if (email && !emailIndex.has(email)) emailIndex.set(email, target);
     if (phone && !phoneIndex.has(phone)) phoneIndex.set(phone, target);

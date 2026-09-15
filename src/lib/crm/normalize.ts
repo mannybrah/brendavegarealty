@@ -1,16 +1,3 @@
-export const STAGES = ["new", "contacted", "active", "under_contract", "closed", "sphere", "archived"] as const;
-export type Stage = (typeof STAGES)[number];
-
-export const STAGE_LABELS: Record<Stage, string> = {
-  new: "New",
-  contacted: "Contacted",
-  active: "Active",
-  under_contract: "Under Contract",
-  closed: "Closed",
-  sphere: "Sphere / Past",
-  archived: "Archived",
-};
-
 export function normalizePhone(raw: string | null | undefined): string | null {
   if (!raw) return null;
   const digits = raw.replace(/\D/g, "");
