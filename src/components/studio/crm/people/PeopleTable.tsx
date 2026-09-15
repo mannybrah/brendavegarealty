@@ -10,11 +10,11 @@ import { StagePill } from "../StagePill";
 import { Avatar, TagBubble, cardCls } from "../ui";
 
 const COLUMNS: { key: SortKey | null; label: string; className: string }[] = [
-  { key: "name", label: "Name", className: "w-[26%]" },
-  { key: "stage", label: "Stage", className: "w-[13%]" },
-  { key: null, label: "Phone", className: "w-[13%]" },
-  { key: null, label: "Email", className: "w-[20%]" },
-  { key: null, label: "Tags", className: "w-[16%]" },
+  { key: "name", label: "Name", className: "w-[22%]" },
+  { key: "stage", label: "Stage", className: "w-[12%]" },
+  { key: null, label: "Phone", className: "w-[12%]" },
+  { key: null, label: "Email", className: "w-[18%]" },
+  { key: null, label: "Tags", className: "w-[22%] min-w-[220px]" },
   { key: "last_communication", label: "Last comm.", className: "w-[7%] text-right" },
   { key: "created", label: "Added", className: "w-[7%] text-right" },
 ];

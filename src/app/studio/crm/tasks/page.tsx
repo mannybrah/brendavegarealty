@@ -308,12 +308,12 @@ function QuickAdd({ onAdded }: { onAdded: () => void }) {
           aria-label="Task title"
           className={`${inputCls} lg:flex-[2_1_0%]`}
         />
-        <div className="flex gap-2 lg:contents">
+        <div className="grid grid-cols-2 gap-2 lg:contents">
           <select
             value={type}
             onChange={(e) => setType(e.target.value as TaskType)}
             aria-label="Task type"
-            className={`${selectCls} flex-1 min-w-[7.5rem] lg:w-36 lg:flex-none`}
+            className={`${selectCls} col-span-2 lg:col-span-1 lg:w-36 lg:flex-none`}
           >
             {TASK_TYPES.map((k) => (
               <option key={k} value={k}>
@@ -326,14 +326,14 @@ function QuickAdd({ onAdded }: { onAdded: () => void }) {
             value={date}
             onChange={(e) => setDate(e.target.value)}
             aria-label="Due date"
-            className={`${inputCls} flex-1 lg:w-40 lg:flex-none`}
+            className={`${inputCls} min-w-0 lg:w-40 lg:flex-none`}
           />
           <input
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
             aria-label="Due time"
-            className={`${inputCls} flex-1 lg:w-32 lg:flex-none`}
+            className={`${inputCls} min-w-0 lg:w-32 lg:flex-none`}
           />
         </div>
         <ContactPicker value={contact} onChange={setContact} className="lg:flex-1 lg:min-w-0" />
