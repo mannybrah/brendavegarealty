@@ -1,354 +1,457 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { StudioShell } from "@/components/studio/StudioShell";
-import { CrmTabs } from "@/components/studio/crm/CrmTabs";
-import { CardTitle } from "@/components/studio/crm/CardTitle";
-import { ContactRow } from "@/components/studio/crm/ContactListItem";
+// Tasks — Today / Overdue / Upcoming / Done. Server-side views (the worker
+// decides what "today" means in Pacific time), so every tab change refetches.
+// Completing a task is optimistic (the row leaves the list immediately) and
+// reverts with an inline error if the PATCH fails.
 
-interface TaskRow {
-  id: string;
-  contact_id: string | null;
-  deal_id: string | null;
-  milestone_id: string | null;
-  title: string;
-  due_at: string | null;
-  done_at: string | null;
-  notified_at: string | null;
-  created_at: string;
-  contact_name: string | null;
-  deal_address: string | null;
+import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { CrmShell } from "@/components/studio/crm/CrmShell";
+import {
+  Btn,
+  Card,
+  EmptyState,
+  ErrorText,
+  SegmentedTabs,
+  Spinner,
+  TagBubble,
+  crmJson,
+  inputCls,
+  selectCls,
+} from "@/components/studio/crm/ui";
+import {
+  TASK_TYPES,
+  TASK_TYPE_ICONS,
+  TASK_TYPE_LABELS,
+  type ContactListRow,
+  type TaskListRow,
+  type TaskType,
+} from "@/lib/crm/types";
+import { displayName, formatDue, relativeTime } from "@/lib/crm/format";
+
+type TaskView = "today" | "overdue" | "upcoming" | "done";
+
+interface TaskCounts {
+  today: number;
+  overdue: number;
+  upcoming: number;
 }
 
-function formatDueDate(dateStr: string): string {
-  const d = new Date(`${dateStr.slice(0, 10)}T00:00:00`);
-  if (Number.isNaN(d.getTime())) return dateStr.slice(0, 10);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+interface TaskListResponse {
+  tasks: TaskListRow[];
+  today: string;
+  counts: TaskCounts;
+}
+
+interface PickedContact {
+  id: string;
+  name: string;
+}
+
+const EMPTY_COUNTS: TaskCounts = { today: 0, overdue: 0, upcoming: 0 };
+
+const EMPTY_COPY: Record<TaskView, string> = {
+  today: "Nothing due today. Add a task above or get ahead of tomorrow.",
+  overdue: "Nothing overdue. Well done.",
+  upcoming: "Nothing scheduled ahead yet.",
+  done: "No completed tasks yet.",
+};
+
+function isAbort(e: unknown): boolean {
+  return typeof e === "object" && e !== null && (e as { name?: string }).name === "AbortError";
+}
+
+function errMessage(e: unknown, fallback: string): string {
+  return e instanceof Error && e.message ? e.message : fallback;
+}
+
+function typeIcon(type: string | null): string {
+  const icons = TASK_TYPE_ICONS as Record<string, string>;
+  return (type && icons[type]) || TASK_TYPE_ICONS.other;
 }
 
 export default function CrmTasksPage() {
   return (
-    <StudioShell title="Tasks" backHref="/studio/crm">
+    <CrmShell title="Tasks">
       <TasksInner />
-    </StudioShell>
+    </CrmShell>
   );
 }
 
 function TasksInner() {
-  const [openTasks, setOpenTasks] = useState<TaskRow[] | null>(null);
-  const [doneTasks, setDoneTasks] = useState<TaskRow[] | null>(null);
-  const [today, setToday] = useState<string | null>(null);
-  const [contacts, setContacts] = useState<ContactRow[]>([]);
-  const [showDone, setShowDone] = useState(false);
+  const [view, setView] = useState<TaskView>("today");
+  const [tasks, setTasks] = useState<TaskListRow[] | null>(null);
+  const [counts, setCounts] = useState<TaskCounts>(EMPTY_COUNTS);
+  // The view whose response we are currently showing; anything else means a
+  // fetch for the selected view is still in flight.
+  const [loadedView, setLoadedView] = useState<TaskView | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  // Single-flight guards: each fetch function aborts its own prior in-flight
-  // request so an older response can never overwrite state from a newer one.
-  // The mount effect and fetchAll() (called by toggleTask and QuickAdd) both
-  // funnel through these same two functions.
-  const openControllerRef = useRef<AbortController | null>(null);
-  const doneControllerRef = useRef<AbortController | null>(null);
+  const [moving, setMoving] = useState(false);
 
-  function fetchOpen() {
-    openControllerRef.current?.abort();
+  // Single-flight: every load aborts its own prior in-flight request so an
+  // older response can never overwrite state from a newer one.
+  const controllerRef = useRef<AbortController | null>(null);
+
+  const load = useCallback((v: TaskView) => {
+    controllerRef.current?.abort();
     const controller = new AbortController();
-    openControllerRef.current = controller;
-    fetch(`/api/studio/crm/tasks?view=open`, { credentials: "include", cache: "no-store", signal: controller.signal })
-      .then((r) => (r.ok ? r.json() : { tasks: [], today: null }))
-      .then((j: { tasks: TaskRow[]; today: string }) => {
-        setOpenTasks(j.tasks ?? []);
-        setToday(j.today);
+    controllerRef.current = controller;
+    crmJson<TaskListResponse>(`/api/studio/crm/tasks?view=${v}`, { signal: controller.signal })
+      .then((j) => {
+        setTasks(j.tasks ?? []);
+        setCounts(j.counts ?? EMPTY_COUNTS);
+        setLoadedView(v);
       })
-      .catch((e) => {
-        if (e instanceof DOMException && e.name === "AbortError") return;
-        setOpenTasks([]);
+      .catch((e: unknown) => {
+        if (isAbort(e)) return;
+        setTasks([]);
+        setErr(errMessage(e, "Couldn't load tasks. Try again."));
+        setLoadedView(v);
       });
-  }
-
-  function fetchDone() {
-    doneControllerRef.current?.abort();
-    const controller = new AbortController();
-    doneControllerRef.current = controller;
-    fetch(`/api/studio/crm/tasks?view=done`, { credentials: "include", cache: "no-store", signal: controller.signal })
-      .then((r) => (r.ok ? r.json() : { tasks: [] }))
-      .then((j: { tasks: TaskRow[] }) => setDoneTasks(j.tasks ?? []))
-      .catch((e) => {
-        if (e instanceof DOMException && e.name === "AbortError") return;
-        setDoneTasks([]);
-      });
-  }
-
-  function fetchAll() {
-    fetchOpen();
-    fetchDone();
-  }
-
-  useEffect(() => {
-    fetchAll();
-    return () => {
-      openControllerRef.current?.abort();
-      doneControllerRef.current?.abort();
-    };
   }, []);
 
   useEffect(() => {
-    const controller = new AbortController();
-    fetch(`/api/studio/crm/contacts`, { credentials: "include", cache: "no-store", signal: controller.signal })
-      .then((r) => (r.ok ? r.json() : { contacts: [] }))
-      .then((j: { contacts: ContactRow[] }) => setContacts(j.contacts ?? []))
-      .catch((e) => {
-        if (e instanceof DOMException && e.name === "AbortError") return;
-      });
-    return () => controller.abort();
-  }, []);
+    load(view);
+    return () => controllerRef.current?.abort();
+  }, [view, load]);
 
-  async function toggleTask(task: TaskRow) {
-    const nextDone = !task.done_at;
-    const prevOpen = openTasks;
-    const prevDone = doneTasks;
+  async function setDone(task: TaskListRow, done: boolean) {
+    const prevTasks = tasks;
+    const prevCounts = counts;
     setErr(null);
-    if (nextDone) {
-      setOpenTasks((cur) => (cur ?? []).filter((t) => t.id !== task.id));
-      setDoneTasks((cur) => [{ ...task, done_at: new Date().toISOString() }, ...(cur ?? [])]);
-    } else {
-      setDoneTasks((cur) => (cur ?? []).filter((t) => t.id !== task.id));
-      setOpenTasks((cur) => [...(cur ?? []), { ...task, done_at: null }]);
+    // The row always leaves the current tab: completed on today/overdue/
+    // upcoming, reopened on done.
+    setTasks((cur) => (cur ?? []).filter((t) => t.id !== task.id));
+    if (view !== "done") {
+      setCounts((c) => ({ ...c, [view]: Math.max(0, c[view] - 1) }));
     }
-    let r: Response | null;
     try {
-      r = await fetch(`/api/studio/crm/tasks/${task.id}`, {
+      await crmJson(`/api/studio/crm/tasks/${task.id}`, {
         method: "PATCH",
-        credentials: "include",
-        cache: "no-store",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ done: nextDone }),
+        body: JSON.stringify({ done }),
       });
-    } catch {
-      r = null;
-    }
-    if (!r || !r.ok) {
-      setOpenTasks(prevOpen);
-      setDoneTasks(prevDone);
-      setErr("Couldn't update — try again.");
+    } catch (e: unknown) {
+      setTasks(prevTasks);
+      setCounts(prevCounts);
+      setErr(errMessage(e, "Couldn't update. Try again."));
       return;
     }
-    fetchAll();
+    load(view);
   }
 
-  const loaded = openTasks !== null && doneTasks !== null && today !== null;
-  const open = openTasks ?? [];
-  const overdue = today ? open.filter((t) => t.due_at && t.due_at.slice(0, 10) < today) : [];
-  const dueToday = today ? open.filter((t) => t.due_at && t.due_at.slice(0, 10) === today) : [];
-  const upcoming = today ? open.filter((t) => t.due_at && t.due_at.slice(0, 10) > today) : [];
-  const noDate = open.filter((t) => !t.due_at);
+  async function moveOverdue() {
+    setErr(null);
+    setMoving(true);
+    try {
+      await crmJson(`/api/studio/crm/tasks/move-overdue`, { method: "POST" });
+    } catch (e: unknown) {
+      setErr(errMessage(e, "Couldn't move overdue tasks. Try again."));
+      setMoving(false);
+      return;
+    }
+    setMoving(false);
+    load(view);
+  }
+
+  const rows = tasks ?? [];
+  const loading = loadedView !== view;
 
   return (
     <div className="space-y-4">
-      <CrmTabs active="tasks" />
+      <QuickAdd onAdded={() => load(view)} />
 
-      <QuickAdd contacts={contacts} onAdded={fetchAll} />
+      <SegmentedTabs<TaskView>
+        tabs={[
+          { key: "today", label: "Today", count: counts.today },
+          { key: "overdue", label: "Overdue", count: counts.overdue },
+          { key: "upcoming", label: "Upcoming", count: counts.upcoming },
+          { key: "done", label: "Done" },
+        ]}
+        value={view}
+        onChange={setView}
+      />
 
-      {err && <div className="font-body text-sm text-red-600">{err}</div>}
+      {err && <ErrorText>{err}</ErrorText>}
 
-      {!loaded && <div className="font-body text-sm text-charcoal-light">Loading…</div>}
-
-      {loaded && open.length === 0 && (doneTasks ?? []).length === 0 && (
-        <div className="font-body text-sm text-charcoal-light">No tasks yet — add one above.</div>
+      {view === "overdue" && rows.length > 0 && (
+        <div className="flex justify-end">
+          <Btn variant="secondary" onClick={moveOverdue} disabled={moving}>
+            {moving ? "Moving…" : "Move all to today"}
+          </Btn>
+        </div>
       )}
 
-      {loaded && (
-        <>
-          <TaskSection title="Overdue" tasks={overdue} accent="overdue" onToggle={toggleTask} />
-          <TaskSection title="Today" tasks={dueToday} accent="today" onToggle={toggleTask} />
-          <TaskSection title="Upcoming" tasks={upcoming} accent="upcoming" onToggle={toggleTask} />
-          <TaskSection title="No date" tasks={noDate} onToggle={toggleTask} />
-
-          {(doneTasks ?? []).length > 0 && (
-            <section>
-              <button
-                onClick={() => setShowDone((v) => !v)}
-                className="w-full flex items-center justify-between font-ui text-xs tracking-wider uppercase text-charcoal-light mb-2"
-              >
-                <span>Done ({(doneTasks ?? []).length})</span>
-                <span className={`transition-transform ${showDone ? "rotate-180" : ""}`}>▾</span>
-              </button>
-              {showDone && (
-                <div className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] divide-y divide-navy/5">
-                  {(doneTasks ?? []).map((t) => (
-                    <TaskItem key={t.id} task={t} accent="done" onToggle={toggleTask} />
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
-        </>
+      {loading ? (
+        <div className="flex justify-center py-10">
+          <Spinner />
+        </div>
+      ) : rows.length === 0 ? (
+        <Card className="px-4 py-6">
+          <EmptyState>{EMPTY_COPY[view]}</EmptyState>
+        </Card>
+      ) : (
+        <Card className="overflow-hidden">
+          <ul>
+            {rows.map((t) => (
+              <TaskItem key={t.id} task={t} view={view} onSetDone={setDone} />
+            ))}
+          </ul>
+        </Card>
       )}
     </div>
-  );
-}
-
-type TaskAccent = "overdue" | "today" | "upcoming" | "done";
-
-const TASK_ACCENT_COLOR: Record<TaskAccent, string> = {
-  overdue: "#f87171", // red-400 — unchanged, already works
-  today: "#C8A55B", // gold
-  upcoming: "#0F1D35", // navy
-  done: "#9A9A9A", // muted gray
-};
-
-function TaskSection({
-  title,
-  tasks,
-  accent,
-  onToggle,
-}: {
-  title: string;
-  tasks: TaskRow[];
-  accent?: TaskAccent;
-  onToggle: (t: TaskRow) => void;
-}) {
-  if (tasks.length === 0) return null;
-  return (
-    <section>
-      <CardTitle>
-        {title} ({tasks.length})
-      </CardTitle>
-      <div className="bg-[#FCFBF7] rounded-lg border border-navy/10 shadow-[0_1px_3px_rgba(15,29,53,0.06)] divide-y divide-navy/5">
-        {tasks.map((t) => (
-          <TaskItem key={t.id} task={t} accent={accent} onToggle={onToggle} />
-        ))}
-      </div>
-    </section>
   );
 }
 
 function TaskItem({
   task,
-  accent,
-  onToggle,
+  view,
+  onSetDone,
 }: {
-  task: TaskRow;
-  accent?: TaskAccent;
-  onToggle: (t: TaskRow) => void;
+  task: TaskListRow;
+  view: TaskView;
+  onSetDone: (t: TaskListRow, done: boolean) => void;
 }) {
-  const done = !!task.done_at;
-  const showAccent = accent && (accent === "done" || !done);
+  const isDone = view === "done";
+  const due = formatDue(task.due_at);
   return (
-    <div
-      className="flex items-center gap-3 p-4 border-l-4"
-      style={{ borderLeftColor: showAccent ? TASK_ACCENT_COLOR[accent] : "transparent" }}
-    >
+    <li className="flex items-start gap-3 px-4 py-3 border-b border-navy/5 last:border-b-0">
       <input
         type="checkbox"
-        checked={done}
-        onChange={() => onToggle(task)}
-        className="w-4 h-4 shrink-0 accent-gold"
+        checked={isDone}
+        onChange={() => onSetDone(task, !isDone)}
+        aria-label={isDone ? `Reopen ${task.title}` : `Complete ${task.title}`}
+        className="mt-1 w-4 h-4 shrink-0 accent-gold cursor-pointer"
       />
-      <span
-        className={`font-body text-sm flex-1 min-w-0 truncate ${done ? "line-through text-charcoal-light" : "text-navy"}`}
-      >
-        {task.title}
+      <span aria-hidden className="mt-0.5 shrink-0 text-sm leading-5">
+        {typeIcon(task.type)}
       </span>
-      {task.contact_id && task.contact_name && (
-        <Link
-          href={`/studio/crm/contact?id=${task.contact_id}`}
-          className="shrink-0 font-ui text-[0.6rem] tracking-wider uppercase bg-navy/5 text-navy px-2.5 py-1 rounded-full truncate max-w-[100px]"
-        >
-          {task.contact_name}
-        </Link>
+      <div className="min-w-0 flex-1">
+        <p className={`font-body text-sm leading-5 ${isDone ? "text-charcoal-light line-through" : "text-navy"}`}>
+          {task.title}
+        </p>
+        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-body font-light text-xs">
+          {task.contact_id && task.contact_name && (
+            <Link href={`/studio/crm/contact?id=${task.contact_id}`} className="text-teal hover:text-navy">
+              {task.contact_name}
+            </Link>
+          )}
+          {task.deal_address && <span className="text-charcoal-light truncate max-w-[16rem]">{task.deal_address}</span>}
+          {due && (
+            <span className={view === "overdue" ? "text-red-700" : "text-charcoal-light"}>
+              {view === "overdue" ? `Due ${due}` : due}
+            </span>
+          )}
+          {isDone && task.done_at && <span className="text-charcoal-light">Done {relativeTime(task.done_at)}</span>}
+        </div>
+      </div>
+      {isDone && (
+        <Btn variant="ghost" className="shrink-0" onClick={() => onSetDone(task, false)}>
+          Undo
+        </Btn>
       )}
-      {task.deal_id && (
-        <Link
-          href={`/studio/crm/deal?id=${task.deal_id}`}
-          className="shrink-0 font-ui text-[0.6rem] tracking-wider uppercase bg-teal/10 text-teal px-2.5 py-1 rounded-full truncate max-w-[100px]"
-        >
-          {task.deal_address || "Deal"}
-        </Link>
-      )}
-      {task.due_at && (
-        <span className="font-ui text-[0.65rem] text-charcoal-light shrink-0">{formatDueDate(task.due_at)}</span>
-      )}
-    </div>
+    </li>
   );
 }
 
-function QuickAdd({ contacts, onAdded }: { contacts: ContactRow[]; onAdded: () => void }) {
+// ------------------------------------------------------------
+// Quick add bar
+// ------------------------------------------------------------
+function QuickAdd({ onAdded }: { onAdded: () => void }) {
   const [title, setTitle] = useState("");
-  const [dueAt, setDueAt] = useState("");
-  const [contactId, setContactId] = useState("");
+  const [type, setType] = useState<TaskType>("follow_up");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [contact, setContact] = useState<PickedContact | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   async function add() {
-    if (!title.trim()) return;
+    const t = title.trim();
+    if (!t || busy) return;
     setErr(null);
     setBusy(true);
-    let r: Response | null;
+    // due_at is Pacific-naive: date alone, or date + time when both are set.
+    const dueAt = date ? (time ? `${date}T${time}` : date) : undefined;
     try {
-      r = await fetch("/api/studio/crm/tasks", {
+      await crmJson(`/api/studio/crm/tasks`, {
         method: "POST",
-        credentials: "include",
-        cache: "no-store",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: title.trim(),
-          dueAt: dueAt || undefined,
-          contactId: contactId || undefined,
-        }),
+        body: JSON.stringify({ title: t, type, dueAt, contactId: contact?.id }),
       });
-    } catch {
-      r = null;
+    } catch (e: unknown) {
+      // Keep the draft so nothing typed is lost.
+      setErr(errMessage(e, "Couldn't save. Try again."));
+      setBusy(false);
+      return;
     }
+    setTitle("");
+    setDate("");
+    setTime("");
+    setContact(null);
     setBusy(false);
-    if (r && r.ok) {
-      setTitle("");
-      setDueAt("");
-      setContactId("");
-      onAdded();
-    } else {
-      setErr("Couldn't save — try again.");
-    }
+    onAdded();
   }
 
   return (
-    <div className="sticky top-16 z-30 bg-cream -mx-5 px-5 pt-1 pb-3 space-y-2">
-      <div className="flex gap-2">
+    <Card className="p-3 lg:p-4">
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && add()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              void add();
+            }
+          }}
           placeholder="Add a task…"
-          className="flex-1 min-w-0 bg-white border border-navy/10 rounded-xl px-4 py-3 font-body text-sm focus:outline-none focus:border-teal"
+          aria-label="Task title"
+          className={`${inputCls} lg:flex-[2_1_0%]`}
         />
-        <button
-          onClick={add}
-          disabled={busy || !title.trim()}
-          className="shrink-0 bg-navy text-gold hover:bg-navy/90 font-ui text-xs tracking-wider uppercase px-4 py-3 rounded-md active:scale-[0.98] transition-transform disabled:opacity-60"
-        >
-          {busy ? "Adding…" : "+ Add"}
-        </button>
+        <div className="flex gap-2 lg:contents">
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value as TaskType)}
+            aria-label="Task type"
+            className={`${selectCls} flex-1 lg:w-36 lg:flex-none`}
+          >
+            {TASK_TYPES.map((k) => (
+              <option key={k} value={k}>
+                {TASK_TYPE_LABELS[k]}
+              </option>
+            ))}
+          </select>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            aria-label="Due date"
+            className={`${inputCls} flex-1 lg:w-40 lg:flex-none`}
+          />
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            aria-label="Due time"
+            className={`${inputCls} flex-1 lg:w-32 lg:flex-none`}
+          />
+        </div>
+        <ContactPicker value={contact} onChange={setContact} className="lg:flex-1 lg:min-w-0" />
+        <Btn onClick={add} disabled={busy || !title.trim()} className="shrink-0">
+          {busy ? "Adding…" : "Add"}
+        </Btn>
       </div>
-      <div className="flex gap-2">
-        <input
-          value={dueAt}
-          onChange={(e) => setDueAt(e.target.value)}
-          type="date"
-          className="flex-1 min-w-0 bg-white border border-navy/10 rounded-xl px-3 py-2.5 font-body text-xs focus:outline-none focus:border-teal"
+      {!date && time && (
+        <p className="mt-2 font-body font-light text-xs text-charcoal-light">Pick a date to use that time.</p>
+      )}
+      {err && (
+        <div className="mt-2">
+          <ErrorText>{err}</ErrorText>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// Typeahead against /contacts?q=, debounced 250ms; a pick becomes a removable
+// chip holding the contactId.
+function ContactPicker({
+  value,
+  onChange,
+  className = "",
+}: {
+  value: PickedContact | null;
+  onChange: (c: PickedContact | null) => void;
+  className?: string;
+}) {
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState<PickedContact[]>([]);
+  const [open, setOpen] = useState(false);
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  // Derived, so an emptied query hides stale names without a state write.
+  const visible = q.trim().length < 1 ? [] : results;
+
+  useEffect(() => {
+    const term = q.trim();
+    if (value || term.length < 1) return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      crmJson<{ contacts: ContactListRow[] }>(`/api/studio/crm/contacts?q=${encodeURIComponent(term)}&limit=8`, {
+        signal: controller.signal,
+      })
+        .then((j) => {
+          setResults((j.contacts ?? []).map((c) => ({ id: c.id, name: displayName(c.first_name, c.last_name) })));
+          setOpen(true);
+        })
+        .catch((e: unknown) => {
+          if (isAbort(e)) return;
+          setResults([]);
+        });
+    }, 250);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [q, value]);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDown(e: MouseEvent) {
+      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  function pick(c: PickedContact) {
+    onChange(c);
+    setQ("");
+    setResults([]);
+    setOpen(false);
+  }
+
+  if (value) {
+    return (
+      <div className={`flex items-center ${className}`}>
+        <TagBubble
+          name={value.name}
+          onRemove={() => {
+            onChange(null);
+            setQ("");
+          }}
         />
-        <select
-          value={contactId}
-          onChange={(e) => setContactId(e.target.value)}
-          className="flex-1 min-w-0 bg-white border border-navy/10 rounded-xl px-3 py-2.5 font-body text-xs focus:outline-none focus:border-teal"
-        >
-          <option value="">No contact</option>
-          {contacts.map((c) => (
-            <option key={c.id} value={c.id}>
-              {`${c.first_name} ${c.last_name}`.trim() || "No name"}
-            </option>
+      </div>
+    );
+  }
+
+  return (
+    <div ref={boxRef} className={`relative ${className}`}>
+      <input
+        value={q}
+        onChange={(e) => {
+          setQ(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => visible.length > 0 && setOpen(true)}
+        placeholder="Link a contact…"
+        aria-label="Link a contact"
+        className={inputCls}
+      />
+      {open && visible.length > 0 && (
+        <ul className="absolute z-40 left-0 right-0 top-full mt-1 max-h-60 overflow-y-auto bg-white border border-navy/10 rounded-xl shadow-[0_8px_24px_rgba(15,29,53,0.12)]">
+          {visible.map((c) => (
+            <li key={c.id}>
+              <button
+                type="button"
+                onClick={() => pick(c)}
+                className="w-full text-left px-3 py-2 font-body text-sm text-navy hover:bg-navy/5"
+              >
+                {c.name}
+              </button>
+            </li>
           ))}
-        </select>
-      </div>
-      {err && <div className="font-body text-xs text-red-600">{err}</div>}
+        </ul>
+      )}
     </div>
   );
 }
