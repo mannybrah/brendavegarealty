@@ -59,3 +59,30 @@ export function normalizeEmailInputs(inputs: EmailInput[] | undefined | null): N
   }
   return pickPrimary(out);
 }
+
+export interface AddressInput {
+  address: string;
+  label?: string;
+  isPrimary?: boolean;
+}
+export interface NormalizedAddress {
+  address: string;
+  label: string;
+  isPrimary: boolean;
+}
+
+export function normalizeAddressInputs(inputs: AddressInput[] | undefined | null): NormalizedAddress[] {
+  const seen = new Set<string>();
+  const out: NormalizedAddress[] = [];
+  for (const raw of inputs ?? []) {
+    if (!raw || typeof raw !== "object") continue;
+    const address = typeof raw.address === "string" ? raw.address.trim().replace(/\s+/g, " ").slice(0, 200) : "";
+    if (!address) continue;
+    const key = address.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const label = (typeof raw.label === "string" ? raw.label.trim().slice(0, 40) : "") || "Home";
+    out.push({ address, label, isPrimary: !!raw.isPrimary });
+  }
+  return pickPrimary(out);
+}

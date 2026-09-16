@@ -38,6 +38,7 @@ import {
   handleContactDelete,
   handlePhonesPut,
   handleEmailsPut,
+  handleAddressesPut,
   handleSourceList,
 } from "./worker-lib/crmContacts";
 import {
@@ -287,6 +288,10 @@ export default {
     const crmEmailsMatch = url.pathname.match(/^\/api\/studio\/crm\/contacts\/([a-f0-9-]+)\/emails$/);
     if (crmEmailsMatch && request.method === "PUT") {
       return requireStudio(request, env, () => handleEmailsPut(crmEmailsMatch[1], request, env));
+    }
+    const crmAddressesMatch = url.pathname.match(/^\/api\/studio\/crm\/contacts\/([a-f0-9-]+)\/addresses$/);
+    if (crmAddressesMatch && request.method === "PUT") {
+      return requireStudio(request, env, () => handleAddressesPut(crmAddressesMatch[1], request, env));
     }
     const crmRelCreateMatch = url.pathname.match(/^\/api\/studio\/crm\/contacts\/([a-f0-9-]+)\/relationships$/);
     if (crmRelCreateMatch && request.method === "POST") {

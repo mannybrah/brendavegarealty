@@ -1,9 +1,9 @@
 "use client";
 
 import { useId, useState } from "react";
-import type { ContactRow, EmailRow, PhoneRow } from "@/lib/crm/types";
-import { CONTACT_TYPES, CONTACT_TYPE_LABELS, EMAIL_LABELS, PHONE_LABELS } from "@/lib/crm/types";
-import type { EmailInput, PhoneInput } from "@/lib/crm/contactsInput";
+import type { AddressRow, ContactRow, EmailRow, PhoneRow } from "@/lib/crm/types";
+import { ADDRESS_LABEL_SUGGESTIONS, CONTACT_TYPES, CONTACT_TYPE_LABELS, EMAIL_LABELS, PHONE_LABELS } from "@/lib/crm/types";
+import type { AddressInput, EmailInput, PhoneInput } from "@/lib/crm/contactsInput";
 import { Btn, ErrorText, Field, Sheet, crmJson, inputCls, labelCls, selectCls } from "@/components/studio/crm/ui";
 
 // ------------------------------------------------------------
@@ -14,6 +14,9 @@ export function phonesToInputs(rows: PhoneRow[]): PhoneInput[] {
 }
 export function emailsToInputs(rows: EmailRow[]): EmailInput[] {
   return rows.map((e) => ({ address: e.address, label: e.label, isPrimary: !!e.is_primary, isBad: !!e.is_bad }));
+}
+export function addressesToInputs(rows: AddressRow[]): AddressInput[] {
+  return rows.map((a) => ({ address: a.address, label: a.label, isPrimary: !!a.is_primary }));
 }
 
 const rowCls = "rounded-xl border border-navy/10 bg-white/60 p-2.5 space-y-2";
@@ -188,6 +191,83 @@ export function EmailsEditor({ value, onChange }: { value: EmailInput[]; onChang
 }
 
 // ------------------------------------------------------------
+// AddressesEditor — labels are free text (Home, Mailing, Investment,
+// Second home, Rental, Work, or anything typed), so new kinds can be added
+// live without a code change.
+// ------------------------------------------------------------
+export function AddressesEditor({ value, onChange }: { value: AddressInput[]; onChange: (v: AddressInput[]) => void }) {
+  const uid = useId();
+  const listId = `${uid}-address-labels`;
+
+  function update(i: number, patch: Partial<AddressInput>) {
+    onChange(value.map((a, n) => (n === i ? { ...a, ...patch } : a)));
+  }
+  function setPrimary(i: number) {
+    onChange(value.map((a, n) => ({ ...a, isPrimary: n === i })));
+  }
+  function remove(i: number) {
+    const next = value.filter((_, n) => n !== i);
+    if (next.length > 0 && !next.some((a) => a.isPrimary)) next[0] = { ...next[0], isPrimary: true };
+    onChange(next);
+  }
+  function add() {
+    onChange([...value, { address: "", label: value.length === 0 ? "Home" : "", isPrimary: value.length === 0 }]);
+  }
+
+  return (
+    <div className="space-y-2">
+      <span className={labelCls}>Addresses</span>
+      <datalist id={listId}>
+        {ADDRESS_LABEL_SUGGESTIONS.map((l) => (
+          <option key={l} value={l} />
+        ))}
+      </datalist>
+      {value.map((a, i) => (
+        <div key={i} className={rowCls}>
+          <input
+            value={a.address}
+            onChange={(e) => update(i, { address: e.target.value })}
+            placeholder="123 Main St, San Jose, CA 95125"
+            aria-label={`Address ${i + 1}`}
+            className={inputCls}
+            autoComplete="off"
+          />
+          <div className="flex gap-2">
+            <input
+              list={listId}
+              value={a.label ?? ""}
+              onChange={(e) => update(i, { label: e.target.value })}
+              placeholder="Label: Home, Investment…"
+              aria-label={`Address ${i + 1} label`}
+              className={`${inputCls} flex-1 min-w-0`}
+              autoComplete="off"
+            />
+          </div>
+          <div className="flex items-center gap-4 flex-wrap">
+            <label className={smallCheck}>
+              <input
+                type="radio"
+                name={`${uid}-address-primary`}
+                checked={!!a.isPrimary}
+                onChange={() => setPrimary(i)}
+                className="w-4 h-4 accent-navy"
+              />
+              Primary
+            </label>
+            <button type="button" onClick={() => remove(i)} className={removeCls}>
+              Remove
+            </button>
+          </div>
+        </div>
+      ))}
+      <button type="button" onClick={add} className="font-body text-sm text-teal hover:text-navy min-h-10 px-1">
+        + Add address
+      </button>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------
 // EditContactSheet
 // ------------------------------------------------------------
 interface EditContactProps {
@@ -195,6 +275,7 @@ interface EditContactProps {
   contact: ContactRow;
   phones: PhoneRow[];
   emails: EmailRow[];
+  addresses: AddressRow[];
   onClose: () => void;
   onSaved: () => void | Promise<void>;
 }
@@ -205,13 +286,13 @@ export function EditContactSheet(props: EditContactProps) {
   return <EditContactForm {...props} />;
 }
 
-function EditContactForm({ contact, phones, emails, onClose, onSaved }: EditContactProps) {
+function EditContactForm({ contact, phones, emails, addresses, onClose, onSaved }: EditContactProps) {
   const [firstName, setFirstName] = useState(contact.first_name);
   const [lastName, setLastName] = useState(contact.last_name);
   const [type, setType] = useState(contact.type ?? "");
-  const [address, setAddress] = useState(contact.address ?? "");
   const [phoneInputs, setPhoneInputs] = useState<PhoneInput[]>(() => phonesToInputs(phones));
   const [emailInputs, setEmailInputs] = useState<EmailInput[]>(() => emailsToInputs(emails));
+  const [addressInputs, setAddressInputs] = useState<AddressInput[]>(() => addressesToInputs(addresses));
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -226,7 +307,7 @@ function EditContactForm({ contact, phones, emails, onClose, onSaved }: EditCont
       const base = `/api/studio/crm/contacts/${contact.id}`;
       await crmJson(base, {
         method: "PATCH",
-        body: JSON.stringify({ firstName: firstName.trim(), lastName: lastName.trim(), type: type || null, address: address.trim() }),
+        body: JSON.stringify({ firstName: firstName.trim(), lastName: lastName.trim(), type: type || null }),
       });
       await crmJson(`${base}/phones`, {
         method: "PUT",
@@ -235,6 +316,10 @@ function EditContactForm({ contact, phones, emails, onClose, onSaved }: EditCont
       await crmJson(`${base}/emails`, {
         method: "PUT",
         body: JSON.stringify({ emails: emailInputs.filter((e) => e.address.trim()) }),
+      });
+      await crmJson(`${base}/addresses`, {
+        method: "PUT",
+        body: JSON.stringify({ addresses: addressInputs.filter((a) => a.address.trim()) }),
       });
       await onSaved();
       onClose();
@@ -281,15 +366,7 @@ function EditContactForm({ contact, phones, emails, onClose, onSaved }: EditCont
       </Field>
       <PhonesEditor value={phoneInputs} onChange={setPhoneInputs} />
       <EmailsEditor value={emailInputs} onChange={setEmailInputs} />
-      <Field label="Address">
-        <input
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          placeholder="123 Main St, San Jose, CA"
-          className={inputCls}
-          autoComplete="off"
-        />
-      </Field>
+      <AddressesEditor value={addressInputs} onChange={setAddressInputs} />
       <ErrorText>{err}</ErrorText>
     </Sheet>
   );

@@ -91,8 +91,8 @@ export async function ingestLead(env: Env, input: IngestLeadInput): Promise<Inge
     const emails = email ? [{ address: email, label: "personal", isPrimary: true, isBad: false }] : [];
     await env.CRM_DB.batch([
       env.CRM_DB.prepare(
-        `INSERT INTO contacts (id, first_name, last_name, email, phone, type, stage, source, notes, price, timeframe, address, last_communication_at, created_at, updated_at, last_activity_at)
-         VALUES (?1, ?2, ?3, ?4, ?5, NULL, 'new', ?6, '', NULL, NULL, '', NULL, ?7, ?7, ?7)`
+        `INSERT INTO contacts (id, first_name, last_name, email, phone, type, stage, source, notes, price, timeframe, last_communication_at, created_at, updated_at, last_activity_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, NULL, 'new', ?6, '', NULL, NULL, NULL, ?7, ?7, ?7)`
       ).bind(contactId, firstName, lastName, email, phone, input.source, now),
       ...writePhones(env, contactId, null, phones, now),
       ...writeEmails(env, contactId, null, emails, now),

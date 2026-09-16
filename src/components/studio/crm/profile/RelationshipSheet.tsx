@@ -3,9 +3,16 @@
 import { useState } from "react";
 import type { RelationshipFull } from "@/lib/crm/types";
 import { RELATIONSHIP_TYPES } from "@/lib/crm/types";
-import type { EmailInput, PhoneInput } from "@/lib/crm/contactsInput";
+import type { AddressInput, EmailInput, PhoneInput } from "@/lib/crm/contactsInput";
 import { Btn, ErrorText, Field, Sheet, crmJson, inputCls } from "@/components/studio/crm/ui";
-import { EmailsEditor, PhonesEditor, emailsToInputs, phonesToInputs } from "./EditContactSheet";
+import {
+  AddressesEditor,
+  EmailsEditor,
+  PhonesEditor,
+  addressesToInputs,
+  emailsToInputs,
+  phonesToInputs,
+} from "./EditContactSheet";
 
 interface Props {
   open: boolean;
@@ -27,6 +34,9 @@ function RelationshipForm({ contactId, relationship, onClose, onSaved }: Props) 
   const [type, setType] = useState(relationship?.type ?? "");
   const [phones, setPhones] = useState<PhoneInput[]>(() => (relationship ? phonesToInputs(relationship.phones) : []));
   const [emails, setEmails] = useState<EmailInput[]>(() => (relationship ? emailsToInputs(relationship.emails) : []));
+  const [addresses, setAddresses] = useState<AddressInput[]>(() =>
+    relationship ? addressesToInputs(relationship.addresses) : []
+  );
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -43,6 +53,7 @@ function RelationshipForm({ contactId, relationship, onClose, onSaved }: Props) 
       type: type.trim(),
       phones: phones.filter((p) => p.number.trim()),
       emails: emails.filter((e) => e.address.trim()),
+      addresses: addresses.filter((a) => a.address.trim()),
     });
     try {
       if (relationship) {
@@ -122,6 +133,7 @@ function RelationshipForm({ contactId, relationship, onClose, onSaved }: Props) 
       </Field>
       <PhonesEditor value={phones} onChange={setPhones} />
       <EmailsEditor value={emails} onChange={setEmails} />
+      <AddressesEditor value={addresses} onChange={setAddresses} />
       <ErrorText>{err}</ErrorText>
     </Sheet>
   );

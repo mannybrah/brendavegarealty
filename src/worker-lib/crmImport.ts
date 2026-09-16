@@ -150,8 +150,8 @@ export async function handleImport(request: Request, env: Env): Promise<Response
   for (const row of plan.inserts) {
     statements.push(
       env.CRM_DB.prepare(
-        `INSERT INTO contacts (id, first_name, last_name, email, phone, type, stage, source, notes, price, timeframe, address, last_communication_at, created_at, updated_at, last_activity_at)
-         VALUES (?1, ?2, ?3, ?4, ?5, NULL, ?6, ?7, ?8, NULL, NULL, '', NULL, ?9, ?10, ?11)`
+        `INSERT INTO contacts (id, first_name, last_name, email, phone, type, stage, source, notes, price, timeframe, last_communication_at, created_at, updated_at, last_activity_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, NULL, ?6, ?7, ?8, NULL, NULL, NULL, ?9, ?10, ?11)`
       ).bind(
         row.id,
         row.first_name,

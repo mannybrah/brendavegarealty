@@ -2,16 +2,20 @@ import { Env } from "./env";
 import { jsonResponse } from "./http";
 import { buildContactQuery, parseFilters } from "../lib/crm/filters";
 import {
+  normalizeAddressInputs,
   normalizeEmailInputs,
   normalizePhoneInputs,
+  NormalizedAddress,
   NormalizedEmail,
   NormalizedPhone,
+  AddressInput,
   PhoneInput,
   EmailInput,
 } from "../lib/crm/contactsInput";
 import { splitName } from "../lib/crm/normalize";
 import { CONTACT_TYPES, TIMEFRAMES } from "../lib/crm/types";
 import type {
+  AddressRow,
   ContactRow,
   ContactListRow,
   DealWithProgress,
@@ -65,6 +69,26 @@ export function writeEmails(
       env.CRM_DB.prepare(
         "INSERT INTO emails (id, contact_id, relationship_id, address, label, is_primary, is_bad, sort_order, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)"
       ).bind(crypto.randomUUID(), contactId, relationshipId, e.address, e.label, e.isPrimary ? 1 : 0, e.isBad ? 1 : 0, i, now)
+    ),
+  ];
+}
+
+export function writeAddresses(
+  env: Env,
+  contactId: string,
+  relationshipId: string | null,
+  addresses: NormalizedAddress[],
+  now: string
+): D1PreparedStatement[] {
+  const del = relationshipId
+    ? env.CRM_DB.prepare("DELETE FROM addresses WHERE relationship_id = ?1").bind(relationshipId)
+    : env.CRM_DB.prepare("DELETE FROM addresses WHERE contact_id = ?1 AND relationship_id IS NULL").bind(contactId);
+  return [
+    del,
+    ...addresses.map((a, i) =>
+      env.CRM_DB.prepare(
+        "INSERT INTO addresses (id, contact_id, relationship_id, label, address, is_primary, sort_order, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)"
+      ).bind(crypto.randomUUID(), contactId, relationshipId, a.label, a.address, a.isPrimary ? 1 : 0, i, now)
     ),
   ];
 }
@@ -145,6 +169,7 @@ interface CreateBody {
   source?: string;
   phones?: PhoneInput[];
   emails?: EmailInput[];
+  addresses?: AddressInput[];
   phone?: string;
   email?: string;
   tags?: string[];
@@ -184,15 +209,18 @@ export async function handleContactCreate(request: Request, env: Env): Promise<R
     ...(typeof body.email === "string" && body.email.trim() ? [{ address: body.email }] : []),
   ]);
 
+  const addresses = normalizeAddressInputs(Array.isArray(body.addresses) ? body.addresses : []);
+
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
   await env.CRM_DB.batch([
     env.CRM_DB.prepare(
-      `INSERT INTO contacts (id, first_name, last_name, email, phone, type, stage, source, notes, price, timeframe, address, last_communication_at, created_at, updated_at, last_activity_at)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, NULL, NULL, '', NULL, ?10, ?10, ?10)`
+      `INSERT INTO contacts (id, first_name, last_name, email, phone, type, stage, source, notes, price, timeframe, last_communication_at, created_at, updated_at, last_activity_at)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, NULL, NULL, NULL, ?10, ?10, ?10)`
     ).bind(id, firstName, lastName, primaryEmail(emails), primaryPhone(phones), type, stage, source, notes, now),
     ...writePhones(env, id, null, phones, now),
     ...writeEmails(env, id, null, emails, now),
+    ...writeAddresses(env, id, null, addresses, now),
     env.CRM_DB.prepare(
       "INSERT INTO events (id, contact_id, kind, body, meta, created_at) VALUES (?1, ?2, 'system', 'Contact created', NULL, ?3)"
     ).bind(crypto.randomUUID(), id, now),
@@ -211,7 +239,7 @@ export async function handleContactGet(id: string, env: Env): Promise<Response> 
   const contact = await getContact(env, id);
   if (!contact) return jsonResponse({ error: "not found" }, 404);
 
-  const [phones, emails, relationships, tagMap, events, tasks, deals] = await Promise.all([
+  const [phones, emails, addresses, relationships, tagMap, events, tasks, deals] = await Promise.all([
     env.CRM_DB.prepare(
       "SELECT * FROM phones WHERE contact_id = ?1 ORDER BY (relationship_id IS NULL) DESC, is_primary DESC, sort_order ASC"
     )
@@ -222,6 +250,11 @@ export async function handleContactGet(id: string, env: Env): Promise<Response> 
     )
       .bind(id)
       .all<EmailRow>(),
+    env.CRM_DB.prepare(
+      "SELECT * FROM addresses WHERE contact_id = ?1 ORDER BY (relationship_id IS NULL) DESC, is_primary DESC, sort_order ASC"
+    )
+      .bind(id)
+      .all<AddressRow>(),
     env.CRM_DB.prepare("SELECT * FROM relationships WHERE contact_id = ?1 ORDER BY sort_order ASC, created_at ASC")
       .bind(id)
       .all<RelationshipRow>(),
@@ -246,16 +279,19 @@ export async function handleContactGet(id: string, env: Env): Promise<Response> 
 
   const allPhones = phones.results ?? [];
   const allEmails = emails.results ?? [];
+  const allAddresses = addresses.results ?? [];
   const rels: RelationshipFull[] = (relationships.results ?? []).map((r) => ({
     ...r,
     phones: allPhones.filter((p) => p.relationship_id === r.id),
     emails: allEmails.filter((e) => e.relationship_id === r.id),
+    addresses: allAddresses.filter((a) => a.relationship_id === r.id),
   }));
 
   return jsonResponse({
     contact,
     phones: allPhones.filter((p) => p.relationship_id === null),
     emails: allEmails.filter((e) => e.relationship_id === null),
+    addresses: allAddresses.filter((a) => a.relationship_id === null),
     relationships: rels,
     tags: tagMap.get(id) ?? [],
     events: events.results ?? [],
@@ -276,7 +312,6 @@ interface PatchBody {
   source?: string | null;
   price?: number | string | null;
   timeframe?: string | null;
-  address?: string;
   notes?: string;
   tags?: string[];
 }
@@ -323,7 +358,6 @@ export async function handleContactPatch(id: string, request: Request, env: Env)
     else return jsonResponse({ error: "invalid timeframe" }, 400);
   }
 
-  const address = typeof body.address === "string" ? body.address.trim().slice(0, 200) : existing.address;
   const notes = typeof body.notes === "string" ? body.notes : existing.notes;
 
   let stage = existing.stage;
@@ -339,8 +373,8 @@ export async function handleContactPatch(id: string, request: Request, env: Env)
   const lastActivityAt = stageChanged ? now : existing.last_activity_at;
   const statements = [
     env.CRM_DB.prepare(
-      `UPDATE contacts SET first_name=?1, last_name=?2, type=?3, stage=?4, source=?5, price=?6, timeframe=?7, address=?8, notes=?9, updated_at=?10, last_activity_at=?11 WHERE id=?12`
-    ).bind(firstName, lastName, type, stage, source, price, timeframe, address, notes, now, lastActivityAt, id),
+      `UPDATE contacts SET first_name=?1, last_name=?2, type=?3, stage=?4, source=?5, price=?6, timeframe=?7, notes=?8, updated_at=?9, last_activity_at=?10 WHERE id=?11`
+    ).bind(firstName, lastName, type, stage, source, price, timeframe, notes, now, lastActivityAt, id),
   ];
   if (stageChanged) {
     statements.push(
@@ -410,6 +444,29 @@ export async function handleEmailsPut(id: string, request: Request, env: Env): P
   return jsonResponse({ emails: results ?? [], contact });
 }
 
+export async function handleAddressesPut(id: string, request: Request, env: Env): Promise<Response> {
+  const existing = await env.CRM_DB.prepare("SELECT id FROM contacts WHERE id = ?1").bind(id).first();
+  if (!existing) return jsonResponse({ error: "not found" }, 404);
+  let body: { addresses?: AddressInput[] };
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return jsonResponse({ error: "bad request" }, 400);
+  }
+  const addresses = normalizeAddressInputs(Array.isArray(body.addresses) ? body.addresses : []);
+  const now = new Date().toISOString();
+  await env.CRM_DB.batch([
+    ...writeAddresses(env, id, null, addresses, now),
+    env.CRM_DB.prepare("UPDATE contacts SET updated_at = ?1 WHERE id = ?2").bind(now, id),
+  ]);
+  const { results } = await env.CRM_DB.prepare(
+    "SELECT * FROM addresses WHERE contact_id = ?1 AND relationship_id IS NULL ORDER BY is_primary DESC, sort_order ASC"
+  )
+    .bind(id)
+    .all<AddressRow>();
+  return jsonResponse({ addresses: results ?? [] });
+}
+
 // ============================================================
 // Delete
 // ============================================================
@@ -427,6 +484,7 @@ export async function handleContactDelete(id: string, env: Env): Promise<Respons
     env.CRM_DB.prepare("DELETE FROM events WHERE contact_id = ?1").bind(id),
     env.CRM_DB.prepare("DELETE FROM phones WHERE contact_id = ?1").bind(id),
     env.CRM_DB.prepare("DELETE FROM emails WHERE contact_id = ?1").bind(id),
+    env.CRM_DB.prepare("DELETE FROM addresses WHERE contact_id = ?1").bind(id),
     env.CRM_DB.prepare("DELETE FROM relationships WHERE contact_id = ?1").bind(id),
     env.CRM_DB.prepare("DELETE FROM contact_tags WHERE contact_id = ?1").bind(id),
     env.CRM_DB.prepare("DELETE FROM contacts WHERE id = ?1").bind(id),

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ContactRow, EmailRow, PhoneRow } from "@/lib/crm/types";
+import type { AddressRow, ContactRow, EmailRow, PhoneRow } from "@/lib/crm/types";
 import { displayName, formatPhone, lastCommunicationLabel } from "@/lib/crm/format";
 import { Avatar, Btn, Card } from "@/components/studio/crm/ui";
 
@@ -45,17 +45,18 @@ export function IdentityCard({
   contact,
   phones,
   emails,
+  addresses,
   onEdit,
 }: {
   contact: ContactRow;
   phones: PhoneRow[];
   emails: EmailRow[];
+  addresses: AddressRow[];
   onEdit: () => void;
 }) {
   const name = displayName(contact.first_name, contact.last_name);
   const phone = primaryPhoneOf(phones, contact.phone);
   const email = primaryEmailOf(emails, contact.email);
-  const address = (contact.address ?? "").trim();
 
   return (
     <Card className="p-4 space-y-4">
@@ -75,7 +76,7 @@ export function IdentityCard({
         <QuickAction href={email ? `mailto:${email}` : null} icon="✉️" label="Email" />
       </div>
 
-      {(phones.length > 0 || emails.length > 0 || address) && (
+      {(phones.length > 0 || emails.length > 0 || addresses.length > 0) && (
         <div className="space-y-0.5">
           {phones.map((p) => (
             <div key={p.id} className={rowCls}>
@@ -110,21 +111,22 @@ export function IdentityCard({
               <span className="font-ui text-[0.6rem] tracking-wider uppercase text-charcoal-light shrink-0">· {e.label}</span>
             </div>
           ))}
-          {address && (
-            <div className={`${rowCls} items-start`}>
+          {addresses.map((a) => (
+            <div key={a.id} className={`${rowCls} items-start`}>
               <span className="w-6 text-center shrink-0 pt-2.5" aria-hidden="true">
                 📍
               </span>
               <a
-                href={`https://maps.apple.com/?q=${encodeURIComponent(address)}`}
+                href={`https://maps.apple.com/?q=${encodeURIComponent(a.address)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-navy hover:text-teal py-2.5 leading-snug"
+                className="text-navy hover:text-teal py-2.5 leading-snug min-w-0"
               >
-                {address}
+                {a.address}
               </a>
+              <span className="font-ui text-[0.6rem] tracking-wider uppercase text-charcoal-light shrink-0 pt-3">· {a.label}</span>
             </div>
-          )}
+          ))}
         </div>
       )}
 

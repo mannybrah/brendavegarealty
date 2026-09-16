@@ -219,10 +219,12 @@ function ContactProfile() {
     );
   }
 
-  const { contact, phones, emails, relationships, tags, events, tasks, deals } = data;
+  const { contact, phones, emails, addresses, relationships, tags, events, tasks, deals } = data;
 
   // ---- cards ----------------------------------------------
-  const identity = <IdentityCard contact={contact} phones={phones} emails={emails} onEdit={() => setEditOpen(true)} />;
+  const identity = (
+    <IdentityCard contact={contact} phones={phones} emails={emails} addresses={addresses} onEdit={() => setEditOpen(true)} />
+  );
   const relationshipsCard = (
     <RelationshipsCard
       relationships={relationships}
@@ -242,7 +244,15 @@ function ContactProfile() {
 
   const sheets = (
     <>
-      <EditContactSheet open={editOpen} contact={contact} phones={phones} emails={emails} onClose={() => setEditOpen(false)} onSaved={load} />
+      <EditContactSheet
+        open={editOpen}
+        contact={contact}
+        phones={phones}
+        emails={emails}
+        addresses={addresses}
+        onClose={() => setEditOpen(false)}
+        onSaved={load}
+      />
       <RelationshipSheet
         open={relSheet.open}
         contactId={id}

@@ -24,7 +24,6 @@ export interface ContactRow {
   notes: string;
   price: number | null;
   timeframe: string | null;
-  address: string;
   last_communication_at: string | null;
   created_at: string;
   updated_at: string;
@@ -68,6 +67,17 @@ export interface EmailRow {
   created_at: string;
 }
 
+export interface AddressRow {
+  id: string;
+  contact_id: string;
+  relationship_id: string | null;
+  label: string;
+  address: string;
+  is_primary: number;
+  sort_order: number;
+  created_at: string;
+}
+
 export interface RelationshipRow {
   id: string;
   contact_id: string;
@@ -82,6 +92,7 @@ export interface RelationshipRow {
 export interface RelationshipFull extends RelationshipRow {
   phones: PhoneRow[];
   emails: EmailRow[];
+  addresses: AddressRow[];
 }
 
 export interface EventRow {
@@ -132,6 +143,7 @@ export interface ContactBundle {
   contact: ContactRow;
   phones: PhoneRow[];
   emails: EmailRow[];
+  addresses: AddressRow[];
   relationships: RelationshipFull[];
   tags: TagRow[];
   events: EventRow[];
@@ -203,6 +215,8 @@ export const EVENT_ICON: Record<string, string> = {
   deal: "🏠",
   system: "⚙️",
 };
+
+export const ADDRESS_LABEL_SUGGESTIONS = ["Home", "Mailing", "Investment", "Second home", "Rental", "Work", "Other"] as const;
 
 export const PHONE_LABELS = ["mobile", "home", "work", "other"] as const;
 export const EMAIL_LABELS = ["personal", "work", "other"] as const;
