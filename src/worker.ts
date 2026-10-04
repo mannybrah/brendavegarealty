@@ -30,6 +30,7 @@ import {
 } from "./worker-lib/listing";
 import { renderListingPage } from "./worker-lib/listingPage";
 import { ingestLead } from "./worker-lib/crm";
+import { normalizeHeardFrom, withHeardVia } from "./lib/heardFrom";
 import {
   handleContactList,
   handleContactCreate,
@@ -715,12 +716,13 @@ async function handleStats(env: Env): Promise<Response> {
 
 async function handleContact(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   try {
-    const { name, email, phone, message, type } = await request.json() as {
+    const { name, email, phone, message, type, heardFrom } = await request.json() as {
       name: string;
       email: string;
       phone: string;
       message?: string;
       type?: string;
+      heardFrom?: unknown;
     };
 
     if (!name || !email || !phone) {
@@ -733,8 +735,10 @@ async function handleContact(request: Request, env: Env, ctx: ExecutionContext):
       email,
       phone,
       source: "contact-form",
-      message: message || `New ${type || "buyer"} lead from contact form`,
-      meta: { type },
+      // Optional "How did you hear about Brenda?" answer rides along on the lead
+      // event (no schema change); unknown values are dropped, never rejected.
+      message: withHeardVia(message || `New ${type || "buyer"} lead from contact form`, heardFrom),
+      meta: { type, heardFrom: normalizeHeardFrom(heardFrom) || undefined },
     });
 
     ctx.waitUntil(
@@ -755,7 +759,7 @@ async function handleContact(request: Request, env: Env, ctx: ExecutionContext):
 
 async function handleLead(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   try {
-    const { name, email, phone, workingWithAgent, timeline, source, calculatorSummary } =
+    const { name, email, phone, workingWithAgent, timeline, source, calculatorSummary, heardFrom } =
       await request.json() as {
         name: string;
         email: string;
@@ -764,6 +768,7 @@ async function handleLead(request: Request, env: Env, ctx: ExecutionContext): Pr
         timeline?: string;
         source?: string;
         calculatorSummary?: Record<string, unknown>;
+        heardFrom?: unknown;
       };
 
     if (!name || !email || !phone) {
@@ -781,6 +786,7 @@ async function handleLead(request: Request, env: Env, ctx: ExecutionContext): Pr
       if (s.qualificationStatus) messageText += ` | Status: ${s.qualificationStatus}`;
       if (s.city) messageText += ` | City: ${s.city}`;
     }
+    messageText = withHeardVia(messageText, heardFrom, " | ");
 
     const leadSource = source || "contact-form";
     const { contactId } = await ingestLead(env, {
@@ -789,7 +795,7 @@ async function handleLead(request: Request, env: Env, ctx: ExecutionContext): Pr
       phone,
       source: leadSource,
       message: messageText,
-      meta: { timeline, workingWithAgent, calculatorSummary },
+      meta: { timeline, workingWithAgent, calculatorSummary, heardFrom: normalizeHeardFrom(heardFrom) || undefined },
     });
 
     ctx.waitUntil(

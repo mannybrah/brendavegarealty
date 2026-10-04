@@ -10,11 +10,384 @@ export interface BlogPost {
   content: string; // HTML
   videoScript: string;
   youtubeEmbed: string;
+  /** Optional Q&A rendered after the content and mirrored in FAQPage JSON-LD. Plain text. */
+  faqs?: { q: string; a: string }[];
 }
 
 import kvPostsData from "./kv-posts.json";
 
 const authoredPosts: BlogPost[] = [
+  // ── Answer-first posts (2026-10-04) ────────────────────────────────────────
+  // Each opens with a direct, self-contained answer, uses question-style H2s,
+  // has one checklist table and three FAQs (the `faqs` field, mirrored in JSON-LD).
+  // Kept at the top so they list first on /blog. Editorial rules: only facts about
+  // Brenda stated elsewhere on the site, no prices or market statistics, no
+  // guarantees, Fair Housing-safe (official sources for schools and city questions).
+  {
+    slug: "how-to-choose-real-estate-agent-campbell-ca",
+    title: "How to Choose a Real Estate Agent in Campbell, CA: What to Verify First",
+    excerpt:
+      "Choosing a real estate agent in Campbell? Verify before you compare: the DRE license, the responsible broker, the pricing evidence and the agreement. Here is how to check any agent, including me.",
+    category: "Buying",
+    date: "2026-10-04",
+    readTime: "5 min read",
+    metaDescription:
+      "How to choose a real estate agent in Campbell, CA: look up the DRE license, confirm the broker, ask for comparable sales and read the agreement. A checklist for any agent.",
+    keywords: [
+      "how to choose a real estate agent in Campbell CA",
+      "verify California real estate license",
+      "DRE license lookup",
+      "real estate agent Campbell CA",
+      "questions to ask a real estate agent",
+      "Brenda Vega DRE 02196981",
+    ],
+    content: `<p>The most reliable way to choose a real estate agent in Campbell is to verify first and compare personalities second. Look up the agent's license on the California Department of Real Estate (DRE) website, confirm which brokerage supervises them, ask how they would handle your specific neighborhood and situation, and read the representation agreement before you sign it. This guide explains how to run those checks on any agent, including me. I'm Brenda Vega, a REALTOR® with Real Broker, California DRE license #02196981.</p>
+
+<h2>What Should You Verify Before You Hire an Agent?</h2>
+<p>Everything in this table can be checked by you, without taking the agent's word for it.</p>
+<table>
+<thead><tr><th>What to verify</th><th>Why it matters</th><th>How to check</th></tr></thead>
+<tbody>
+<tr><td>A current California real estate license</td><td>The public record shows the license type, status, expiration date and any disciplinary action</td><td>Search the license number in the public license lookup at dre.ca.gov</td></tr>
+<tr><td>The responsible broker</td><td>A salesperson must work under a licensed broker, who is responsible for supervising them</td><td>The DRE record names the responsible broker. It should match the brokerage the agent says they work with</td></tr>
+<tr><td>The license number on their materials</td><td>California agents are required to show their license number on their advertising and first-contact materials</td><td>Look on the website, business card and signs</td></tr>
+<tr><td>Experience with your neighborhood and property type</td><td>Campbell, Willow Glen and Cambrian Park sit a few miles apart and are different markets</td><td>Ask for specifics about your area, not the South Bay in general</td></tr>
+<tr><td>How they reached their price opinion</td><td>A number without comparable sales behind it is a guess</td><td>Ask to see the comparable sales and why each one was chosen</td></tr>
+<tr><td>The representation agreement</td><td>It sets the term, the services, the compensation and how either side can end it</td><td>Read it before signing and ask about anything unclear</td></tr>
+<tr><td>A communication plan</td><td>You should not have to chase your own agent for updates</td><td>Ask how often you will hear from them, by what method, and who covers when they are unavailable</td></tr>
+</tbody>
+</table>
+
+<h2>How Do You Look Up a California Real Estate License?</h2>
+<p>Go to the California Department of Real Estate website, dre.ca.gov, and open the public license lookup. You can search by name or by license number. The number is more reliable, because the name on a license can differ from the name an agent uses in business.</p>
+<p>The record shows:</p>
+<ul>
+<li>The license type (salesperson or broker) and its status</li>
+<li>The expiration date</li>
+<li>The responsible broker, for a salesperson</li>
+<li>Any disciplinary action or public comments</li>
+</ul>
+<p>It takes about two minutes. My license number is 02196981. Enter it in the <a href="https://www2.dre.ca.gov/publicasp/pplinfo.asp" target="_blank" rel="noopener noreferrer">DRE public license lookup</a>. I would rather you look it up than take my word for it.</p>
+
+<h2>What Questions Should You Ask Every Agent You Interview?</h2>
+<p>Skip "are you good at this?" Everyone says yes. Ask questions that need a specific answer:</p>
+<ul>
+<li>How did you arrive at this price, and can I see the comparable sales?</li>
+<li>If I am selling: what exactly is your marketing plan, beyond the MLS and an open house?</li>
+<li>If I am buying: how will you help me judge what a home is worth before I offer?</li>
+<li>How will we communicate, and how often?</li>
+<li>What is your experience in my specific neighborhood?</li>
+<li>How long is the agreement, and what happens if I am not happy with how things are going?</li>
+</ul>
+<p>Interview two or three agents and ask each one the same questions. Pay attention to how directly they answer.</p>
+
+<h2>What Are the Red Flags?</h2>
+<ul>
+<li><strong>The highest price with the least evidence.</strong> An agent who suggests a list price well above everyone else, with little to back it up, may be trying to win the listing rather than sell the home.</li>
+<li><strong>A guarantee.</strong> No agent can guarantee a sale price, a timeline or a winning offer.</li>
+<li><strong>Pressure to sign today.</strong> A representation agreement is a contract. You are entitled to read it first.</li>
+<li><strong>Vague answers about the agreement.</strong> The term, the compensation and how to cancel should all be explained plainly.</li>
+<li><strong>A license you cannot find.</strong> If the number is missing from their materials, or the DRE record does not match what you were told, ask why.</li>
+</ul>
+
+<h2>Does It Matter Whether the Agent Is a REALTOR®?</h2>
+<p>The two terms are not the same. A real estate license comes from the state. REALTOR® is a membership title: it means the agent belongs to the National Association of REALTORS® and has agreed to follow its Code of Ethics. Not every licensed agent is a member. It is one more thing you can ask about, alongside the license itself.</p>
+
+<h2>How Do I Measure Up on This Checklist?</h2>
+<p>Hold me to the same list. I'm Brenda Vega, a REALTOR® with Real Broker, and my California DRE license number is 02196981. My primary area is Campbell, and I work with buyers and sellers in San Jose, Los Gatos, Saratoga and the greater Bay Area. You can reach me at (501) 827-9619 or brenda@brendavegarealty.com, and a first consultation is free, by phone, video or in person.</p>
+<p>If you want to see how I work before we talk, these pages describe it: <a href="/services/buying-a-home">buying a home</a>, <a href="/services/selling-a-home">selling a home</a> and <a href="/services/first-time-home-buyers">first-time home buyers</a>. When you are ready, <a href="/contact#schedule">book a free consultation</a> and bring this checklist with you.</p>
+<p><strong>Related reading:</strong> <a href="/blog/listing-agent-or-own-buyers-agent-california">Should You Use the Listing Agent or Your Own Agent to Buy a Home in California?</a></p>`,
+    videoScript: `[HOOK - first 3 seconds]
+"Before you hire any real estate agent in Campbell, do this two-minute check."
+
+[BODY]
+"I'm Brenda Vega, a REALTOR with Real Broker.
+
+Step one: look up the agent's license number on the California DRE website. You'll see the license status, the responsible broker, and any disciplinary action.
+
+Step two: ask to see the comparable sales behind any price they give you.
+
+Step three: read the agreement before you sign it. The term, the compensation, and how to cancel should all be clear.
+
+And do the same check on me. My DRE number is 02196981.
+
+[CTA]
+The full checklist is on my blog at brendavegarealty.com. Follow for more South Bay real estate tips."`,
+    youtubeEmbed: "",
+    faqs: [
+      {
+        q: "How do I check whether a real estate agent is licensed in California?",
+        a: "Use the public license lookup on the California Department of Real Estate website, dre.ca.gov. Search by license number or by name. The record shows the license type, status, expiration date, responsible broker and any disciplinary action.",
+      },
+      {
+        q: "How many agents should I interview before choosing one?",
+        a: "Two or three is a reasonable number. Ask each of them the same questions about pricing, communication, neighborhood experience and the terms of the agreement, so you can compare the answers side by side.",
+      },
+      {
+        q: "Is Brenda Vega a licensed real estate agent in Campbell, CA?",
+        a: "Brenda Vega is a REALTOR® with Real Broker, and her California DRE license number is 02196981. Her primary area is Campbell. You can confirm the current status of the license yourself on the DRE website.",
+      },
+    ],
+  },
+  {
+    slug: "first-time-buyers-santa-clara-county-before-touring",
+    title: "What First-Time Buyers in Santa Clara County Should Line Up Before Touring Homes",
+    excerpt:
+      "Five things to have in place before your first home tour in Santa Clara County: a pre-approval, your documents, a monthly budget, a must-have list and a buyer representation agreement.",
+    category: "Buying",
+    date: "2026-10-04",
+    readTime: "5 min read",
+    metaDescription:
+      "First-time buyer in Santa Clara County? Line up a pre-approval, lender documents, a monthly budget, a must-have list and a buyer representation agreement before touring homes.",
+    keywords: [
+      "first time home buyer Santa Clara County",
+      "what to do before touring homes",
+      "mortgage pre-approval before house hunting",
+      "buyer representation agreement California",
+      "first time buyer Campbell CA",
+      "first time buyer San Jose",
+    ],
+    content: `<p>Before you tour homes in Santa Clara County, line up five things: a mortgage pre-approval (not just a pre-qualification), the documents your lender will ask for, a monthly budget you are comfortable with, a short written list of must-haves, and a buyer representation agreement with the agent who will show you homes. With those in place you can act on a home you like, instead of starting the paperwork while someone else writes an offer. I'm Brenda Vega, a REALTOR® with Real Broker (DRE #02196981), and this guide walks through each item for buyers in Campbell, San Jose, Los Gatos, Saratoga and the rest of the county.</p>
+
+<h2>What Should You Have Ready Before Your First Tour?</h2>
+<table>
+<thead><tr><th>What to line up</th><th>Why it matters</th><th>How to get it</th></tr></thead>
+<tbody>
+<tr><td>A mortgage pre-approval letter</td><td>Shows sellers you are a serious buyer and tells you what you can borrow</td><td>Apply with a lender, who reviews your income, assets and credit</td></tr>
+<tr><td>Income and asset documents</td><td>Your lender needs them for the pre-approval and again before closing</td><td>Gather two years of tax returns, recent pay stubs and bank statements</td></tr>
+<tr><td>A monthly budget</td><td>The amount a lender approves and the payment you are comfortable with are not always the same</td><td>Work out the full monthly payment, including property tax, insurance and any HOA dues</td></tr>
+<tr><td>Funds for the down payment and closing costs</td><td>Lenders verify where the money comes from</td><td>Keep the funds in accounts you can document, and ask your lender about the rules for gift funds</td></tr>
+<tr><td>A list of must-haves</td><td>Keeps tours focused and decisions faster</td><td>Write down what you need, what you would like and what you will not accept</td></tr>
+<tr><td>A buyer representation agreement</td><td>Puts in writing what your agent will do and how they are paid</td><td>Read it before signing, and ask about the term and how to end it</td></tr>
+</tbody>
+</table>
+
+<h2>Why Get Pre-Approved Before You Tour?</h2>
+<p>A pre-qualification is an estimate based on what you tell a lender. A pre-approval means the lender has reviewed your documents and credit. Sellers and listing agents in the South Bay expect a pre-approval letter with an offer, and homes here can receive offers within days of being listed, so the time to get it is before you find a home, not after.</p>
+<p>A pre-approval also protects you. Knowing your ceiling before you tour keeps you from getting attached to a home that does not fit the numbers.</p>
+
+<h2>How Do You Set a Budget You Can Live With?</h2>
+<p>Start from the monthly payment, not the purchase price. The payment includes principal and interest, property tax, homeowners insurance, and HOA dues if the home has them. Some neighborhoods also carry special taxes such as Mello-Roos, which appear on the property tax bill. Then set aside funds for closing costs, which are separate from your down payment.</p>
+<p>The calculators on this site can help you estimate before you talk to a lender: <a href="/calculators/qualify">Do I Qualify?</a> and <a href="/calculators/costs">Mortgage and Closing Costs</a>. To see whether state programs apply to you, the California Housing Finance Agency (CalHFA) lists its first-time buyer programs at calhfa.ca.gov, and a lender can tell you which ones you may be eligible for.</p>
+
+<h2>Do You Have to Sign an Agreement With an Agent Before Touring?</h2>
+<p>In most cases, yes. California law requires a written buyer representation agreement between a buyer and their agent, and agents who belong to a multiple listing service generally need one in place before they tour a home with you. The agreement states what the agent will do, how long it lasts and how the agent is paid.</p>
+<p>Two things are worth knowing. First, you can walk through an open house on your own without signing anything. Second, the agreement is a contract, so read it, and ask about the term and how either side can end it before you sign.</p>
+
+<h2>What Should You Pay Attention to on the First Tours?</h2>
+<p>Early tours are for calibration. Bring your must-have list and take notes on each home, because they blur together quickly. Look past paint and staging to the things that are expensive to change: the layout, the lot, the position on the street, and the age of the roof, electrical panel and plumbing. Older South Bay homes can have outdated electrical panels, aging sewer laterals or foundation concerns, which is what the inspection is for once you are in contract.</p>
+<p>For questions about schools, zoning or city services, go to the source. School district and city websites publish boundaries, rules and contact information.</p>
+
+<h2>How Do I Help First-Time Buyers?</h2>
+<p>I'm Brenda Vega, a REALTOR® with Real Broker, California DRE #02196981. My primary area is Campbell, and I represent first-time buyers in San Jose, Los Gatos, Saratoga and the greater Bay Area. For any home you are serious about, I review recent comparable sales with you so you can see what the price is based on, and I explain each contingency before you sign an offer.</p>
+<p>A first consultation is free, by phone, video or in person. <a href="/contact#schedule">Book a time here</a>, or read more about <a href="/services/first-time-home-buyers">how I work with first-time buyers</a>.</p>
+<p><strong>Related reading:</strong> <a href="/blog/first-time-home-buyers-guide-south-bay">First-Time Home Buyer's Guide to the South Bay</a> · <a href="/blog/understanding-closing-costs-california">Understanding Closing Costs in California</a></p>`,
+    videoScript: `[HOOK - first 3 seconds]
+"First-time buyer in Santa Clara County? Don't tour a single home until you have these five things."
+
+[BODY]
+"I'm Brenda Vega, a REALTOR with Real Broker.
+
+One: a pre-approval, not a pre-qualification.
+
+Two: your documents. Two years of tax returns, recent pay stubs, and bank statements.
+
+Three: a monthly budget you're actually comfortable with.
+
+Four: a written list of must-haves.
+
+Five: a buyer representation agreement with your agent. Read it before you sign it.
+
+[CTA]
+The full checklist is on my blog at brendavegarealty.com. Follow for more South Bay real estate tips."`,
+    youtubeEmbed: "",
+    faqs: [
+      {
+        q: "Do I need a pre-approval to tour homes in Santa Clara County?",
+        a: "It is not a legal requirement, but it is strongly recommended. A pre-approval tells you what you can borrow, and sellers expect to see the letter with an offer, so having it before you tour means you can act when you find the right home.",
+      },
+      {
+        q: "What documents does a lender ask for?",
+        a: "Typically two years of tax returns, recent pay stubs and bank statements, plus documentation of where your down payment is coming from. Your lender will give you an exact list for your situation.",
+      },
+      {
+        q: "Does Brenda Vega work with first-time buyers in Santa Clara County?",
+        a: "Yes. Brenda Vega is a REALTOR® with Real Broker (California DRE #02196981). Her primary area is Campbell, and she represents first-time buyers in San Jose, Los Gatos, Saratoga and the greater Bay Area. A first consultation is free.",
+      },
+    ],
+  },
+  {
+    slug: "seller-disclosures-california-what-to-disclose",
+    title: "What Do You Have to Disclose When You Sell a Home in California?",
+    excerpt:
+      "California sellers must tell buyers in writing what they know about the property. Here are the core disclosure documents, who fills them out, when buyers receive them and what \"as is\" does not cover.",
+    category: "Selling",
+    date: "2026-10-04",
+    readTime: "5 min read",
+    metaDescription:
+      "What California home sellers must disclose: the Transfer Disclosure Statement, Natural Hazard Disclosure, lead-based paint disclosure and more. A checklist for South Bay sellers.",
+    keywords: [
+      "seller disclosures California",
+      "what do I have to disclose when selling a house in California",
+      "Transfer Disclosure Statement",
+      "Natural Hazard Disclosure",
+      "selling a home Campbell CA",
+      "listing agent Campbell CA",
+    ],
+    content: `<p>When you sell a house, a condo or another one-to-four unit home in California, you have to tell the buyer in writing what you know about the property. The core documents are the Transfer Disclosure Statement (TDS), the Natural Hazard Disclosure (NHD) and, for homes built before 1978, a lead-based paint disclosure. Most South Bay sales also include a Seller Property Questionnaire, a preliminary title report and any inspection reports the seller has. The working rule is simple: if you know about something that could affect the value or desirability of the home, disclose it. I'm Brenda Vega, a REALTOR® with Real Broker (DRE #02196981), and this guide explains what goes in the package. It is general information, not legal advice.</p>
+
+<h2>Which Disclosures Does a California Seller Provide?</h2>
+<table>
+<thead><tr><th>Document</th><th>What it covers</th><th>Who completes it</th></tr></thead>
+<tbody>
+<tr><td>Transfer Disclosure Statement (TDS)</td><td>What you know about the condition of the home: systems, appliances, structure, known defects and problems</td><td>The seller. Each agent adds their own visual inspection section</td></tr>
+<tr><td>Natural Hazard Disclosure (NHD)</td><td>Whether the property is in a mapped flood, fire, earthquake fault or seismic hazard zone</td><td>Usually prepared by a disclosure company from public maps, then signed by the seller</td></tr>
+<tr><td>Seller Property Questionnaire (SPQ)</td><td>More detailed questions about repairs, water intrusion, alterations, neighborhood conditions and disputes</td><td>The seller</td></tr>
+<tr><td>Lead-based paint disclosure</td><td>Known lead-based paint or hazards, for homes built before 1978</td><td>The seller, under federal law</td></tr>
+<tr><td>Preliminary title report</td><td>Liens, easements and other items recorded against the property</td><td>The title company</td></tr>
+<tr><td>HOA documents, if there is an association</td><td>Governing documents, dues, financial statements and rules</td><td>The homeowners association, at the seller's request</td></tr>
+<tr><td>Inspection reports you already have</td><td>Findings from home, pest, roof or other inspections</td><td>The inspectors. The seller passes the reports on</td></tr>
+</tbody>
+</table>
+<p>This list is not exhaustive. Depending on the property and the city there can be others, and your listing agent and the escrow and title officers will tell you which ones apply.</p>
+
+<h2>What Counts as Something You Have to Disclose?</h2>
+<p>Known facts that matter to a buyer. That includes past problems as well as current ones: a roof leak that was repaired, a room added without a permit, a drainage problem in heavy rain, a dispute with a neighbor over a fence line. The forms ask about most of these directly. When you are unsure whether something belongs, the safer course is to disclose it and attach whatever documentation you have, such as invoices or permits.</p>
+<p>You are disclosing what you know. You are not expected to be an inspector, which is one reason many sellers order inspections before listing.</p>
+
+<h2>Who Fills Out the Forms: You or Your Agent?</h2>
+<p>You do. The TDS and the SPQ are the seller's own statements, so they have to be completed by the seller, in the seller's words. Your agent can explain what a question is asking, but should not answer it for you. Separately, agents have their own duty to do a visual inspection of the accessible areas of the property and note what they see.</p>
+
+<h2>When Does the Buyer Receive the Disclosures?</h2>
+<p>As early as possible. In the South Bay it is common for sellers to put the disclosure package and inspection reports together before the home goes on the market, so buyers can review everything before they write an offer. That leaves fewer open questions once an offer is on the table.</p>
+<p>The timing has a legal side too. If the TDS is delivered after a buyer has already signed an offer, California law gives the buyer a short window to cancel: three days after delivery in person, or five days after delivery by mail. Delivering early removes that uncertainty.</p>
+
+<h2>Does Selling "As Is" Remove the Duty to Disclose?</h2>
+<p>No. "As is" means you are not agreeing to make repairs. It does not change what you have to tell the buyer. A seller who leaves out a known problem can face a legal claim after closing, which costs far more than disclosing it up front.</p>
+
+<h2>How Do I Help Sellers With Disclosures?</h2>
+<p>I'm Brenda Vega, a REALTOR® with Real Broker, California DRE #02196981, and I list homes in Campbell, San Jose, Los Gatos, Saratoga and the greater Bay Area. Disclosures and pre-sale inspections are among the things I go over with every seller before a home goes on the market. For legal questions about a specific situation, a real estate attorney is the right person to ask.</p>
+<p>If you are thinking about selling, a first consultation is free. <a href="/contact#schedule">Book a time</a>, or read <a href="/services/selling-a-home">how I work with sellers</a>.</p>
+<p><strong>Related reading:</strong> <a href="/blog/pre-inspection-bay-area-sellers-pay-first">Pre-Inspection: Why Smart Bay Area Sellers Pay for It First</a> · <a href="/blog/10-things-before-selling-home-silicon-valley">10 Things to Know Before Selling Your Home in Silicon Valley</a></p>`,
+    videoScript: `[HOOK - first 3 seconds]
+"Selling a home in California? Here's what you're required to tell the buyer."
+
+[BODY]
+"I'm Brenda Vega, a REALTOR with Real Broker.
+
+The core disclosures are the Transfer Disclosure Statement, the Natural Hazard Disclosure, and for homes built before 1978, a lead-based paint disclosure.
+
+The rule is simple. If you know about something that could affect the value of the home, disclose it. That includes problems you already fixed.
+
+And selling as-is does not change that. As-is means no repairs. It does not mean no disclosures.
+
+[CTA]
+The full list is on my blog at brendavegarealty.com. Follow for more South Bay real estate tips."`,
+    youtubeEmbed: "",
+    faqs: [
+      {
+        q: "Do I have to disclose a problem that has already been repaired?",
+        a: "Yes, in most cases. The disclosure forms ask about past problems and repairs, not only current ones. Describe what happened and what was done, and attach invoices or permits if you have them.",
+      },
+      {
+        q: "Is the Transfer Disclosure Statement the same as a home inspection?",
+        a: "No. The Transfer Disclosure Statement is the seller's written statement of what they know about the property. A home inspection is a professional's examination of the home. Buyers usually rely on both.",
+      },
+      {
+        q: "Who can help me with seller disclosures in Campbell, CA?",
+        a: "Your listing agent explains the forms and what the package needs to include, and the title and escrow officers handle their parts. Brenda Vega, a REALTOR® with Real Broker (California DRE #02196981), lists homes in Campbell and the surrounding South Bay cities. For legal advice, consult a real estate attorney.",
+      },
+    ],
+  },
+  {
+    slug: "listing-agent-or-own-buyers-agent-california",
+    title: "Should You Use the Listing Agent or Your Own Agent to Buy a Home in California?",
+    excerpt:
+      "You can buy through the listing agent in California, but that agent already represents the seller. Here is how dual agency works, what it limits, and how to find out who represents whom.",
+    category: "Buying",
+    date: "2026-10-04",
+    readTime: "4 min read",
+    metaDescription:
+      "Listing agent or your own buyer's agent? How dual agency works in California, what a dual agent cannot tell you, and how to find out who represents whom before you make an offer.",
+    keywords: [
+      "should I use the listing agent to buy a house",
+      "dual agency California",
+      "buyer's agent Campbell CA",
+      "buyer representation agreement California",
+      "who does the listing agent represent",
+      "buyer's agent San Jose",
+    ],
+    content: `<p>You are allowed to buy a home through the listing agent in California, but that agent already represents the seller. When one agent or one brokerage represents both sides, it is called dual agency. It is legal in California only with the written consent of both the buyer and the seller, and a dual agent may not share one side's confidential price or motivation with the other without permission. If you want someone advising only you on price, inspections and terms, hire your own buyer's agent before you write an offer. I'm Brenda Vega, a REALTOR® with Real Broker (DRE #02196981), and this guide explains how representation works so you can decide.</p>
+
+<h2>Who Represents Whom?</h2>
+<table>
+<thead><tr><th>Arrangement</th><th>Who the agent works for</th><th>What to know</th></tr></thead>
+<tbody>
+<tr><td>Listing agent (seller's agent)</td><td>The seller</td><td>Hired by the seller to market the home and negotiate on the seller's behalf</td></tr>
+<tr><td>Buyer's agent</td><td>The buyer</td><td>Advises you on value, inspections and terms, and negotiates on your behalf</td></tr>
+<tr><td>Dual agent</td><td>Both the buyer and the seller</td><td>Requires written consent from both. Cannot share either side's confidential price or motivation without permission</td></tr>
+</tbody>
+</table>
+
+<h2>What Is Dual Agency, and Is It Legal in California?</h2>
+<p>Dual agency means the same agent, or two agents working under the same broker, represent both the buyer and the seller in one transaction. California allows it as long as both parties know about it and agree in writing.</p>
+<p>The law also limits what a dual agent can say. Without the seller's permission, a dual agent cannot tell you that the seller would accept less than the asking price. Without your permission, the agent cannot tell the seller that you would pay more than you offered. In practice, a dual agent cannot push for either side on price the way an agent who represents only you can.</p>
+
+<h2>What Can Your Own Agent Do for You?</h2>
+<p>An agent who represents only you can:</p>
+<ul>
+<li>Give you a frank opinion of what the home is worth, based on comparable sales</li>
+<li>Recommend an offer price and terms with only your interests in mind</li>
+<li>Point out concerns in the disclosures and inspection reports, and suggest how to respond</li>
+<li>Negotiate price, repairs and credits on your behalf</li>
+</ul>
+
+<h2>How Do You Find Out Who an Agent Represents?</h2>
+<p>You do not have to guess. California requires agents to give you a written form called the Disclosure Regarding Real Estate Agency Relationships, which explains the three arrangements above. The purchase contract then confirms in writing which agent represents which party. If you are ever unsure, ask directly: "Who do you represent in this transaction?"</p>
+
+<h2>How Is a Buyer's Agent Paid?</h2>
+<p>That is set out in the buyer representation agreement you sign with your agent, which California law requires to be in writing. Compensation is not fixed by law and is negotiable. The agreement states the amount and how it will be handled, including whether you will ask the seller to cover some or all of it as part of your offer. Read that section carefully and ask questions before you sign.</p>
+
+<h2>Can You Visit Open Houses Without an Agent?</h2>
+<p>Yes. You can walk through any open house on your own. Keep in mind that the agent hosting it is there on the seller's behalf, so it is sensible not to share how much you are approved for or how much you want the house.</p>
+
+<h2>How Do I Work With Buyers?</h2>
+<p>I'm Brenda Vega, a REALTOR® with Real Broker, California DRE #02196981. My primary area is Campbell, and I represent buyers in San Jose, Los Gatos, Saratoga and the greater Bay Area. Whichever way you decide to go, make sure the agency forms are explained to you before you sign anything.</p>
+<p>If you would like to talk through your situation, a first consultation is free, by phone, video or in person. <a href="/contact#schedule">Book a time</a>, or read about <a href="/services/buying-a-home">how I represent buyers</a>.</p>
+<p><strong>Related reading:</strong> <a href="/blog/how-to-choose-real-estate-agent-campbell-ca">How to Choose a Real Estate Agent in Campbell, CA</a> · <a href="/blog/3-contingencies-never-waive-bay-area">The 3 Contingencies You Should NEVER Waive in the Bay Area</a></p>`,
+    videoScript: `[HOOK - first 3 seconds]
+"Thinking about calling the listing agent to buy that house? Know this first."
+
+[BODY]
+"I'm Brenda Vega, a REALTOR with Real Broker.
+
+The listing agent already represents the seller.
+
+If one agent represents both sides, that's called dual agency. It's legal in California, but only if you and the seller both agree in writing.
+
+And a dual agent can't tell you the seller would take less than asking, unless the seller says so.
+
+If you want someone advising only you, hire your own agent before you write an offer.
+
+[CTA]
+I explain how it all works on my blog at brendavegarealty.com. Follow for more South Bay real estate tips."`,
+    youtubeEmbed: "",
+    faqs: [
+      {
+        q: "Is dual agency legal in California?",
+        a: "Yes. One agent or brokerage can represent both the buyer and the seller if both agree in writing. A dual agent may not disclose either side's confidential price or motivation to the other without permission.",
+      },
+      {
+        q: "When should I hire a buyer's agent?",
+        a: "Before you write an offer, and ideally before you start touring homes with an agent. Most agents need a written buyer representation agreement in place before they tour homes with you.",
+      },
+      {
+        q: "Does Brenda Vega represent buyers in Campbell and San Jose?",
+        a: "Yes. Brenda Vega is a REALTOR® with Real Broker (California DRE #02196981). Her primary area is Campbell, and she represents buyers in San Jose, Los Gatos, Saratoga and the greater Bay Area.",
+      },
+    ],
+  },
+  // ── Earlier posts, oldest first ────────────────────────────────────────────
   {
     slug: "first-time-home-buyers-guide-south-bay",
     title: "First-Time Home Buyer's Guide to the South Bay",

@@ -72,12 +72,33 @@ export default async function BlogPostPage({ params }: Props) {
     },
   };
 
+  // Answer-first posts carry their FAQs as data so the visible Q&A can be mirrored
+  // in FAQPage JSON-LD for search engines and AI assistants.
+  const faqLd =
+    post.faqs && post.faqs.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: post.faqs.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }
+      : null;
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
+      {faqLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd).replace(/</g, "\\u003c") }}
+        />
+      )}
 
       <article className="py-20 px-6">
         <div className="max-w-[800px] mx-auto">
@@ -121,10 +142,28 @@ export default async function BlogPostPage({ params }: Props) {
           {/* Post Content */}
           <AnimateOnScroll>
             <div
-              className="blog-content font-body font-light text-[1.05rem] text-charcoal leading-[1.85] [&_h2]:font-display [&_h2]:font-light [&_h2]:text-[clamp(1.5rem,3vw,2rem)] [&_h2]:text-navy [&_h2]:mt-12 [&_h2]:mb-5 [&_h2]:leading-tight [&_h3]:font-display [&_h3]:font-light [&_h3]:text-[clamp(1.2rem,2.5vw,1.5rem)] [&_h3]:text-navy [&_h3]:mt-8 [&_h3]:mb-4 [&_h3]:leading-snug [&_p]:mb-5 [&_ul]:mb-5 [&_ul]:pl-6 [&_ul]:space-y-2 [&_li]:list-disc [&_li]:text-charcoal [&_strong]:font-medium [&_strong]:text-navy"
+              className="blog-content font-body font-light text-[1.05rem] text-charcoal leading-[1.85] [&_h2]:font-display [&_h2]:font-light [&_h2]:text-[clamp(1.5rem,3vw,2rem)] [&_h2]:text-navy [&_h2]:mt-12 [&_h2]:mb-5 [&_h2]:leading-tight [&_h3]:font-display [&_h3]:font-light [&_h3]:text-[clamp(1.2rem,2.5vw,1.5rem)] [&_h3]:text-navy [&_h3]:mt-8 [&_h3]:mb-4 [&_h3]:leading-snug [&_p]:mb-5 [&_ul]:mb-5 [&_ul]:pl-6 [&_ul]:space-y-2 [&_li]:list-disc [&_li]:text-charcoal [&_strong]:font-medium [&_strong]:text-navy [&_a]:text-teal [&_a]:underline [&_table]:w-full [&_table]:my-8 [&_table]:text-[0.92rem] [&_table]:leading-normal [&_th]:text-left [&_th]:align-bottom [&_th]:font-medium [&_th]:text-navy [&_th]:border-b [&_th]:border-navy/20 [&_th]:py-3 [&_th]:pr-4 [&_td]:align-top [&_td]:border-b [&_td]:border-navy/10 [&_td]:py-3 [&_td]:pr-4"
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
           </AnimateOnScroll>
+
+          {post.faqs && post.faqs.length > 0 && (
+            <AnimateOnScroll>
+              <section className="mt-12">
+                <h2 className="font-display font-light text-[clamp(1.5rem,3vw,2rem)] text-navy mb-2 leading-tight">
+                  Frequently Asked Questions
+                </h2>
+                <dl>
+                  {post.faqs.map((f) => (
+                    <div key={f.q} className="border-b border-navy/10 py-6">
+                      <dt className="font-display font-light text-[clamp(1.2rem,2.5vw,1.5rem)] text-navy leading-snug">{f.q}</dt>
+                      <dd className="mt-3 font-body font-light text-[1.05rem] text-charcoal leading-[1.85]">{f.a}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+            </AnimateOnScroll>
+          )}
 
           <BlogYouTubeEmbed
             slug={post.slug}

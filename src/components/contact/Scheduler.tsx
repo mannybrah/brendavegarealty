@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
+import { HeardFromSelect } from "@/components/ui/HeardFromSelect";
 
 interface TimeSlot {
   date: string;
@@ -13,7 +14,7 @@ export function Scheduler() {
   const [selectedTime, setSelectedTime] = useState("");
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", phone: "", reason: "", consultationType: "phone" });
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", reason: "", consultationType: "phone", heardFrom: "" });
   const [status, setStatus] = useState<"idle" | "booking" | "booked" | "error">("idle");
 
   // Generate next 14 days, Mon-Sat (include Saturday, exclude Sunday)
@@ -61,6 +62,7 @@ export function Scheduler() {
           email: formData.email,
           phone: formData.phone,
           source: "scheduler",
+          ...(formData.heardFrom ? { heardFrom: formData.heardFrom } : {}),
           note: `Consultation request:\nDate: ${dateDisplay}\nTime: ${timeDisplay} PT\nType: ${formData.consultationType}\nReason: ${formData.reason}`,
         }),
       }).catch(() => {});
@@ -174,6 +176,7 @@ export function Scheduler() {
             <label htmlFor="sched-reason" className="font-body font-medium text-xs tracking-[0.15em] uppercase text-charcoal-light mb-2 block">What can Brenda help you with?</label>
             <textarea id="sched-reason" rows={3} value={formData.reason} onChange={(e) => setFormData({ ...formData, reason: e.target.value })} className={`${inputClass} resize-none`} />
           </div>
+          <HeardFromSelect id="sched-heard-from" value={formData.heardFrom} onChange={(heardFrom) => setFormData({ ...formData, heardFrom })} className={inputClass} />
           <Button type="submit" variant="gold" disabled={status === "booking"}>
             {status === "booking" ? "Booking..." : "Confirm Consultation"}
           </Button>

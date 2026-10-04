@@ -51,6 +51,7 @@ export interface LeadRequest {
   timeline: "0-3 months" | "3-6 months" | "6-12 months" | "12+ months" | "Just browsing";
   source: "qualification-calculator" | "cost-calculator" | "phone-call" | "scheduler" | "contact-form";
   calculatorSummary?: CalculatorSummary;
+  heardFrom?: string;
 }
 
 export interface CalculatorSummary {

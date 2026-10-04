@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
+import { HeardFromSelect } from "@/components/ui/HeardFromSelect";
 import type { LeadRequest, CalculatorSummary } from "@/types";
 
 interface LeadCaptureModalProps {
@@ -30,6 +31,7 @@ export function LeadCaptureModal({ source, onComplete, calculatorSummary }: Lead
     email: "",
     workingWithAgent: null as boolean | null,
     timeline: "" as string,
+    heardFrom: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<"idle" | "submitting" | "error">("idle");
@@ -86,6 +88,7 @@ export function LeadCaptureModal({ source, onComplete, calculatorSummary }: Lead
       timeline: formData.timeline as LeadRequest["timeline"],
       source,
       calculatorSummary,
+      ...(formData.heardFrom ? { heardFrom: formData.heardFrom } : {}),
     };
 
     try {
@@ -251,6 +254,15 @@ export function LeadCaptureModal({ source, onComplete, calculatorSummary }: Lead
             </select>
             {errors.timeline && <p className="text-red-600 text-xs mt-1">{errors.timeline}</p>}
           </div>
+
+          {/* How did you hear about Brenda? (optional) */}
+          <HeardFromSelect
+            id="lead-heard-from"
+            value={formData.heardFrom}
+            onChange={(heardFrom) => setFormData({ ...formData, heardFrom })}
+            className={inputClass}
+            disabled={status === "submitting"}
+          />
 
           {serverError && (
             <p className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">{serverError}</p>

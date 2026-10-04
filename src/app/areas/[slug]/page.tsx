@@ -4,6 +4,7 @@ import { AnimateOnScroll } from "@/components/ui/AnimateOnScroll";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Button } from "@/components/ui/Button";
 import { areas } from "@/data/areas";
+import { services } from "@/data/services";
 import Link from "next/link";
 
 interface Props {
@@ -57,6 +58,25 @@ export default async function NeighborhoodPage({ params }: Props) {
                 <li key={highlight} className="font-body font-light text-base text-charcoal flex items-center gap-3">
                   <span className="w-2 h-2 rounded-full bg-teal flex-shrink-0" />
                   {highlight}
+                </li>
+              ))}
+            </ul>
+          </AnimateOnScroll>
+        </div>
+      </section>
+      <section className="pb-16 px-6">
+        <div className="max-w-[1200px] mx-auto">
+          <AnimateOnScroll>
+            <h2 className="font-body font-medium text-xs tracking-[0.2em] uppercase text-gold mb-6">Working with Brenda in {area.name}</h2>
+            <ul className="flex flex-wrap gap-3 list-none p-0">
+              {services.map((service) => (
+                <li key={service.slug}>
+                  <Link
+                    href={`/services/${service.slug}`}
+                    className="inline-block rounded-full border border-navy/15 px-5 py-2.5 font-ui font-medium text-xs tracking-wider uppercase text-navy hover:border-teal hover:text-teal transition-colors"
+                  >
+                    {service.title}
+                  </Link>
                 </li>
               ))}
             </ul>

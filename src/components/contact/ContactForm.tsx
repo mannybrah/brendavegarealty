@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { HeardFromSelect } from "@/components/ui/HeardFromSelect";
 
 export function ContactForm() {
-  const [formData, setFormData] = useState({ name: "", email: "", phone: "", message: "", type: "buyer" });
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", message: "", type: "buyer", heardFrom: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,7 +20,7 @@ export function ContactForm() {
 
       if (res.ok) {
         setStatus("sent");
-        setFormData({ name: "", email: "", phone: "", message: "", type: "buyer" });
+        setFormData({ name: "", email: "", phone: "", message: "", type: "buyer", heardFrom: "" });
       } else {
         setStatus("error");
       }
@@ -67,6 +68,7 @@ export function ContactForm() {
         <label htmlFor="message" className="font-body font-medium text-xs tracking-[0.15em] uppercase text-charcoal-light mb-2 block">Message</label>
         <textarea id="message" rows={4} value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} className={`${inputClass} resize-none`} placeholder="Tell Brenda how she can help..." />
       </div>
+      <HeardFromSelect id="heard-from" value={formData.heardFrom} onChange={(heardFrom) => setFormData({ ...formData, heardFrom })} className={inputClass} />
       <Button type="submit" variant="primary" disabled={status === "sending"}>
         {status === "sending" ? "Sending..." : "Send Message"}
       </Button>
