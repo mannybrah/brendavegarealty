@@ -2,61 +2,88 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/Button";
+import { usePathname } from "next/navigation";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 
 const navLinks = [
-  { href: "/", label: "Home" },
   { href: "/about", label: "About" },
   { href: "/listings", label: "Listings" },
-  { href: "/areas", label: "Areas" },
+  { href: "/areas", label: "Communities" },
+  { href: "/home-clarity", label: "Home Clarity" },
   { href: "/blog", label: "Blog" },
   { href: "/contact", label: "Contact" },
 ];
 
+const moreLinks = [
+  { href: "/services", label: "Services" },
+  { href: "/testimonials", label: "Testimonials" },
+  { href: "/calculators/qualify", label: "Do I Qualify?" },
+  { href: "/calculators/costs", label: "Mortgage & Closing Costs" },
+];
+
 export function Navbar() {
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [calcOpen, setCalcOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Escape closes the menu; the page behind it does not scroll while it is open
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previous;
+    };
+  }, [isOpen]);
+
+  // Pages whose first section is dark and runs under the header
+  const overPhoto = (pathname === "/" || pathname === "/home-clarity") && !isScrolled && !isOpen;
+  const ink = overPhoto ? "text-cream" : "text-navy";
+  const linkInk = overPhoto ? "text-cream/85 hover:text-white" : "text-charcoal-light hover:text-navy";
+  const isActive = (href: string) => pathname === href || pathname?.startsWith(`${href}/`);
+
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled
-            ? "bg-white/95 backdrop-blur-md shadow-sm"
-            : "bg-transparent"
+        className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,box-shadow] duration-300 ${
+          isOpen
+            ? "bg-navy"
+            : isScrolled
+              ? "bg-warm-white/95 backdrop-blur-md shadow-[0_1px_0_rgba(15,29,53,0.08)]"
+              : "bg-transparent"
         }`}
       >
-        <AnnouncementBar />
-        <nav className="max-w-[1200px] mx-auto flex items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-3">
-            <Image
-              src="/images/logo-icon.svg"
-              alt=""
-              width={28}
-              height={28}
-              aria-hidden="true"
-            />
-            <span className="font-display font-normal text-[1.4rem] tracking-[0.15em] uppercase text-navy">
-              Brenda <span className="text-gold">Vega</span>
-            </span>
+        {!isOpen && <AnnouncementBar />}
+        <nav aria-label="Main" className="max-w-[1280px] mx-auto flex items-center justify-between px-6 desktop:px-10 h-[72px]">
+          <Link
+            href="/"
+            onClick={() => setIsOpen(false)}
+            className={`font-display font-normal text-[1.45rem] tracking-[0.18em] uppercase leading-none ${isOpen ? "text-cream" : ink}`}
+          >
+            Brenda <span className="text-gold">Vega</span>
           </Link>
 
-          <ul className="hidden desktop:flex gap-8 items-center list-none">
-            {navLinks.slice(0, 6).map((link) => (
+          <ul className="hidden desktop:flex gap-8 items-center list-none m-0 p-0">
+            {navLinks.map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="font-body font-normal text-[0.8rem] tracking-[0.1em] uppercase text-charcoal-light hover:text-gold transition-colors"
+                  aria-current={isActive(link.href) ? "page" : undefined}
+                  className={`font-body font-normal text-[0.76rem] tracking-[0.14em] uppercase transition-colors ${linkInk} ${
+                    isActive(link.href) ? "underline underline-offset-[10px] decoration-gold decoration-1" : ""
+                  }`}
                 >
                   {link.label}
                 </Link>
@@ -64,110 +91,87 @@ export function Navbar() {
             ))}
           </ul>
 
-          <div className="hidden desktop:block">
-            <Link href="/contact#schedule">
-              <Button variant="primary" className="px-5! py-2.5! min-h-0! text-[0.7rem]! whitespace-nowrap">
-                Book Consultation
-              </Button>
-            </Link>
-          </div>
+          <Link
+            href="/contact#schedule"
+            className={`hidden desktop:inline-flex items-center font-ui font-medium text-[0.7rem] tracking-[0.14em] uppercase px-5 h-10 border transition-colors ${
+              overPhoto
+                ? "border-cream/60 text-cream hover:bg-cream hover:text-navy"
+                : "border-navy text-navy hover:bg-navy hover:text-cream"
+            }`}
+          >
+            Book a consultation
+          </Link>
 
           <button
-            className="desktop:hidden flex flex-col gap-[5px] w-6 p-0 bg-transparent border-none cursor-pointer"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-            aria-expanded={isMobileMenuOpen}
+            type="button"
+            className="desktop:hidden relative w-11 h-11 -mr-2 flex items-center justify-center bg-transparent border-none cursor-pointer"
+            onClick={() => setIsOpen((v) => !v)}
+            aria-label={isOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isOpen}
+            aria-controls="mobile-menu"
           >
-            <span
-              className={`block h-[1.5px] w-full bg-navy rounded transition-all ${
-                isMobileMenuOpen ? "rotate-45 translate-y-[6.5px]" : ""
-              }`}
-            />
-            <span
-              className={`block h-[1.5px] bg-navy rounded transition-all ${
-                isMobileMenuOpen ? "opacity-0" : "w-[70%] ml-auto"
-              }`}
-            />
-            <span
-              className={`block h-[1.5px] w-full bg-navy rounded transition-all ${
-                isMobileMenuOpen ? "-rotate-45 -translate-y-[6.5px]" : ""
-              }`}
-            />
+            <span className="relative block w-6 h-[14px]" aria-hidden="true">
+              <span
+                className={`absolute left-0 right-0 h-[1.5px] transition-transform duration-300 ${isOpen || overPhoto ? "bg-cream" : "bg-navy"} ${
+                  isOpen ? "top-[6px] rotate-45" : "top-0"
+                }`}
+              />
+              <span
+                className={`absolute left-0 right-0 top-[6px] h-[1.5px] transition-opacity duration-200 ${isOpen || overPhoto ? "bg-cream" : "bg-navy"} ${
+                  isOpen ? "opacity-0" : "opacity-100"
+                }`}
+              />
+              <span
+                className={`absolute left-0 right-0 h-[1.5px] transition-transform duration-300 ${isOpen || overPhoto ? "bg-cream" : "bg-navy"} ${
+                  isOpen ? "top-[6px] -rotate-45" : "top-[12px]"
+                }`}
+              />
+            </span>
           </button>
         </nav>
       </header>
 
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-navy flex flex-col items-center justify-center gap-8 desktop:hidden"
-          >
-            {navLinks.slice(0, 6).map((link, i) => (
-              <motion.div
-                key={link.href}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08 }}
-              >
+      {isOpen && (
+        <div
+          id="mobile-menu"
+          className="fixed inset-0 z-40 bg-navy desktop:hidden overflow-y-auto pt-[88px] pb-28 px-8"
+        >
+          <ul className="list-none m-0 p-0 border-t border-cream/10">
+            {navLinks.map((link) => (
+              <li key={link.href} className="border-b border-cream/10">
                 <Link
                   href={link.href}
-                  className="font-display font-light text-3xl text-cream tracking-wider hover:text-gold transition-colors"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  aria-current={isActive(link.href) ? "page" : undefined}
+                  onClick={() => setIsOpen(false)}
+                  className="block py-4 font-display font-light text-[1.9rem] text-cream hover:text-gold transition-colors"
                 >
                   {link.label}
                 </Link>
-              </motion.div>
+              </li>
             ))}
-            {/* Calculators expandable section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 6 * 0.08 }}
-              className="flex flex-col items-center"
-            >
-              <button
-                onClick={() => setCalcOpen(!calcOpen)}
-                className="font-display font-light text-3xl text-cream tracking-wider hover:text-gold transition-colors"
-              >
-                Calculators {calcOpen ? "\u2212" : "+"}
-              </button>
-              {calcOpen && (
-                <div className="mt-3 space-y-3 flex flex-col items-center">
-                  <Link
-                    href="/calculators/qualify"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="font-body font-light text-xl text-cream/70 hover:text-gold transition-colors"
-                  >
-                    Do I Qualify?
-                  </Link>
-                  <Link
-                    href="/calculators/costs"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="font-body font-light text-xl text-cream/70 hover:text-gold transition-colors"
-                  >
-                    Mortgage & Closing Costs
-                  </Link>
-                </div>
-              )}
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 7 * 0.08 }}
-            >
-              <Link
-                href="/contact#schedule"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Button variant="gold">Book Consultation</Button>
-              </Link>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </ul>
+          <ul className="list-none m-0 p-0 mt-6 grid grid-cols-2 gap-x-6 gap-y-3">
+            {moreLinks.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  onClick={() => setIsOpen(false)}
+                  className="block py-1 font-body font-light text-sm text-cream/70 hover:text-gold transition-colors"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/contact#schedule"
+            onClick={() => setIsOpen(false)}
+            className="mt-8 flex items-center justify-center h-12 bg-gold text-navy font-ui font-medium text-[0.78rem] tracking-[0.14em] uppercase"
+          >
+            Book a consultation
+          </Link>
+        </div>
+      )}
     </>
   );
 }

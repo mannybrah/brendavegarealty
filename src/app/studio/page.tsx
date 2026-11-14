@@ -12,6 +12,7 @@ const ACTIONS = [
   { href: "/studio/blog", label: "Write a Blog", desc: "Notes → polished post, live in minutes", icon: "✍️" },
   { href: "/studio/announcement", label: "Announcement", desc: "One-line banner across the site", icon: "📣" },
   { href: "/studio/calendar", label: "Video Calendar", desc: "Your YouTube Shorts workflow", icon: "🎬" },
+  { href: "/studio/home-clarity", label: "Home Clarity", desc: "Disclosure uploads from buyers", icon: "📄", span: true },
   { href: "/studio/listings", label: "Listings", desc: "Paste a listing site — get a page on yours", icon: "🏡", span: true },
 ];
 

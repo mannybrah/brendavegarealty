@@ -4,13 +4,8 @@ export function AreaMap() {
     ? `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=Campbell,CA&zoom=11`
     : "";
 
-  if (!mapSrc) {
-    return (
-      <div className="rounded-2xl overflow-hidden h-[400px] bg-navy/5 flex items-center justify-center">
-        <span className="font-body font-light text-charcoal-light/50">Map available when Google Maps API key is configured</span>
-      </div>
-    );
-  }
+  // No key configured: render nothing rather than a placeholder box
+  if (!mapSrc) return null;
 
   return (
     <div className="rounded-2xl overflow-hidden h-[400px] bg-navy/5">

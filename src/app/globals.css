@@ -57,3 +57,69 @@ body {
   font-family: var(--font-body);
   font-weight: 300;
 }
+
+/* ---- Editorial redesign ---- */
+
+/* Keyboard focus is always visible, on light and dark sections alike */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+
+/* Home hero: one slow settle of the photograph, then the copy rises in.
+   Content is visible by default; the animation only runs when motion is welcome,
+   so a failed or blocked animation can never hide the page. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-settle {
+    animation: hero-settle 2.6s cubic-bezier(0.2, 0, 0, 1) both;
+  }
+  .hero-rise {
+    animation: hero-rise 0.9s cubic-bezier(0.2, 0, 0, 1) 0.15s both;
+  }
+  .hero-rise-2 {
+    animation-delay: 0.3s;
+  }
+  .hero-rise-3 {
+    animation-delay: 0.45s;
+  }
+}
+
+@keyframes hero-settle {
+  from {
+    transform: scale(1.07);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scroll reveal (see components/ui/AnimateOnScroll.tsx). The hidden state is only ever
+   applied by script, to elements below the fold. */
+.reveal-pending {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.8s cubic-bezier(0.2, 0, 0, 1),
+    transform 0.8s cubic-bezier(0.2, 0, 0, 1);
+}
+.reveal-pending.reveal-in {
+  opacity: 1;
+  transform: none;
+}
+@media print {
+  .reveal-pending {
+    opacity: 1;
+    transform: none;
+  }
+}

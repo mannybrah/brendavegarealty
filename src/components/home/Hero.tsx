@@ -1,127 +1,53 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
-import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
 
-const container = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
-};
-const item = {
-  hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.2, 0, 0, 1] as const } },
-};
-
-// Ambient background video only on larger screens with motion allowed —
-// phones and reduced-motion users get the golden-hour poster frame instead.
-function AmbientBackground() {
-  const reduced = useReducedMotion();
-  const [playVideo, setPlayVideo] = useState(false);
-
-  useEffect(() => {
-    if (reduced) return;
-    const mq = window.matchMedia("(min-width: 768px)");
-    const update = () => setPlayVideo(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, [reduced]);
-
-  return (
-    <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-      {playVideo ? (
-        <video
-          className="absolute inset-0 w-full h-full object-cover"
-          src="/videos/hero-ambient.mp4"
-          poster="/videos/hero-poster.jpg"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-        />
-      ) : (
-        // eslint-disable-next-line @next/next/no-img-element -- static poster fallback
-        <img
-          src="/videos/hero-poster.jpg"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      )}
-      <div className="absolute inset-0 bg-gradient-to-r from-navy/90 via-navy/75 to-navy/55" />
-      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-navy/60 to-transparent" />
-    </div>
-  );
-}
-
+// Cinematic still: a real photograph from one of Brenda's own listings, with a single
+// slow "settle" on load (see .hero-settle in globals.css, disabled for reduced motion).
+// It is a still image on purpose: no autoplay video, nothing that loops.
 export function Hero() {
-  const reduced = useReducedMotion();
   return (
-    <section className="relative min-h-[calc(100vh-72px)] flex items-center px-6 py-16">
-      <AmbientBackground />
-      <div className="relative max-w-[1200px] mx-auto grid desktop:grid-cols-2 gap-16 items-center w-full">
-        <motion.div
-          variants={container}
-          initial={reduced ? false : "hidden"}
-          animate="show"
-        >
-          <motion.span
-            variants={item}
-            className="font-body font-medium text-[0.65rem] tracking-[0.4em] uppercase text-gold mb-5 block"
-          >
-            Bay Area Real Estate Expert
-          </motion.span>
-          <motion.h1
-            variants={item}
-            className="font-display font-light text-[clamp(2.5rem,4vw,3.8rem)] leading-[1.1] text-cream mb-6"
-          >
-            Your Next Chapter
-            <br />
-            Starts <em className="text-gold">Here</em>
-          </motion.h1>
-          <motion.p
-            variants={item}
-            className="font-body font-light text-lg leading-relaxed text-cream/80 mb-9 max-w-[460px]"
-          >
-            Trusted by families across Campbell and the Bay Area to navigate the
-            biggest decisions of their lives — with expertise, honesty, and
-            heart.
-          </motion.p>
-          <motion.div variants={item} className="flex gap-4 flex-wrap">
-            <Link href="/contact#schedule">
-              <Button variant="gold">Schedule a Call</Button>
-            </Link>
-            <Link href="/listings">
-              <Button
-                variant="outline"
-                className="text-cream! border-cream/40! hover:bg-cream/10! hover:border-cream/70! hover:text-cream!"
-              >
-                Browse Listings
-              </Button>
-            </Link>
-          </motion.div>
-        </motion.div>
+    <section className="relative -mt-[72px] min-h-[100svh] flex items-end overflow-hidden bg-navy">
+      {/* eslint-disable-next-line @next/next/no-img-element -- static export; same srcset as the preload in app/page.tsx */}
+      <img
+        src="/images/home/hero.jpg"
+        srcSet="/images/home/hero-sm.jpg 900w, /images/home/hero.jpg 1600w"
+        sizes="100vw"
+        alt="Sunlit living room with vaulted ceilings in a Morgan Hill home represented by Brenda Vega"
+        width={1600}
+        height={1066}
+        fetchPriority="high"
+        decoding="async"
+        className="hero-settle absolute inset-0 w-full h-full object-cover"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/45 to-navy/25" aria-hidden="true" />
+      <div className="absolute inset-0 bg-gradient-to-r from-navy/50 to-transparent" aria-hidden="true" />
 
-        <motion.div
-          initial={reduced ? false : { opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, delay: 0.2, ease: [0.2, 0, 0, 1] }}
-          className="relative h-[400px] desktop:h-[500px] rounded-md overflow-hidden shadow-2xl shadow-navy/50"
-        >
-          <Image
-            src="/images/brenda-headshot.jpg"
-            alt="Brenda Vega — Bay Area Real Estate Agent"
-            fill
-            className="object-cover object-top"
-            priority
-            sizes="(max-width: 1024px) 100vw, 50vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-navy/30 to-transparent" />
-          <div className="absolute inset-5 border border-gold/30 rounded-sm" />
-        </motion.div>
+      <div className="relative w-full max-w-[1280px] mx-auto px-6 desktop:px-10 pt-40 pb-16 desktop:pb-24">
+        <p className="hero-rise font-body font-medium text-[0.68rem] tracking-[0.38em] uppercase text-gold-light mb-6">
+          Brenda Vega &middot; REALTOR&reg; &middot; Silicon Valley
+        </p>
+        <h1 className="hero-rise hero-rise-2 font-display font-light text-cream leading-[1.02] text-[clamp(2.7rem,7.2vw,6rem)] max-w-[13ch]">
+          A place to belong. <em className="text-gold-light">A move to remember.</em>
+        </h1>
+        <div className="hero-rise hero-rise-3 mt-10 flex flex-wrap gap-4">
+          <Link
+            href="/contact#schedule"
+            className="inline-flex items-center justify-center h-[52px] px-8 bg-gold text-navy font-ui font-medium text-[0.78rem] tracking-[0.14em] uppercase hover:bg-gold-light transition-colors"
+          >
+            Start a conversation
+          </Link>
+          <Link
+            href="/home-clarity"
+            className="inline-flex items-center justify-center h-[52px] px-8 border border-cream/60 text-cream font-ui font-medium text-[0.78rem] tracking-[0.14em] uppercase hover:bg-cream hover:text-navy transition-colors"
+          >
+            Explore Home Clarity
+          </Link>
+        </div>
+        <p className="hero-rise hero-rise-3 mt-10 font-body font-light text-xs text-cream/60">
+          Pictured:{" "}
+          <Link href="/listings/15540-armsby-ln" className="underline underline-offset-4 hover:text-cream">
+            15540 Armsby Ln, Morgan Hill
+          </Link>
+        </p>
       </div>
     </section>
   );

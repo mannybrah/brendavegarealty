@@ -60,18 +60,18 @@ export function FeedSection() {
   const posts = data?.feedPosts ?? [];
   if (posts.length === 0) return null;
   return (
-    <section className="py-20 px-6 bg-navy">
-      <div className="max-w-[1200px] mx-auto">
+    <section className="bg-warm-white px-6 desktop:px-10 py-20 desktop:py-28">
+      <div className="max-w-[1280px] mx-auto">
         <div className="flex items-end justify-between mb-12 gap-4">
           <div>
             <SectionLabel>Live Updates</SectionLabel>
-            <h2 className="font-display font-light text-[clamp(2rem,4vw,3.2rem)] text-cream mt-4 leading-tight">
-              Latest from <em className="text-gold italic">Brenda</em>
+            <h2 className="font-display font-light text-[clamp(2rem,4vw,3.2rem)] text-navy mt-4 leading-tight">
+              Latest from <em className="text-teal italic">Brenda</em>
             </h2>
           </div>
           <Link
             href="/updates"
-            className="hidden tablet:block font-ui font-medium text-xs tracking-wider uppercase text-cream/70 hover:text-gold transition-colors whitespace-nowrap"
+            className="hidden tablet:block font-ui font-medium text-xs tracking-wider uppercase text-charcoal-light hover:text-teal transition-colors whitespace-nowrap"
           >
             See All Updates &rarr;
           </Link>
@@ -89,7 +89,7 @@ export function FeedSection() {
         <div className="mt-8 text-center tablet:hidden">
           <Link
             href="/updates"
-            className="font-ui font-medium text-xs tracking-wider uppercase text-cream/70 hover:text-gold transition-colors"
+            className="font-ui font-medium text-xs tracking-wider uppercase text-charcoal-light hover:text-teal transition-colors"
           >
             See All Updates &rarr;
           </Link>

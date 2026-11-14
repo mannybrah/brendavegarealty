@@ -92,6 +92,20 @@ import {
   runReminderSweep,
   sendPushToAll,
 } from "./worker-lib/push";
+import {
+  handleHcConfig,
+  handleHcCreate,
+  handleHcUpload,
+  handleHcStatus,
+  handleHcList,
+  handleHcGet,
+  handleHcPatch,
+  handleHcNoteCreate,
+  handleHcFileGet,
+  handleHcFileDelete,
+  handleHcResend,
+  runHomeClaritySweep,
+} from "./worker-lib/homeClarity";
 
 const SESSION_COOKIE = "bvr_studio_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
@@ -114,6 +128,48 @@ export default {
     }
     if (url.pathname === "/api/stats" && request.method === "GET") {
       return requireStudio(request, env, () => handleStats(env));
+    }
+
+    // Home Clarity: disclosure upload (public) + Brenda's request inbox (studio)
+    if (url.pathname === "/api/home-clarity/config" && request.method === "GET") {
+      return handleHcConfig(env);
+    }
+    if (url.pathname === "/api/home-clarity/intakes" && request.method === "POST") {
+      return handleHcCreate(request, env);
+    }
+    const hcFileMatch = url.pathname.match(/^\/api\/home-clarity\/intakes\/([a-f0-9-]{36})\/file$/);
+    if (hcFileMatch && request.method === "PUT") {
+      return handleHcUpload(hcFileMatch[1], request, env, ctx);
+    }
+    const hcStatusMatch = url.pathname.match(/^\/api\/home-clarity\/intakes\/([a-f0-9-]{36})\/status$/);
+    if (hcStatusMatch && request.method === "GET") {
+      return handleHcStatus(hcStatusMatch[1], request, env);
+    }
+    if (url.pathname === "/api/studio/home-clarity" && request.method === "GET") {
+      return requireStudio(request, env, () => handleHcList(env));
+    }
+    const hcStudioSub = url.pathname.match(/^\/api\/studio\/home-clarity\/([a-f0-9-]{36})\/(notes|file|resend)$/);
+    if (hcStudioSub) {
+      const [, hcId, hcAction] = hcStudioSub;
+      if (hcAction === "notes" && request.method === "POST") {
+        return requireStudio(request, env, () => handleHcNoteCreate(hcId, request, env));
+      }
+      if (hcAction === "file" && request.method === "GET") {
+        return requireStudio(request, env, () => handleHcFileGet(hcId, env));
+      }
+      if (hcAction === "file" && request.method === "DELETE") {
+        return requireStudio(request, env, () => handleHcFileDelete(hcId, env));
+      }
+      if (hcAction === "resend" && request.method === "POST") {
+        return requireStudio(request, env, () => handleHcResend(hcId, env));
+      }
+    }
+    const hcStudioMatch = url.pathname.match(/^\/api\/studio\/home-clarity\/([a-f0-9-]{36})$/);
+    if (hcStudioMatch && request.method === "GET") {
+      return requireStudio(request, env, () => handleHcGet(hcStudioMatch[1], env));
+    }
+    if (hcStudioMatch && request.method === "PATCH") {
+      return requireStudio(request, env, () => handleHcPatch(hcStudioMatch[1], request, env));
     }
 
     // Public read — YouTube URLs keyed by post slug (no auth)
@@ -447,6 +503,7 @@ export default {
 
   async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
     ctx.waitUntil(runReminderSweep(env));
+    ctx.waitUntil(runHomeClaritySweep(env));
   },
 } satisfies ExportedHandler<Env>;
 

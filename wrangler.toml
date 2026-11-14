@@ -20,5 +20,12 @@ binding = "CRM_DB"
 database_name = "bvr-crm"
 database_id = "0c3791e6-3f23-404d-b7c7-831e202384e6"
 
+# Home Clarity (disclosure uploads). Set HC_ENABLED to "false" to pause new uploads
+# without touching requests already received.
+[vars]
+HC_ENABLED = "true"
+HC_MAX_FILE_MB = "25"
+HC_RETENTION_DAYS = "90"
+
 [triggers]
 crons = ["*/15 * * * *"]

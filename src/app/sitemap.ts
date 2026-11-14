@@ -20,6 +20,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...services.map((s) => ({ url: `${SITE_URL}/services/${s.slug}`, priority: 0.8 })),
     { url: `${SITE_URL}/listings`, priority: 0.9 },
     { url: `${SITE_URL}/testimonials`, priority: 0.7 },
+    { url: `${SITE_URL}/home-clarity`, priority: 0.9 },
     { url: `${SITE_URL}/areas`, priority: 0.8 },
     ...areas.map((a) => ({ url: `${SITE_URL}/areas/${a.slug}`, priority: 0.7 })),
     { url: `${SITE_URL}/blog`, priority: 0.8 },

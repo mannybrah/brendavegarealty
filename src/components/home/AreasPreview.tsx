@@ -1,5 +1,4 @@
 import { AnimateOnScroll } from "@/components/ui/AnimateOnScroll";
-import { SectionLabel } from "@/components/ui/SectionLabel";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -18,50 +17,62 @@ const previewAreas = [
   { name: "Saratoga", slug: "saratoga" },
 ];
 
+export function CommunityTiles() {
+  return (
+    <div className="grid grid-cols-2 desktop:grid-cols-4 gap-3 desktop:gap-4">
+      {previewAreas.map((area, i) => (
+        <AnimateOnScroll key={area.slug} delay={i * 0.08}>
+          <Link href={`/areas/${area.slug}`} className="group relative block aspect-[3/4] overflow-hidden bg-navy">
+            <Image
+              src={`/images/areas/${area.slug}.jpg`}
+              alt={`${area.name}, California`}
+              fill
+              loading="lazy"
+              sizes="(max-width: 1024px) 50vw, 25vw"
+              className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/20 to-transparent" />
+            <div className="absolute bottom-0 inset-x-0 p-5 desktop:p-7">
+              <span className="block font-display font-light text-[1.6rem] desktop:text-[2rem] text-cream leading-none">
+                {area.name}
+              </span>
+              <span className="block mt-3 font-ui font-medium text-[0.66rem] tracking-[0.16em] uppercase text-gold-light">
+                Explore the guide &rarr;
+              </span>
+            </div>
+          </Link>
+        </AnimateOnScroll>
+      ))}
+    </div>
+  );
+}
+
 export function AreasPreview() {
   return (
-    <section className="py-20 px-6">
-      <div className="max-w-[1200px] mx-auto">
+    <section className="bg-warm-white px-6 desktop:px-10 py-20 desktop:py-28" aria-labelledby="communities-heading">
+      <div className="max-w-[1280px] mx-auto">
         <AnimateOnScroll>
-          <SectionLabel>Areas Served</SectionLabel>
-          <h2 className="font-display font-light text-[clamp(2rem,4vw,3.2rem)] text-navy mt-4 mb-12 leading-tight">
-            Serving the Bay Area
-            <br />
-            <span className="text-teal italic">& beyond</span>
-          </h2>
-        </AnimateOnScroll>
-        <div className="grid grid-cols-2 desktop:grid-cols-4 gap-4">
-          {previewAreas.map((area, i) => (
-            <AnimateOnScroll key={area.slug} delay={i * 0.1}>
-              <Link
-                href={`/areas/${area.slug}`}
-                className="group relative block aspect-[4/5] overflow-hidden rounded-md"
+          <div className="flex flex-col desktop:flex-row desktop:items-end desktop:justify-between gap-6 mb-10 desktop:mb-14">
+            <div>
+              <p className="font-body font-medium text-[0.68rem] tracking-[0.38em] uppercase text-gold mb-5">
+                Communities
+              </p>
+              <h2
+                id="communities-heading"
+                className="font-display font-light text-navy leading-[1.05] text-[clamp(2.2rem,4.6vw,4rem)]"
               >
-                <Image
-                  src={`/images/areas/${area.slug}.jpg`}
-                  alt={`${area.name}, California`}
-                  fill
-                  sizes="(max-width: 1024px) 50vw, 25vw"
-                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-navy/85 via-navy/25 to-navy/10 transition-colors duration-300 group-hover:from-navy/90" />
-                <div className="absolute inset-3 border border-gold/25 rounded-sm pointer-events-none" />
-                <div className="absolute bottom-0 inset-x-0 p-5 text-center">
-                  <span className="font-display font-light text-xl text-cream group-hover:text-gold transition-colors">
-                    {area.name}
-                  </span>
-                </div>
-              </Link>
-            </AnimateOnScroll>
-          ))}
-        </div>
-        <AnimateOnScroll>
-          <div className="text-center mt-8">
-            <Link href="/areas" className="font-ui font-medium text-xs tracking-wider uppercase text-charcoal-light hover:text-gold transition-colors">
-              View All Areas &rarr;
+                Silicon Valley <em className="text-teal">&amp; beyond.</em>
+              </h2>
+            </div>
+            <Link
+              href="/areas"
+              className="self-start desktop:self-auto font-ui font-medium text-[0.76rem] tracking-[0.14em] uppercase text-navy border-b border-gold pb-1 hover:text-teal transition-colors"
+            >
+              View all communities &rarr;
             </Link>
           </div>
         </AnimateOnScroll>
+        <CommunityTiles />
       </div>
     </section>
   );
