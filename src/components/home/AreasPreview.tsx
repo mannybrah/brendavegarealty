@@ -1,6 +1,6 @@
-import { AnimateOnScroll } from "@/components/ui/AnimateOnScroll";
 import Link from "next/link";
 import Image from "next/image";
+import { communityCount } from "@/data/communities";
 
 /*
  * Area card photography (public/images/areas/) — licenses:
@@ -19,29 +19,23 @@ const previewAreas = [
 
 export function CommunityTiles() {
   return (
-    <div className="grid grid-cols-2 desktop:grid-cols-4 gap-3 desktop:gap-4">
-      {previewAreas.map((area, i) => (
-        <AnimateOnScroll key={area.slug} delay={i * 0.08}>
-          <Link href={`/areas/${area.slug}`} className="group relative block aspect-[3/4] overflow-hidden bg-navy">
-            <Image
-              src={`/images/areas/${area.slug}.jpg`}
-              alt={`${area.name}, California`}
-              fill
-              loading="lazy"
-              sizes="(max-width: 1024px) 50vw, 25vw"
-              className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/20 to-transparent" />
-            <div className="absolute bottom-0 inset-x-0 p-5 desktop:p-7">
-              <span className="block font-display font-light text-[1.6rem] desktop:text-[2rem] text-cream leading-none">
-                {area.name}
-              </span>
-              <span className="block mt-3 font-ui font-medium text-[0.66rem] tracking-[0.16em] uppercase text-gold-light">
-                Explore the guide &rarr;
-              </span>
-            </div>
-          </Link>
-        </AnimateOnScroll>
+    <div className="ed-community-grid">
+      {previewAreas.map((area) => (
+        <Link key={area.slug} href={`/areas/${area.slug}`} className="ed-community-tile">
+          <Image
+            src={`/images/areas/${area.slug}.jpg`}
+            alt={`${area.name}, California`}
+            fill
+            loading="lazy"
+            sizes="(max-width: 900px) 50vw, 25vw"
+          />
+          <div>
+            <h3>{area.name}</h3>
+            <span>
+              Explore community <span aria-hidden="true">↗</span>
+            </span>
+          </div>
+        </Link>
       ))}
     </div>
   );
@@ -49,30 +43,36 @@ export function CommunityTiles() {
 
 export function AreasPreview() {
   return (
-    <section className="bg-warm-white px-6 desktop:px-10 py-20 desktop:py-28" aria-labelledby="communities-heading">
-      <div className="max-w-[1280px] mx-auto">
-        <AnimateOnScroll>
-          <div className="flex flex-col desktop:flex-row desktop:items-end desktop:justify-between gap-6 mb-10 desktop:mb-14">
-            <div>
-              <p className="font-body font-medium text-[0.68rem] tracking-[0.38em] uppercase text-gold mb-5">
-                Communities
-              </p>
-              <h2
-                id="communities-heading"
-                className="font-display font-light text-navy leading-[1.05] text-[clamp(2.2rem,4.6vw,4rem)]"
-              >
-                Silicon Valley <em className="text-teal">&amp; beyond.</em>
-              </h2>
-            </div>
-            <Link
-              href="/areas"
-              className="self-start desktop:self-auto font-ui font-medium text-[0.76rem] tracking-[0.14em] uppercase text-navy border-b border-gold pb-1 hover:text-teal transition-colors"
-            >
-              View all communities &rarr;
-            </Link>
-          </div>
-        </AnimateOnScroll>
-        <CommunityTiles />
+    <section className="ed ed-section ed-communities" id="communities" aria-labelledby="communities-heading">
+      <div className="ed-section-head">
+        <div>
+          <p className="ed-kicker">Find your place</p>
+          <h2 id="communities-heading">
+            Silicon Valley
+            <br />
+            <em>&amp; beyond.</em>
+          </h2>
+        </div>
+        <p>
+          A collection of communities.
+          <br />
+          A place that feels like you.
+        </p>
+      </div>
+
+      <CommunityTiles />
+
+      <div className="ed-community-more">
+        <div>
+          <h3>Your search doesn&rsquo;t stop here.</h3>
+          <p>
+            From San Francisco and the East Bay to Silicon Valley, Gilroy, Monterey, and Carmel&mdash;explore{" "}
+            {communityCount} cities and neighborhoods.
+          </p>
+        </div>
+        <Link className="ed-textlink" href="/areas">
+          View all communities &rarr;
+        </Link>
       </div>
     </section>
   );

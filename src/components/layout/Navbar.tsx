@@ -62,7 +62,9 @@ export function Navbar() {
             ? "bg-navy"
             : isScrolled
               ? "bg-warm-white/95 backdrop-blur-md shadow-[0_1px_0_rgba(15,29,53,0.08)]"
-              : "bg-transparent"
+              : overPhoto
+                ? "bg-transparent shadow-[0_1px_0_rgba(255,255,255,0.19)]"
+                : "bg-transparent"
         }`}
       >
         {!isOpen && <AnnouncementBar />}

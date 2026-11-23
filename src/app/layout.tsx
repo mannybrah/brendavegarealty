@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Outfit, DM_Sans } from "next/font/google";
+import { Cormorant_Garamond, Outfit, DM_Sans, Italiana } from "next/font/google";
 import {
   SiteChromeNav,
   SiteChromeFooter,
@@ -33,6 +33,14 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
+// Headings on the editorial pages (home, Home Clarity, communities)
+const italiana = Italiana({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-italiana",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: {
     default: `${siteConfig.name} | Bay Area Real Estate`,
@@ -56,7 +64,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${outfit.variable} ${dmSans.variable}`}
+      className={`${cormorant.variable} ${outfit.variable} ${dmSans.variable} ${italiana.variable}`}
     >
       <head>
         <script

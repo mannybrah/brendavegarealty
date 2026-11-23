@@ -1,71 +1,98 @@
 import Image from "next/image";
 import Link from "next/link";
-import { AnimateOnScroll } from "@/components/ui/AnimateOnScroll";
 import { SampleReport } from "@/components/home-clarity/SampleReport";
+
+// The branded header row shared by the home page section and the /home-clarity page.
+export function ClarityBrandRow() {
+  return (
+    <div className="ed-clarity-top">
+      <div className="ed-clarity-brand">
+        <small>BRENDA VEGA&rsquo;S</small>
+        Home Clarity
+      </div>
+      <p className="ed-kicker">
+        A more informed
+        <br />
+        way to come home.
+      </p>
+    </div>
+  );
+}
+
+// Brenda's personal follow-up, shown directly under the sample report: the report is
+// the AI first look, this is the person who walks you through it.
+export function PersonalReview({ href }: { href: string }) {
+  return (
+    <aside className="ed-personal-review">
+      <Image src="/images/home/brenda-portrait.jpg" alt="Brenda Vega" width={1400} height={933} loading="lazy" sizes="78px" />
+      <div>
+        <p className="ed-kicker">Your questions. A personal conversation.</p>
+        <h3>
+          Your report is just
+          <br />
+          the beginning.
+        </h3>
+        <p>
+          Brenda will personally reach out to go over the findings, answer your questions, and help you identify
+          where a specialist&rsquo;s input may be useful.
+        </p>
+        <Link className="ed-textlink" href={href}>
+          Start your free disclosure review <span aria-hidden="true">↗</span>
+        </Link>
+      </div>
+    </aside>
+  );
+}
+
+export const CLARITY_STEPS = ["Upload your disclosures", "Get your AI first look", "Brenda personally follows up"];
 
 export function HomeClaritySection() {
   return (
-    <section className="bg-navy text-cream px-6 desktop:px-10 py-20 desktop:py-28" aria-labelledby="home-clarity-heading">
-      <div className="max-w-[1280px] mx-auto grid gap-14 desktop:gap-20 desktop:grid-cols-2 items-center">
-        <AnimateOnScroll>
-          <p className="font-body font-medium text-[0.68rem] tracking-[0.38em] uppercase text-gold mb-6">
-            Brenda Vega&rsquo;s Home Clarity
-          </p>
-          <h2
-            id="home-clarity-heading"
-            className="font-display font-light leading-[1.05] text-[clamp(2.2rem,4.6vw,4rem)]"
-          >
-            Before you make an offer, <em className="text-gold-light">get a clearer picture.</em>
+    <section className="ed ed-clarity" id="clarity" aria-labelledby="home-clarity-heading">
+      <ClarityBrandRow />
+      <div className="ed-clarity-layout">
+        <div>
+          <h2 id="home-clarity-heading" className="ed-clarity-title">
+            Before you
+            <br />
+            make an offer,
+            <br />
+            <em>
+              get a clearer
+              <br />
+              picture.
+            </em>
           </h2>
-          <p className="font-body font-light text-lg leading-relaxed text-cream/80 mt-8 max-w-[52ch]">
+          <p className="ed-clarity-copy">
             Upload the disclosures for a home you&rsquo;re considering. Our custom AI system will analyze the
             documents and organize key findings, potential concerns, and questions worth asking.
+            <strong>
+              Brenda will personally reach out to walk you through the findings and discuss your next steps.
+            </strong>
           </p>
-          <p className="font-body font-light text-lg leading-relaxed text-cream/80 mt-5 max-w-[52ch]">
-            Brenda will personally reach out to walk you through the findings and discuss your next steps.
-          </p>
-          <p className="font-display italic text-xl text-gold-light mt-8">
-            Complimentary analysis. Personal follow-up. No obligation.
-          </p>
-          <div className="mt-10 flex flex-wrap items-center gap-6">
-            <Link
-              href="/home-clarity#upload"
-              className="inline-flex items-center justify-center h-[52px] px-8 bg-gold text-navy font-ui font-medium text-[0.78rem] tracking-[0.14em] uppercase hover:bg-gold-light transition-colors"
-            >
-              Upload your disclosures
-            </Link>
-            <Link
-              href="/home-clarity"
-              className="font-ui font-medium text-[0.76rem] tracking-[0.14em] uppercase text-cream border-b border-gold pb-1 hover:text-gold-light transition-colors"
-            >
-              How it works &rarr;
-            </Link>
-          </div>
+          <ol className="ed-steps">
+            {CLARITY_STEPS.map((step, i) => (
+              <li key={step}>
+                <span>0{i + 1}</span>
+                {step}
+              </li>
+            ))}
+          </ol>
+          <Link className="ed-button" href="/home-clarity#upload">
+            Upload your disclosures <span aria-hidden="true">↗</span>
+          </Link>
+          <p className="ed-clarity-free">Complimentary analysis. Personal follow-up. No obligation.</p>
+        </div>
 
-          <div className="mt-12 flex items-center gap-5 border-t border-cream/15 pt-8">
-            <div className="relative w-16 h-16 rounded-full overflow-hidden shrink-0">
-              <Image
-                src="/images/home/brenda-portrait.jpg"
-                alt=""
-                fill
-                loading="lazy"
-                sizes="64px"
-                className="object-cover object-top"
-              />
-            </div>
-            <p className="font-body font-light text-sm leading-relaxed text-cream/75 max-w-[40ch]">
-              <span className="block mb-1 font-body font-medium text-[0.62rem] tracking-[0.26em] uppercase text-gold">
-                An invitation from Brenda
-              </span>
-              Not sure what a disclosure is telling you? Send it over, and Brenda will go through it with you.
-            </p>
-          </div>
-        </AnimateOnScroll>
-
-        <AnimateOnScroll delay={0.1}>
+        <div>
           <SampleReport />
-        </AnimateOnScroll>
+          <PersonalReview href="/home-clarity#upload" />
+        </div>
       </div>
+      <p className="ed-clarity-note">
+        The AI first look is separate from Brenda&rsquo;s personal follow-up. AI-assisted summaries support your
+        review of the original documents and professional advice; they do not replace either.
+      </p>
     </section>
   );
 }

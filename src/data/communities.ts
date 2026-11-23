@@ -4,9 +4,10 @@
 // `guide` points at an existing area guide page. Every other entry is an honest
 // "Ask Brenda" link: there is no dedicated guide yet, so none is implied.
 //
-// NOTE FOR THE OWNER: this list was rebuilt from the written redesign brief (nine regions,
-// named cities). The approved preview's communities.html was not available when this was
-// built, so reconcile the entries against it; edit this file only, the page follows.
+// Reconciled 2026-11-22 against the approved preview's communities.html: its 56 places
+// and region groupings, plus five neighborhoods added here (Evergreen, Berryessa,
+// Rose Garden, Downtown San Jose, Monte Sereno). Edit this file only; the pages and
+// the count shown on them follow.
 
 export interface Community {
   name: string;
@@ -55,7 +56,6 @@ export const communityGroups: CommunityGroup[] = [
       { name: "Menlo Park" },
       { name: "Atherton" },
       { name: "East Palo Alto" },
-      { name: "Redwood City" },
       { name: "Woodside" },
       { name: "Portola Valley" },
     ],
@@ -63,6 +63,7 @@ export const communityGroups: CommunityGroup[] = [
   {
     region: "Central & Northern Peninsula",
     communities: [
+      { name: "Redwood City" },
       { name: "San Carlos" },
       { name: "Belmont" },
       { name: "Foster City" },
@@ -73,16 +74,25 @@ export const communityGroups: CommunityGroup[] = [
       { name: "San Bruno" },
       { name: "South San Francisco" },
       { name: "Brisbane" },
-      { name: "Daly City" },
     ],
   },
   {
     region: "San Francisco & coast",
-    communities: [{ name: "San Francisco" }, { name: "Pacifica" }, { name: "Half Moon Bay" }],
+    communities: [{ name: "San Francisco" }, { name: "Daly City" }, { name: "Pacifica" }, { name: "Half Moon Bay" }],
   },
   {
     region: "East Bay",
-    communities: [{ name: "Oakland" }, { name: "Fremont" }, { name: "Hayward" }, { name: "Union City" }],
+    communities: [
+      { name: "Oakland" },
+      { name: "Fremont" },
+      { name: "Hayward" },
+      { name: "Union City" },
+      { name: "Newark" },
+      { name: "San Leandro" },
+      { name: "Alameda" },
+      { name: "Berkeley" },
+      { name: "Walnut Creek" },
+    ],
   },
   {
     region: "South County",

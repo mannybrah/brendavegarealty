@@ -13,8 +13,8 @@ export default function HomePage() {
       <link
         rel="preload"
         as="image"
-        href="/images/home/hero.jpg"
-        imageSrcSet="/images/home/hero-sm.jpg 900w, /images/home/hero.jpg 1600w"
+        href="/images/home/hero-dining.jpg"
+        imageSrcSet="/images/home/hero-dining-sm.jpg 900w, /images/home/hero-dining.jpg 1600w"
         imageSizes="100vw"
         fetchPriority="high"
       />

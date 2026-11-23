@@ -33,9 +33,9 @@ function newKey(): string {
 }
 
 const inputClass =
-  "w-full h-12 px-4 bg-white border border-navy/25 font-body text-base text-charcoal placeholder:text-charcoal-light/60 focus:border-navy focus:outline-none focus-visible:outline-2 focus-visible:outline-gold";
-const labelClass = "block font-body font-medium text-sm text-navy mb-2";
-const errorClass = "mt-2 font-body text-sm text-[#A12C1B]";
+  "w-full h-12 px-4 bg-white border border-[#cbd0c4] font-ui text-base text-charcoal placeholder:text-charcoal-light/60 focus:border-ink focus:outline-none focus-visible:outline-2 focus-visible:outline-[#a78952]";
+const labelClass = "block font-ui font-medium text-sm text-ink mb-2";
+const errorClass = "mt-2 font-ui text-sm text-[#A12C1B]";
 
 export function UploadForm() {
   const uid = useId();
@@ -201,31 +201,31 @@ export function UploadForm() {
 
   if (phase === "received") {
     return (
-      <div className="bg-white border border-navy/15 p-8 desktop:p-12" role="status">
-        <p className="font-body font-medium text-[0.68rem] tracking-[0.38em] uppercase text-gold mb-5">Request received</p>
-        <h3 ref={doneRef} tabIndex={-1} className="font-display font-light text-navy text-[clamp(1.9rem,3.6vw,2.8rem)] leading-tight focus:outline-none">
+      <div className="ed-lead-card" role="status">
+        <p className="ed-kicker">Request received</p>
+        <h3 ref={doneRef} tabIndex={-1} className="ed-card-title focus:outline-none">
           Thank you. Brenda has your disclosures.
         </h3>
-        <p className="font-body font-light text-base leading-relaxed text-charcoal-light mt-5">
+        <p className="font-ui font-normal text-base leading-relaxed text-charcoal-light mt-5">
           Your upload for <strong className="font-medium text-charcoal">{receivedAddress}</strong> arrived safely. The
           documents will be analyzed, and Brenda will personally reach out to walk you through the findings and
           discuss your next steps.
         </p>
-        <p className="font-body font-light text-sm leading-relaxed text-charcoal-light mt-4">
+        <p className="font-ui font-normal text-sm leading-relaxed text-charcoal-light mt-4">
           Your report is not ready yet, and nothing has been reviewed so far. If you need anything in the meantime,
           call{" "}
-          <a href={`tel:${siteConfig.agent.phoneRaw}`} className="text-navy underline underline-offset-4">
+          <a href={`tel:${siteConfig.agent.phoneRaw}`} className="text-ink underline underline-offset-4">
             {siteConfig.agent.phone}
           </a>{" "}
           or email{" "}
-          <a href={`mailto:${siteConfig.agent.email}`} className="text-navy underline underline-offset-4">
+          <a href={`mailto:${siteConfig.agent.email}`} className="text-ink underline underline-offset-4">
             {siteConfig.agent.email}
           </a>
           .
         </p>
         <Link
           href="/"
-          className="inline-block mt-8 font-ui font-medium text-[0.76rem] tracking-[0.14em] uppercase text-navy border-b border-gold pb-1 hover:text-teal transition-colors"
+          className="ed-textlink mt-8"
         >
           Back to the home page &rarr;
         </Link>
@@ -235,15 +235,15 @@ export function UploadForm() {
 
   if (open === false) {
     return (
-      <div className="bg-white border border-navy/15 p-8 desktop:p-12">
-        <h3 className="font-display font-light text-navy text-3xl leading-tight">Uploads are paused right now.</h3>
-        <p className="font-body font-light text-base leading-relaxed text-charcoal-light mt-4">
+      <div className="ed-lead-card">
+        <h3 className="ed-card-title">Uploads are paused right now.</h3>
+        <p className="font-ui font-normal text-base leading-relaxed text-charcoal-light mt-4">
           Brenda can still help with your disclosures. Call{" "}
-          <a href={`tel:${siteConfig.agent.phoneRaw}`} className="text-navy underline underline-offset-4">
+          <a href={`tel:${siteConfig.agent.phoneRaw}`} className="text-ink underline underline-offset-4">
             {siteConfig.agent.phone}
           </a>{" "}
           or email{" "}
-          <a href={`mailto:${siteConfig.agent.email}`} className="text-navy underline underline-offset-4">
+          <a href={`mailto:${siteConfig.agent.email}`} className="text-ink underline underline-offset-4">
             {siteConfig.agent.email}
           </a>
           .
@@ -262,15 +262,19 @@ export function UploadForm() {
   const describedBy = (key: keyof IntakeErrors) => (errors[key] ? `${uid}-${key}-error` : undefined);
 
   return (
-    <form ref={formRef} onSubmit={onSubmit} noValidate className="bg-white border border-navy/15 p-6 desktop:p-10" aria-busy={busy}>
+    <form ref={formRef} onSubmit={onSubmit} noValidate className="ed-lead-card" aria-busy={busy}>
+      <p className="ed-kicker">Your next step, made simpler</p>
+      <h3 className="ed-card-title">Let&rsquo;s take a closer look.</h3>
       <div ref={errorRef} tabIndex={-1} aria-live="assertive" className="focus:outline-none">
         {serverError && (
-          <p className="mb-6 border-l-2 border-[#A12C1B] bg-[#FBEFEC] px-4 py-3 font-body text-sm text-[#7A2E1E]">{serverError}</p>
+          <p className="mb-6 border-l-2 border-[#A12C1B] bg-[#FBEFEC] px-4 py-3 font-ui text-sm text-[#7A2E1E]">{serverError}</p>
         )}
       </div>
 
       <fieldset disabled={busy} className="border-0 p-0 m-0 min-w-0 space-y-7">
         <legend className="sr-only">Disclosure upload</legend>
+
+        <p className="ed-legend" aria-hidden="true">01 / The home you&rsquo;re considering</p>
 
         <div>
           <label htmlFor={`${uid}-address`} className={labelClass}>
@@ -307,7 +311,7 @@ export function UploadForm() {
               if (!busy) chooseFile(e.dataTransfer.files?.[0] ?? null);
             }}
             className={`border border-dashed px-5 py-7 text-center transition-colors ${
-              dragging ? "border-teal bg-teal/5" : "border-navy/35 bg-cream/60"
+              dragging ? "border-ink bg-ink/5" : "border-ink/35 bg-[#f3f0e7]"
             }`}
           >
             <input
@@ -322,25 +326,27 @@ export function UploadForm() {
               className="sr-only peer"
             />
             {file ? (
-              <p className="font-body text-base text-navy break-all">
+              <p className="font-ui text-base text-ink break-all">
                 {file.name} <span className="text-charcoal-light">({formatBytes(file.size)})</span>
               </p>
             ) : (
-              <p className="font-body font-light text-base text-charcoal-light">Drag your PDF here, or</p>
+              <p className="font-ui font-normal text-base text-charcoal-light">Drag your PDF here, or</p>
             )}
             <label
               htmlFor={`${uid}-file`}
-              className="inline-flex items-center justify-center mt-3 h-11 px-6 border border-navy text-navy font-ui font-medium text-[0.72rem] tracking-[0.14em] uppercase cursor-pointer hover:bg-navy hover:text-cream transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-gold peer-focus-visible:outline-offset-2"
+              className="inline-flex items-center justify-center mt-3 h-11 px-6 border border-ink text-ink font-ui font-medium text-[0.72rem] tracking-[0.14em] uppercase cursor-pointer hover:bg-ink hover:text-ivory transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-[#a78952] peer-focus-visible:outline-offset-2"
             >
               {file ? "Choose a different file" : "Choose a file"}
             </label>
-            <p id={`${uid}-file-hint`} className="font-body font-light text-xs text-charcoal-light mt-3">
+            <p id={`${uid}-file-hint`} className="font-ui font-normal text-xs text-charcoal-light mt-3">
               One PDF, up to {maxMb} MB. If the disclosures came as several files, combine them or send the main
               package and mention the rest below.
             </p>
           </div>
           {fieldError("file")}
         </div>
+
+        <p className="ed-legend pt-2" aria-hidden="true">02 / How can Brenda reach you?</p>
 
         <div className="grid gap-7 tablet:grid-cols-2">
           <div>
@@ -384,7 +390,7 @@ export function UploadForm() {
           <div>
             <label htmlFor={`${uid}-phone`} className={labelClass}>
               Phone{" "}
-              <span className="font-light text-charcoal-light">
+              <span className="font-normal text-charcoal-light">
                 {preferredContact === "phone" ? "(needed for a call)" : "(optional)"}
               </span>
             </label>
@@ -409,8 +415,8 @@ export function UploadForm() {
               {(["email", "phone"] as const).map((value) => (
                 <label
                   key={value}
-                  className={`flex-1 flex items-center justify-center h-12 border cursor-pointer font-body text-base transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-gold has-[:focus-visible]:outline-offset-2 ${
-                    preferredContact === value ? "border-navy bg-navy text-cream" : "border-navy/25 bg-white text-charcoal hover:border-navy"
+                  className={`flex-1 flex items-center justify-center h-12 border cursor-pointer font-ui text-base transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-gold has-[:focus-visible]:outline-offset-2 ${
+                    preferredContact === value ? "border-ink bg-ink text-ivory" : "border-ink/25 bg-white text-charcoal hover:border-ink"
                   }`}
                 >
                   <input
@@ -429,16 +435,16 @@ export function UploadForm() {
           </fieldset>
         </div>
 
-        <fieldset className="border-0 p-0 m-0 min-w-0">
+        <fieldset className="border-0 p-0 mx-0 mt-0 min-w-0">
           <legend className={labelClass}>
-            {AGENT_STATUS_QUESTION} <span className="font-light text-charcoal-light">(optional)</span>
+            {AGENT_STATUS_QUESTION} <span className="font-normal text-charcoal-light">(optional)</span>
           </legend>
           <div className="space-y-2">
             {AGENT_STATUS_OPTIONS.map((option) => (
               <label
                 key={option.value}
-                className={`flex items-center gap-3 min-h-12 px-4 py-2 border cursor-pointer font-body text-base transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-gold has-[:focus-visible]:outline-offset-2 ${
-                  agentStatus === option.value ? "border-navy bg-cream" : "border-navy/20 bg-white hover:border-navy/60"
+                className={`flex items-center gap-3 min-h-12 px-4 py-2 border cursor-pointer font-ui text-base transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-gold has-[:focus-visible]:outline-offset-2 ${
+                  agentStatus === option.value ? "border-ink bg-[#f3f0e7]" : "border-ink/20 bg-white hover:border-ink/60"
                 }`}
               >
                 <input
@@ -447,7 +453,7 @@ export function UploadForm() {
                   value={option.value}
                   checked={agentStatus === option.value}
                   onChange={() => setAgentStatus(option.value)}
-                  className="w-4 h-4 accent-[#0F1D35] shrink-0"
+                  className="w-4 h-4 accent-[#142b32] shrink-0"
                 />
                 {option.label}
               </label>
@@ -457,7 +463,7 @@ export function UploadForm() {
             <button
               type="button"
               onClick={() => setAgentStatus(null)}
-              className="mt-2 font-body text-sm text-charcoal-light underline underline-offset-4 hover:text-navy cursor-pointer"
+              className="mt-2 font-ui text-sm text-charcoal-light underline underline-offset-4 hover:text-ink cursor-pointer"
             >
               Clear my answer
             </button>
@@ -466,7 +472,7 @@ export function UploadForm() {
 
         <div>
           <label htmlFor={`${uid}-questions`} className={labelClass}>
-            Anything you want Brenda to look for? <span className="font-light text-charcoal-light">(optional)</span>
+            Anything you want Brenda to look for? <span className="font-normal text-charcoal-light">(optional)</span>
           </label>
           <textarea
             id={`${uid}-questions`}
@@ -494,11 +500,11 @@ export function UploadForm() {
               onChange={(e) => setConsent(e.target.checked)}
               aria-invalid={!!errors.consent}
               aria-describedby={describedBy("consent")}
-              className="mt-1 w-5 h-5 accent-[#0F1D35] shrink-0"
+              className="mt-1 w-5 h-5 accent-[#142b32] shrink-0"
             />
-            <span className="font-body font-light text-sm leading-relaxed text-charcoal">
+            <span className="font-ui font-normal text-sm leading-relaxed text-charcoal">
               {HC_CONSENT_NOTICE} See the{" "}
-              <Link href="/privacy#home-clarity" className="text-navy underline underline-offset-4">
+              <Link href="/privacy#home-clarity" className="text-ink underline underline-offset-4">
                 privacy policy
               </Link>{" "}
               for who receives your documents and how to have them deleted.
@@ -517,11 +523,11 @@ export function UploadForm() {
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={progress}
-              className="h-1.5 bg-navy/10 overflow-hidden"
+              className="h-1.5 bg-ink/10 overflow-hidden"
             >
-              <div className="h-full bg-teal transition-[width] duration-200" style={{ width: `${progress}%` }} />
+              <div className="h-full bg-bronze transition-[width] duration-200" style={{ width: `${progress}%` }} />
             </div>
-            <p className="font-body text-sm text-charcoal-light mt-2">
+            <p className="font-ui text-sm text-charcoal-light mt-2">
               {progress < 99 ? `Uploading… ${progress}%` : "Finishing up…"}
             </p>
           </div>
@@ -529,11 +535,11 @@ export function UploadForm() {
         <button
           type="submit"
           disabled={busy || open === null}
-          className="w-full tablet:w-auto inline-flex items-center justify-center h-[52px] px-10 bg-navy text-cream font-ui font-medium text-[0.78rem] tracking-[0.14em] uppercase hover:bg-navy-light transition-colors disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+          className="ed-button w-full justify-center! text-center text-[12px]! disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {phase === "saving" ? "Sending…" : phase === "uploading" ? "Uploading…" : "Upload your disclosures"}
         </button>
-        <p className="font-body font-light text-xs text-charcoal-light mt-4">
+        <p className="font-ui font-normal text-xs text-charcoal-light mt-4">
           Complimentary analysis. Personal follow-up. No obligation.
         </p>
       </div>

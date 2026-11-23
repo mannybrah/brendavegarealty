@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useHomeState } from "@/lib/useHomeState";
 import { FeedPost, FEED_TYPE_LABELS, relativeTime } from "@/lib/feed";
 
@@ -60,25 +59,22 @@ export function FeedSection() {
   const posts = data?.feedPosts ?? [];
   if (posts.length === 0) return null;
   return (
-    <section className="bg-warm-white px-6 desktop:px-10 py-20 desktop:py-28">
-      <div className="max-w-[1280px] mx-auto">
-        <div className="flex items-end justify-between mb-12 gap-4">
+    <section className="ed ed-section">
+      <div>
+        <div className="ed-section-head">
           <div>
-            <SectionLabel>Live Updates</SectionLabel>
-            <h2 className="font-display font-light text-[clamp(2rem,4vw,3.2rem)] text-navy mt-4 leading-tight">
-              Latest from <em className="text-teal italic">Brenda</em>
+            <p className="ed-kicker">Live updates</p>
+            <h2>
+              Latest from <em>Brenda.</em>
             </h2>
           </div>
-          <Link
-            href="/updates"
-            className="hidden tablet:block font-ui font-medium text-xs tracking-wider uppercase text-charcoal-light hover:text-teal transition-colors whitespace-nowrap"
-          >
-            See All Updates &rarr;
+          <Link href="/updates" className="ed-textlink hidden tablet:inline-block whitespace-nowrap">
+            See all updates &rarr;
           </Link>
         </div>
 
         {/* Mobile: swipeable strip. Desktop: grid of up to 6. */}
-        <div className="flex desktop:grid desktop:grid-cols-3 gap-5 overflow-x-auto desktop:overflow-visible snap-x snap-mandatory -mx-6 px-6 desktop:mx-0 desktop:px-0 pb-2">
+        <div className="flex desktop:grid desktop:grid-cols-3 gap-5 overflow-x-auto desktop:overflow-visible snap-x snap-mandatory pb-2">
           {posts.slice(0, 6).map((post, i) => (
             <div key={post.id} className="w-[280px] desktop:w-auto shrink-0 desktop:shrink snap-start">
               <FeedCard post={post} index={i} />
@@ -89,9 +85,9 @@ export function FeedSection() {
         <div className="mt-8 text-center tablet:hidden">
           <Link
             href="/updates"
-            className="font-ui font-medium text-xs tracking-wider uppercase text-charcoal-light hover:text-teal transition-colors"
+            className="ed-textlink"
           >
-            See All Updates &rarr;
+            See all updates &rarr;
           </Link>
         </div>
       </div>
