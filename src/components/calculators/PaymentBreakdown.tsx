@@ -10,7 +10,7 @@ interface PaymentBreakdownProps {
   loanType: "conventional" | "fha";
 }
 
-const COLORS = ["#0F1D35", "#2A7F6F", "#C8A55B", "#D4B978", "#8FA89A", "#5A5A5A"];
+const COLORS = ["#142b32", "#4d6f78", "#c9a968", "#e2cd9f", "#8FA89A", "#5A5A5A"];
 
 export function PaymentBreakdown({ payment, loanType }: PaymentBreakdownProps) {
   const chartData = useMemo(() => {

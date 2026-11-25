@@ -33,7 +33,7 @@ export function SiteMainPadding({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isStudio = pathname?.startsWith("/studio");
   return (
-    <main className={isStudio ? "" : "pt-[72px] pb-[60px] desktop:pb-0"}>
+    <main className={isStudio ? "studio-scope" : "pt-[72px] pb-[60px] desktop:pb-0"}>
       {children}
     </main>
   );

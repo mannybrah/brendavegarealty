@@ -108,21 +108,21 @@ function renderKeyDates(deal: PortalData["deal"], milestones: MilestoneRow[]): s
 
 const SHARED_STYLE = `
   :root {
-    --navy: #0F1D35;
-    --gold: #C8A55B;
-    --cream: #F8F5EF;
-    --teal: #2A7F6F;
+    --navy: #142b32;
+    --gold: #d6bb83;
+    --cream: #f6f2e9;
+    --teal: #8a6a37;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
     background: var(--cream);
     color: var(--navy);
     font-weight: 300;
     line-height: 1.6;
   }
-  h1, h2 { font-family: 'Cormorant Garamond', Georgia, serif; }
+  h1, h2 { font-family: 'Italiana', Georgia, serif; }
   a { color: inherit; }
   .wrap { max-width: 640px; margin: 0 auto; padding: 0 0 48px; }
   .topbar {
@@ -130,7 +130,7 @@ const SHARED_STYLE = `
     padding: 16px 20px;
     text-align: center;
   }
-  .topbar .brand { color: var(--cream); font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; letter-spacing: 0.15em; text-transform: uppercase; }
+  .topbar .brand { color: var(--cream); font-family: 'Italiana', Georgia, serif; font-size: 1.1rem; letter-spacing: 0.15em; text-transform: uppercase; }
   .topbar .gold { color: var(--gold); }
   .agent-header {
     display: flex;
@@ -156,7 +156,7 @@ const SHARED_STYLE = `
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Italiana', Georgia, serif;
     font-size: 1.3rem;
     border: 2px solid var(--gold);
   }
@@ -169,7 +169,7 @@ const SHARED_STYLE = `
   .progress-fill { background: var(--gold); height: 100%; border-radius: 999px; }
   .key-dates-card {
     background: white;
-    border: 1px solid rgba(200,165,91,0.3);
+    border: 1px solid rgba(214,187,131,0.3);
     border-radius: 6px;
     padding: 16px 20px;
     margin: 24px 0;
@@ -204,7 +204,7 @@ const SHARED_STYLE = `
     z-index: 1;
   }
   .tl-done .tl-marker { background: var(--gold); color: var(--navy); }
-  .tl-current .tl-marker { background: var(--navy); box-shadow: 0 0 0 4px rgba(200,165,91,0.35); }
+  .tl-current .tl-marker { background: var(--navy); box-shadow: 0 0 0 4px rgba(214,187,131,0.35); }
   .tl-title { font-weight: 500; }
   .tl-upcoming .tl-title { color: rgba(15,29,53,0.5); font-weight: 300; }
   .tl-date { font-size: 0.8rem; color: var(--teal); margin-top: 2px; }
@@ -220,7 +220,7 @@ const HEAD_ASSETS = `
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link
-  href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap"
+  href="https://fonts.googleapis.com/css2?family=Italiana&family=DM+Sans:wght@300;400;500;600&display=swap"
   rel="stylesheet"
 />`;
 

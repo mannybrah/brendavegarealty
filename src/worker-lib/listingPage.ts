@@ -181,27 +181,27 @@ ${coverAbsoluteUrl ? `<meta property="og:image" content="${escapeHtml(coverAbsol
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link
-  href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500;600&display=swap"
+  href="https://fonts.googleapis.com/css2?family=Italiana&family=DM+Sans:wght@300;400;500;600&display=swap"
   rel="stylesheet"
 />
 <script type="application/ld+json">${buildJsonLd(listing, coverAbsoluteUrl)}</script>
 <style>
   :root {
-    --navy: #0F1D35;
-    --gold: #C8A55B;
-    --cream: #F8F5EF;
-    --teal: #2A7F6F;
+    --navy: #142b32;
+    --gold: #d6bb83;
+    --cream: #f6f2e9;
+    --teal: #8a6a37;
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    font-family: 'Outfit', system-ui, sans-serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
     background: var(--cream);
     color: var(--navy);
     font-weight: 300;
     line-height: 1.6;
   }
-  h1, h2, .signature { font-family: 'Cormorant Garamond', Georgia, serif; }
+  h1, h2, .signature { font-family: 'Italiana', Georgia, serif; }
   a { color: inherit; }
   .topbar {
     background: var(--navy);
@@ -289,7 +289,7 @@ ${coverAbsoluteUrl ? `<meta property="og:image" content="${escapeHtml(coverAbsol
   .fact-label { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--teal); margin-top: 4px; }
   .description-block, .features-block, .gallery-block { margin: 40px 0; }
   .description-block p { margin: 0 0 16px; color: #333; }
-  h2 { font-size: 1.6rem; font-weight: 500; color: var(--navy); margin: 0 0 16px; border-bottom: 1px solid rgba(200,165,91,0.4); padding-bottom: 10px; }
+  h2 { font-size: 1.6rem; font-weight: 400; color: var(--navy); margin: 0 0 16px; border-bottom: 1px solid rgba(214,187,131,0.4); padding-bottom: 10px; }
   .features-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: 10px; }
   @media (min-width: 640px) {
     .features-list { grid-template-columns: repeat(2, 1fr); }
@@ -331,7 +331,7 @@ ${coverAbsoluteUrl ? `<meta property="og:image" content="${escapeHtml(coverAbsol
     text-align: center;
     background: white;
     border-radius: 6px;
-    border: 1px solid rgba(200,165,91,0.3);
+    border: 1px solid rgba(214,187,131,0.3);
   }
   .cta-block h2 { border: none; }
   .cta-buttons { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin-top: 20px; }
@@ -354,7 +354,7 @@ ${coverAbsoluteUrl ? `<meta property="og:image" content="${escapeHtml(coverAbsol
     font-size: 0.75rem;
     line-height: 1.7;
   }
-  footer .brand { color: var(--cream); font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px; }
+  footer .brand { color: var(--cream); font-family: 'Italiana', Georgia, serif; font-size: 1.1rem; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px; }
   footer .gold { color: var(--gold); }
 </style>
 </head>

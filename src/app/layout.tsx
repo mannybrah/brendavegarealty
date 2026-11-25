@@ -15,25 +15,25 @@ const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
   weight: ["300", "400", "600"],
   style: ["normal", "italic"],
-  variable: "--font-display",
+  variable: "--font-cormorant",
   display: "swap",
 });
 
 const outfit = Outfit({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
-  variable: "--font-body",
+  variable: "--font-outfit",
   display: "swap",
 });
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-ui",
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-dm",
   display: "swap",
 });
 
-// Headings on the editorial pages (home, Home Clarity, communities)
+// Display headings across the public site (the studio keeps Cormorant + Outfit)
 const italiana = Italiana({
   subsets: ["latin"],
   weight: "400",

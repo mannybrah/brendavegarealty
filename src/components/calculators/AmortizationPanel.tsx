@@ -101,8 +101,8 @@ export function AmortizationPanel({
             <YAxis tick={{ fontSize: 10, fill: "#5A5A5A" }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
             <Tooltip formatter={(v) => formatCurrency(Number(v))} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Area type="monotone" dataKey="principal" name="Principal" stackId="1" fill="#2A7F6F" stroke="#2A7F6F" fillOpacity={0.6} />
-            <Area type="monotone" dataKey="interest" name="Interest" stackId="1" fill="#C8A55B" stroke="#C8A55B" fillOpacity={0.6} />
+            <Area type="monotone" dataKey="principal" name="Principal" stackId="1" fill="#142b32" stroke="#142b32" fillOpacity={0.6} />
+            <Area type="monotone" dataKey="interest" name="Interest" stackId="1" fill="#c9a968" stroke="#c9a968" fillOpacity={0.6} />
           </AreaChart>
         </ResponsiveContainer>
       </div>

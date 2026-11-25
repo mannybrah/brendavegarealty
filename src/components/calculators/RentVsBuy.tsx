@@ -78,8 +78,8 @@ export function RentVsBuy({ result, currentRent, purchasePrice, appreciationRate
               contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e5e5e5" }}
             />
             <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Line type="monotone" dataKey="rent" name="Monthly Rent" stroke="#C8A55B" strokeWidth={2} dot={false} />
-            <Line type="monotone" dataKey="buyCost" name="True Cost to Buy" stroke="#2A7F6F" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="rent" name="Monthly Rent" stroke="#c9a968" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="buyCost" name="True Cost to Buy" stroke="#142b32" strokeWidth={2} dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>
